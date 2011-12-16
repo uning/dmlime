@@ -63,7 +63,7 @@ dm.Board = function(rows,cols,game) {
 
 
 
-	/*
+	//*
      //drawline but not work
 	 var cvs = goog.dom.createDom('canvas');
 	 cvs.width= this.WIDTH;
@@ -76,7 +76,7 @@ dm.Board = function(rows,cols,game) {
 	 //this.graphics = new lime.CanvasContext().setSize(this.getSize().clone()).setQuality(.5);
 	 this.appendChild(this.graphics);
 	 this.graphics.draw = goog.bind(this.drawLine,this);
-    */
+    //*/
 
 	 /*
 	var moveandrotate = new lime.animation.Spawn(
@@ -152,37 +152,25 @@ dm.Board.prototype.moveGems = function(opt_static) {
     return action || false;
 };
 
-dm.Board.prototype.calcSolution = function() {
-    var s = this.selectedGems,g,type,i
-	,attack = 0
-	this.add = {}
-	this.add.hp = 0
-	this.add.expadd = 0
-	this.add.defense = 0 
-	this.add.gold = 0
-	
-	for(i = 0; i < this.selectedGems; i++){
-		type = dm.GEMTYPES[this.selectedGems[i].index];
-		//计算经验
-		if(type == 'monstor'){
 
-		}else if(type=='gold'){
-
-		}
+/**
+ * 计算是否额外奖励
+ * basev, 基础值
+ * randratio 是否奖励
+ * baseadd, 增加值
+ * ratio, 增加比例
+ */
+dm.Board.prototype.randExtra = function(basev,randratio,baseadd,ratio) {
+	if(Math.random()*100 <= randratio){
+		return Math.floor((baseadd + basev)*(1+ratio/100));  
 	}
+	return 0;
 }
-
 /**
  * 计算分数
  */
 dm.Board.prototype.checkSolutions = function() {
 	this.isMoving_ = 1;
-    var solutions = this.selectedGems,g,type;
-    if (!solutions.length) {
-        this.getHint();
-        return false;
-    }
-    else this.game.clearHint();
 
     var action = new lime.animation.Spawn(
         new lime.animation.ScaleTo(0),
@@ -192,10 +180,53 @@ dm.Board.prototype.checkSolutions = function() {
 
     var indexes = [];
 
+    var s = this.selectedGems,g,type,i
+	,fp = this.game.user.fp,keep
+	,attack = fp.a1 
+	,gold = 0
+	,defense = 0
+	,exp = 0
+	,blood = 0
+
+	//计算攻击力
+	for(i = 0; i < s.length; i++){
+		type= s[i].type;
+		//计算经验
+		if(type == 'sword'){
+			attack += fp.a2
+		}else if(type != 'monstor'){
+			g = 1;
+			break;
+			
+		}
+	}
+
+	for(i = 0; i < s.length; i++){
+		g = s[i]
+		type = g.type
+		keep = false;
+		if(type == 'monstor'){
+			if(attack >= g.blood ){
+				exp += fp.a17
+				if(i > 2){
+					exp += this.randExtra(fp.a24,f25,fp.a26,f.a27)
+				}
+			}else{
+				g.blood  -= attack;
+				keep = true;
+			}
+		}else if(type == 'blood'){
+			blood += fp.a11;
+			if(i > 2){
+				blood += this.randExtra(fp.a14,f15,fp.a16,f.a17)
+			}
+
+		}
+	}
 
 
 
-    for(var i = 0; i < solutions.length; i++){
+    for(i = 0; i < solutions.length; i++){
 
         action.addTarget(solutions[i]);
         // remove form array but not yet form display list

@@ -15,14 +15,18 @@ goog.require('lime.animation.Loop');
  */
 
 
-dm.Game = function(size) {
+dm.Game = function(size,user){
+
+	this.user = user || new dm.User(1);
+	size  = size ||  6;
+
 	var i ,p,j,plen
 	//初始化数据
 	this.data = {};
 	this.data.turn = 0; //回合数
 	this.data.appearNum = {};
 	for( i = 0 ; i < dm.GEMTYPES.length ; ++i){
-		this.data.appearNum[dm.GEMTYPES[i]] = 0;
+		this.data.appearNum[i] = 0;
 	}
 	this.data.score = 0;
 	this.data.hp    = 0;
@@ -147,6 +151,29 @@ dm.Game = function(size) {
     dm.builtWithLime(this);
 };
 goog.inherits(dm.Game, lime.Scene);
+
+
+/**
+ * 填充一个格子,不同策略实现
+ */
+dm.Game.prototype.newGem = function() {
+
+    var gem = new dm.Gem();
+	//默认随机
+    var id = Math.floor(Math.random() * dm.GEMTYPES.length);
+    //var color = dm.Gem.colors[id];
+    gem.index = id; 
+	gem.type = gem.BTYPES[id];
+	gem.label.setText(gem.type);
+	if(gem.type == 'monstor'){
+		gem.attack = 1;
+		gem.blood = 5;
+	}
+    gem.circle.setFill('assets/ball_' + id + '.png');
+	this.data.appearNum[id] += 1;
+	return gem;
+
+}
 
 
 /**

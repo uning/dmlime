@@ -35,8 +35,8 @@ goog.inherits(dm.Gem, lime.Sprite);
 //是否可以连接
 dm.Gem.prototype.canConnect = function(g) {
 	return (Math.abs(g.r - this.r) < 2 && Math.abs(g.c - this.c) < 2 )
-	&& (g.index == this.index || (dm.GEMTYPES[g.index] == 'monstor' && dm.GEMTYPES[this.index] == 'sword') 
-	   || (dm.GEMTYPES[this.index] == 'monstor' && dm.GEMTYPES[g.index] == 'sword'))
+	&& (g.index == this.index || 
+		 (g.type == 'monstor' && this.type == 'sword')|| (this.type == 'monstor' && g.type == 'sword'))
 }
 
 /**
@@ -51,8 +51,12 @@ dm.Gem.random = function() {
     var id = Math.floor(Math.random() * dm.GEMTYPES.length);
     //var color = dm.Gem.colors[id];
     gem.index = id; 
-	//gem.type = gem.BTYPES[id];
-	gem.label.setText(dm.GEMTYPES[id]);
+	gem.type = gem.BTYPES[id];
+	gem.label.setText(gem.type);
+	if(gem.type == 'monstor'){
+		gem.attack = 1;
+		gem.hp = 5;
+	}
     gem.circle.setFill('assets/ball_' + id + '.png');
 
     return gem;

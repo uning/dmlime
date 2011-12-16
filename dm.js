@@ -12,6 +12,7 @@ goog.require('dm.Board');
 goog.require('dm.Button');
 goog.require('dm.Game');
 goog.require('dm.Help');
+goog.require('dm.User');
 
 //constant iPad size
 dm.WIDTH = 720;
@@ -20,7 +21,7 @@ dm.GEMTYPES = ['monstor','blood','defend','sword','gold'];
 //等级到每个属性定义
 dm.LVLCONF = [
 	{   
-	gold: 1000 
+	 gold: 1000 
 	,gold_add: 1
 	,gold_ratio: 1  
 
@@ -32,6 +33,8 @@ dm.LVLCONF = [
 }
 	,{gold:1000,defense:10000,hp:30,attack:3,wattack:1}
 ]
+
+
 dm.curdata={
 	gold: 0
 	,defense:0
@@ -101,7 +104,7 @@ dm.loadMenu = function() {
 	});
 	btns.appendChild(btn);
 
-	btn = dm.makeButton('Help').setPosition(0, 440);
+	btn = dm.makeButton('帮助').setPosition(0, 440);
 	goog.events.listen(btn, 'click', function() {
 	    dm.loadHelpScene();
 	});
