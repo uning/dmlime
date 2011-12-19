@@ -163,7 +163,7 @@ dm.Game.prototype.newGem = function() {
     var id = Math.floor(Math.random() * dm.GEMTYPES.length);
     //var color = dm.Gem.colors[id];
     gem.index = id; 
-	gem.type = gem.BTYPES[id];
+	gem.type = dm.GEMTYPES[id];
 	gem.label.setText(gem.type);
 	if(gem.type == 'monstor'){
 		gem.attack = 1;

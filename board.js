@@ -209,7 +209,7 @@ dm.Board.prototype.checkSolutions = function() {
 			if(attack >= g.blood ){
 				exp += fp.a17
 				if(i > 2){
-					exp += this.randExtra(fp.a24,f25,fp.a26,f.a27)
+					exp += this.randExtra(fp.a24,fp.a25,fp.a26,fp.a27)
 				}
 			}else{
 				g.blood  -= attack;
@@ -218,7 +218,7 @@ dm.Board.prototype.checkSolutions = function() {
 		}else if(type == 'blood'){
 			blood += fp.a11;
 			if(i > 2){
-				blood += this.randExtra(fp.a14,f15,fp.a16,f.a17)
+				blood += this.randExtra(fp.a14,fp.a15,fp.a16,fp.a17)
 			}
 
 		}
@@ -226,6 +226,7 @@ dm.Board.prototype.checkSolutions = function() {
 
 
 
+	var solutions = s;
     for(i = 0; i < solutions.length; i++){
 
         action.addTarget(solutions[i]);
@@ -318,7 +319,7 @@ dm.Board.prototype.drawLine = function(ctx) {
 			 this.ctx.globalCompositeOperation = 'copy';
 		 else 
 		 */
-		 ctx.clearRect(0,0,this.SIZE,this.SIZE);
+		 //ctx.clearRect(0,0,this.SIZE,this.SIZE);
 
 		 if(this.cancelGem){
 			 ctx.strokeStyle = '#00FF00';
@@ -332,8 +333,8 @@ dm.Board.prototype.drawLine = function(ctx) {
 		 ctx.beginPath();
 
 
-		 ctx.moveTo(0,0);
-		 ctx.lineTo(600,600);
+		 //ctx.moveTo(0,0);
+		 //ctx.lineTo(600,600);
 		 /*
 		 this.selectedGems = [];
 		 this.selectedGems.push(this.gems[0][0]);
@@ -392,7 +393,12 @@ dm.Board.prototype.pressHandler_ = function(e) {
     var c = Math.floor(pos.x / this.GAP),
         r = this.rows - Math.ceil(pos.y / this.GAP);
 
-	if(c >= this.cols || c < 0 || r < 0 || r >= this.rows){
+	var valid_min = this.GAP*0.15,
+		valid_max = this.GAP*0.85,  //落在GEM矩形框内中心部分才有效
+		x_valid = pos.x - this.GAP*c;
+		y_valid = pos.y - this.GAP*(this.rows - 1 - r);
+
+	if(c >= this.cols || c < 0 || r < 0 || r >= this.rows || x_valid < valid_min || x_valid > valid_max || y_valid < valid_min || y_valid > valid_max){
 		return;
 	}
 	console.log(this,r,c);
