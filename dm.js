@@ -40,6 +40,7 @@ dm.curdata={
 	,defense:0
 	,lvl:0
 	,exp:0
+	,hp:100
 	,mhp:0
 	,mdfense:0
 }

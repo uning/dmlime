@@ -187,6 +187,7 @@ dm.Board.prototype.checkSolutions = function() {
 	,defense = 0
 	,exp = 0
 	,blood = 0
+	,p_type = [];
 
 	//计算攻击力
 	for(i = 0; i < s.length; i++){
@@ -196,9 +197,9 @@ dm.Board.prototype.checkSolutions = function() {
 			attack += fp.a2
 		}else if(type != 'monstor'){
 			g = 1;
-			break;
-			
+			break;			
 		}
+		
 	}
 
 	for(i = 0; i < s.length; i++){
@@ -206,26 +207,60 @@ dm.Board.prototype.checkSolutions = function() {
 		type = g.type
 		keep = false;
 		if(type == 'monstor'){
-			if(attack >= g.blood ){
-				exp += fp.a17
+			if(attack >= g.hp ){
+				exp += fp.a23
 				if(i > 2){
 					exp += this.randExtra(fp.a24,fp.a25,fp.a26,fp.a27)
 				}
+				p_type = 'exp';
+				
 			}else{
-				g.blood  -= attack;
+				g.hp  -= attack;
 				keep = true;
+				p_type = 0;
 			}
 		}else if(type == 'blood'){
-			blood += fp.a11;
+			p_type = 'hp'; //进度条
+			blood += fp.a13;
 			if(i > 2){
 				blood += this.randExtra(fp.a14,fp.a15,fp.a16,fp.a17)
+			}	
+		}else if(type == 'gold'){
+			p_type = 'gold';
+			gold += fp.a18;
+			if(i > 2){
+				gold += this.randExtra(fp.a19,fp.a20,fp.a21,fp.a22)
 			}
-
+		}else if(type == 'defend'){
+			p_type = 'def'
+			defense += fp.a28;
+			if(i > 2){
+				defense += this.randExtra(fp.a29,fp.a30,fp.a31,fp.a32)
+			}
 		}
+
 	}
+		switch(p_type){
+		case 'exp':
+		this.game.data[p_type] = Math.min(100, this.game.data[p_type] + exp);
+		break;
+		case 'hp':
+		this.game.data[p_type] = Math.min(100, this.game.data[p_type] + blood);
+		break;
+		case 'gold':
+		this.game.data[p_type] = Math.min(100, this.game.data[p_type] + gold);
+		break;
+		case 'def':
+		this.game.data[p_type] = Math.min(100, this.game.data[p_type] + defense);
+		break;
+		}
+	if(p_type!=0)
+	//	this.game.show_vars[p_type]._pg.setProgress(1/2);
+	//*
+		this.game.show_vars[p_type]._pg.setProgress(this.game.data[p_type]/100);
 
-
-
+	//*/
+	
 	var solutions = s;
     for(i = 0; i < solutions.length; i++){
 

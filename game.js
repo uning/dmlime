@@ -29,9 +29,11 @@ dm.Game = function(size,user){
 		this.data.appearNum[i] = 0;
 	}
 	this.data.score = 0;
-	this.data.hp    = 0;
+	this.data.hp    = 100;
 	this.data.lvl   = 0;
-	
+	this.data.exp   = 0;
+	this.data.def   = 0;
+	this.data.gold   = 0;
 	
 		
 
