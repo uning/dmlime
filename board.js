@@ -205,9 +205,10 @@ dm.Board.prototype.checkSolutions = function() {
 	for(i = 0; i < s.length; i++){
 		g = s[i]
 		type = g.type
-		keep = false;
+		s[i].keep = false;
 		if(type == 'monstor'){
 			if(attack >= g.hp ){
+				g.hp = 0;
 				exp += fp.a23
 				if(i > 2){
 					exp += this.randExtra(fp.a24,fp.a25,fp.a26,fp.a27)
@@ -216,7 +217,7 @@ dm.Board.prototype.checkSolutions = function() {
 				
 			}else{
 				g.hp  -= attack;
-				keep = true;
+				s[i].keep = true;
 				p_type = 0;
 			}
 		}else if(type == 'blood'){
@@ -254,38 +255,55 @@ dm.Board.prototype.checkSolutions = function() {
 		this.game.data[p_type] = Math.min(100, this.game.data[p_type] + defense);
 		break;
 		}
-	if(p_type!=0)
+		if(p_type!=0 && p_type!='hp' && p_type!='def'){
 	//	this.game.show_vars[p_type]._pg.setProgress(1/2);
-	//*
+	//*	
+		
 		this.game.show_vars[p_type]._pg.setProgress(this.game.data[p_type]/100);
-
+		this.game.show_vars[p_type]._lct.setText(this.game.data[p_type]+'/'+100);
+		}
 	//*/
 	
 	var solutions = s;
     for(i = 0; i < solutions.length; i++){
-
+		if(solutions[i].keep == false){
         action.addTarget(solutions[i]);
         // remove form array but not yet form display list
         goog.array.remove(this.gems[solutions[i].c], solutions[i]);
-        goog.array.insert(indexes, solutions[i].index);
+
+		}
     }
 
-    // actual score = bubbles * colors
-    this.game.setScore(solutions.length * indexes.length);
-
-    goog.events.listen(action, lime.animation.Event.STOP, function() {
+	this.game.setScore(solutions.length * indexes.length);
+	//计算剩余防御和hp
+	var total_dmg = this.getDamage(),
+	reduce_dmg = Math.round(total_dmg/2),
+	hp_dmg = Math.max(0, total_dmg - reduce_dmg);
+	
+	this.game.data['def'] -= reduce_dmg;
+	this.game.data['hp'] -= hp_dmg;
+    //
+	goog.events.listen(action, lime.animation.Event.STOP, function() {
         //remove objects after they have faded
         goog.array.forEach(solutions, function(g) {
-            g.parent_.removeChild(g);
+            if(g.keep == false)
+				g.parent_.removeChild(g);
         },this);
         // move other bubbles to place.
         this.moveGems();
     },false, this);
     // fill the gaps
+	
+
     this.fillGems();
     action.play();
 	this.isMoving_ = 0;
-    return true;
+	
+	this.game.show_vars['hp']._pg.setProgress(this.game.data['hp']/100);
+	this.game.show_vars['def']._pg.setProgress(this.game.data['def']/100);
+    this.game.show_vars['hp']._lct.setText(this.game.data['hp']+'/'+100);
+	this.game.show_vars['def']._lct.setText(this.game.data['def']+'/'+100);
+	return true;
 };
 
 
@@ -406,15 +424,28 @@ dm.Board.prototype.pressHandler_ = function(e) {
 
 	}
 	this.selectedGems = this.selectedGems || [];
+	
 	//结束
 	if(e.type == 'mouseup'  || e.type == 'touchend' /*|| e.type == 'touchcancel'*/){
 		this.doing_ = false;
 		console.log("mouseup : this.selectedGems",this.selectedGems);
+		if(this.selectedGems[0].type == 'sword'){
+			var h_exist = 1,
+				cancel = 1;
+		}else{
+			h_exist = 0;
+		}
 		for( i = 0 ;i < this.selectedGems.length ; i ++){
 			this.selectedGems[i].deselect();
+			if(h_exist == 1 && this.selectedGems[i].type == 'monstor'){
+				cancel = 0;			
+			}
 		}
+
 		if(this.selectedGems.length > 2){//消除
-			this.checkSolutions();
+			if(!h_exist || (h_exist && cancel == 0) ){
+				this.checkSolutions();
+				}
 		}
 		this.selectedGems = [];
 		return;
@@ -539,5 +570,18 @@ dm.Board.prototype.getHint = function() {
     this.game.setHint(this.hint);
 
     return maxhint;
+};
+
+dm.Board.prototype.getDamage = function(){
+	var c, r, damage = 0;
+    for (c = 0; c < this.cols; c++) {
+        for (r = 0; r < this.gems[c].length; r++) {
+			if(this.gems[c][r].type == "monstor"){
+				console.log(this.gems[c][r].attack);
+				damage += this.gems[c][r].attack;
+				}
+        }
+    }
+	return damage;
 };
 

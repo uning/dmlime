@@ -55,7 +55,7 @@ dm.Gem.random = function() {
 	gem.label.setText(gem.type);
 	if(gem.type == 'monstor'){
 		gem.attack = 1;
-		gem.hp = 1;
+		gem.hp = 4;
 	}
     gem.circle.setFill('assets/ball_' + id + '.png');
 

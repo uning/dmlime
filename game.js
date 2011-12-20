@@ -32,7 +32,7 @@ dm.Game = function(size,user){
 	this.data.hp    = 100;
 	this.data.lvl   = 0;
 	this.data.exp   = 0;
-	this.data.def   = 0;
+	this.data.def   = 100;
 	this.data.gold   = 0;
 	
 		
@@ -55,24 +55,29 @@ dm.Game = function(size,user){
 	,lxx=90  //第二个x坐标起点
 	//exp 
 	fcolor = '#00ff00';
-	plen = 200;
+	plen = 260;
 	this.show_vars = {
-		exp:{color:'#00ff00',txt:'经验'}
-		,gold:{color:'#ffff00',txt:'金币'}
-		,def:{color:'#0000ff',txt:'防御'}
-		,hp:{color:'#FF0000',txt:'血量',init:1}
+		exp:{color:'#00ff00',txt:'经验',curdata:this.data.exp, max:100}
+		,gold:{color:'#ffff00',txt:'金币',curdata:this.data.gold, max:100}
+		,def:{color:'#0000ff',txt:'防御',curdata:this.data.def, init:1, max:100}
+		,hp:{color:'#FF0000',txt:'血量',curdata:this.data.hp,init:1, max:100}
 	}
-
+	
 	var odd = 0;
 	for( i in this.show_vars){
 		p = this.show_vars[i];
 		j =  odd * (plen + lxx - lx +20);
-		p._lbl = new lime.Label().setFontFamily('Trebuchet MS')
-		.setFontSize(24).setPosition(lx + j, lh).setText(p.txt).setAnchorPoint(0, 0);//.setFontColor(p.color)
+		p._lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontSize(24).setPosition(lx + j, lh).setText(p.txt).setAnchorPoint(0, 0);
+		
 		layer.appendChild(p._lbl);
+		
 		p.init = p.init || 0.001;
 		p._pg = new dm.Progress(p.init ,p.color,plen,h,10,2,p.bcolor).setPosition(lxx + j, lh);//
 		layer.appendChild(p._pg);
+		
+		p._lct = new lime.Label().setFontFamily('Trebuchet MS').setFontSize(24).setPosition(plen/2 + lxx + j, lh).setAnchorPoint(0.5, 0).setText(p.curdata+'/'+p.max);
+		layer.appendChild(p._lct);
+		
 		if(odd)
 			lh += h + gap;
 		odd = odd ? 0 : 1;
@@ -169,7 +174,7 @@ dm.Game.prototype.newGem = function() {
 	gem.label.setText(gem.type);
 	if(gem.type == 'monstor'){
 		gem.attack = 1;
-		gem.blood = 5;
+		gem.blood = 2;
 	}
     gem.circle.setFill('assets/ball_' + id + '.png');
 	this.data.appearNum[id] += 1;
