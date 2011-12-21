@@ -54,6 +54,10 @@ dm.Board = function(rows,cols,game) {
         this.appendChild(this.layers[i]);
     }
 
+	//划线
+	this.lineLayer = new lime.Layer();
+	this.appendChild(this.lineLayer);
+
     // load in first bubbles
     this.fillGems();
 
@@ -63,7 +67,7 @@ dm.Board = function(rows,cols,game) {
 
 
 
-	//*
+	/*
      //drawline but not work
 	 var cvs = goog.dom.createDom('canvas');
 	 cvs.width= this.WIDTH;
@@ -170,6 +174,7 @@ dm.Board.prototype.randExtra = function(basev,randratio,baseadd,ratio) {
  * 计算分数
  */
 dm.Board.prototype.checkSolutions = function() {
+	this.lineLayer.removeAllChildren();
 	this.isMoving_ = 1;
 
     var action = new lime.animation.Spawn(
@@ -362,11 +367,56 @@ dm.Board.prototype.getSolutions = function() {
 };
 
 dm.Board.prototype.updateLine = function() {
-    this.graphics && this.graphics.setDirty(lime.Dirty.CONTENT);
+	this.drawLine();
+    //this.graphics && this.graphics.setDirty(lime.Dirty.CONTENT);
 
 }
 dm.Board.prototype.drawLine = function(ctx) {
+
 		 this.selectedGems = this.selectedGems || [];
+
+
+		 var pos,rota,len,x,y,line
+		 this.lineLayer.removeAllChildren();
+		 for(var i =  0 ; i < this.selectedGems.length ; i++){
+			 if(i > 0){
+				 pos = this.selectedGems[i-1].getPosition();
+				 pos1 = this.selectedGems[i].getPosition();
+
+				 len = goog.math.Coordinate.distance(pos,pos1);
+				 rota = goog.math.Vec2.difference(pos1,pos);
+				 if(rota.x > 0 && rota.y == 0){
+					 rota = 0;
+				 }else if(rota.x > 0 && rota.y < 0){
+					 rota = 45;
+				 }else if(rota.x == 0 && rota.y < 0){
+					 rota = 90;
+				 }else if(rota.x < 0 && rota.y < 0){
+					 rota = 135;
+				 }else if(rota.x < 0 && rota.y == 0){
+					 rota = 180;
+				 }else if(rota.x < 0 && rota.y > 0){
+					 rota = 225;
+				 }else if(rota.x ==0 && rota.y > 0){
+					 rota = 270;
+				 }else if(rota.x > 0 && rota.y > 0){
+					 rota = 315;
+				 }
+				// rota = Math.atan(-rota.y/rota.x)*180/Math.PI;
+				 
+				 line =  new lime.Sprite().setSize(len, 4).setFill('#295081').setAnchorPoint(0,0)
+				 line.setPosition(pos).setRotation(rota);
+				 this.lineLayer.appendChild(line);
+
+			 }
+		 }
+
+
+}
+dm.Board.prototype.old_drawLine = function(ctx) {
+		 this.selectedGems = this.selectedGems || [];
+
+
 		 /*
 		 if(goog.userAgent.MOBILE)
 			 this.ctx.globalCompositeOperation = 'copy';
