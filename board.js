@@ -411,7 +411,7 @@ dm.Board.prototype.drawLine = function(ctx) {
 		 this.selectedGems = this.selectedGems || [];
 
 
-		 var pos,rota,len,x,y,line
+		 var pos,rota,len,x,y,line,degree,color
 		 this.lineLayer.removeAllChildren();
 		 for(var i =  0 ; i < this.selectedGems.length ; i++){
 			 if(i > 0){
@@ -420,27 +420,33 @@ dm.Board.prototype.drawLine = function(ctx) {
 
 				 len = goog.math.Coordinate.distance(pos,pos1);
 				 rota = goog.math.Vec2.difference(pos1,pos);
+				 /*
 				 if(rota.x > 0 && rota.y == 0){
-					 rota = 0;
+					 degree = 0;
 				 }else if(rota.x > 0 && rota.y < 0){
-					 rota = 45;
+					 degree = 45;
 				 }else if(rota.x == 0 && rota.y < 0){
-					 rota = 90;
+					 degree = 90;
 				 }else if(rota.x < 0 && rota.y < 0){
-					 rota = 135;
+					 degree = 135;
 				 }else if(rota.x < 0 && rota.y == 0){
-					 rota = 180;
+					 degree = 180;
 				 }else if(rota.x < 0 && rota.y > 0){
-					 rota = 225;
+					 degree = 225;
 				 }else if(rota.x ==0 && rota.y > 0){
-					 rota = 270;
+					 degree = 270;
 				 }else if(rota.x > 0 && rota.y > 0){
-					 rota = 315;
+					 degree = 315;
 				 }
-				// rota = Math.atan(-rota.y/rota.x)*180/Math.PI;
+				 //*/
+				 degree = Math.atan(-rota.y/rota.x)*180/Math.PI;//+270;
+				 if(rota.x < 0){
+					 degree += 180;
+
+				 }
 				 
 				 line =  new lime.Sprite().setSize(len, 4).setFill('#295081').setAnchorPoint(0,0)
-				 line.setPosition(pos).setRotation(rota);
+				 line.setPosition(pos).setRotation(degree);
 				 this.lineLayer.appendChild(line);
 
 			 }
