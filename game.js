@@ -279,7 +279,7 @@ dm.Game.prototype.endGame = function() {
         setAnchorPoint(.5, 0).setRadius(20);
     this.appendChild(dialog);
 
-    var title = new lime.Label().setText(this.curTime < 1 ? 'No more time!' : 'No more moves!').
+    var title = new lime.Label().setText(this.curTime < 1 ? 'No more time!' : 'You are killed!').
         setFontColor('#ddd').setFontSize(40).setPosition(0, 70);
     dialog.appendChild(title);
 

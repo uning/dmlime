@@ -13,6 +13,7 @@ goog.require('dm.Button');
 goog.require('dm.Game');
 goog.require('dm.Help');
 goog.require('dm.User');
+goog.require('dm.Display');
 
 //constant iPad size
 dm.WIDTH = 720;

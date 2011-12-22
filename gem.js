@@ -22,8 +22,6 @@ dm.Gem = function() {
 	//最上层 特殊效果文字
 	this.special = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(30).setAnchorPoint(0.5, 0.5).setOpacity(0);
 	this.appendChild(this.special);
-	//*/
-	
 	
     this.selected_ = false;
 
@@ -33,12 +31,9 @@ dm.Gem = function() {
 
     this.qualityRenderer = true;
 	
-
 };
 goog.inherits(dm.Gem, lime.Sprite);
  
-
-
 //是否可以连接
 dm.Gem.prototype.canConnect = function(g) {
 	return (Math.abs(g.r - this.r) < 2 && Math.abs(g.c - this.c) < 2 )
@@ -50,24 +45,44 @@ dm.Gem.prototype.canConnect = function(g) {
  * Generate bubble with random color
  * @return {dm.Gem} New bubble.
  */
-dm.Gem.random = function() {
+dm.Gem.random = function(x, y) {
 
 	//简单随机出
 	//
     var gem = new dm.Gem();
     var id = Math.floor(Math.random() * dm.GEMTYPES.length);
-    //var color = dm.Gem.colors[id];
     gem.index = id; 
 	gem.type = dm.GEMTYPES[id];
 	gem.label.setText(gem.type);
-	if(gem.type == 'monster'){
-		gem.attack = 1;
-		gem.hp = 4;
-	}
+	gem.setSize(x,y);
+	gem.genAttribute();
     gem.circle.setFill('assets/ball_' + id + '.png');
 
     return gem;
 };
+
+/**
+ * 产生特殊属性，如怪物技能等
+ */
+dm.Gem.prototype.genAttribute= function(){
+	if (this.type == 'monster'){
+		//属性
+		this.attack = 1;
+		this.hp = 4;
+		this.hp_left = this.hp;
+		this.def = 2;
+		this.def_left = this.def;
+		//标签
+		var size = this.getSize(), h=size.height, w=size.width;
+		this.attlabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.attack);
+		this.hplabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#f00').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.hp_left);
+		this.deflabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#00f').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.def);
+		this.appendChild(this.attlabel.setPosition(w*0.4, -h/4));
+		this.appendChild(this.hplabel.setPosition(w*0.4, 0));
+		this.appendChild(this.deflabel.setPosition(w*0.4, h/4));
+	}
+
+}
 
 /**
  * Select bubble. Show highlight
@@ -78,7 +93,6 @@ dm.Gem.prototype.select = function() {
     this.highlight = this.highlight || new lime.Sprite().setSize(size).setFill('assets/selection.png');
     this.appendChild(this.highlight, 0);
     this.selected_ = true;
-
 };
 
 /**

@@ -116,11 +116,11 @@ dm.Board.prototype.fillGems = function() {
         var i = 0;
         for (r = this.gems[c].length; r < this.rows; r++) {
             i++;
-            var gem = dm.Gem.random();
+            var gem = dm.Gem.random(this.GAP, this.GAP);
             gem.r = r;
             gem.c = c;
             gem.setPosition((c + .5) * this.GAP, (-i + .5) * this.GAP);
-            gem.setSize(this.GAP, this.GAP);
+            //gem.setSize(this.GAP, this.GAP);
             this.gems[c].push(gem);
             this.layers[c].appendChild(gem);
         }
@@ -222,8 +222,9 @@ dm.Board.prototype.checkSolutions = function() {
 		type = g.type
 		s[i].keep = false;
 		if(type == 'monster'){
-			if(attack >= g.hp ){
-				g.hp = 0;
+			if(attack >= g.hp_left + g.def_left){
+				g.hp_left = 0;
+				g.def_left = 0;
 				exp += fp.a23;
 				if(i > 2){
 					exp += this.randExtra(fp.a24,fp.a25,fp.a26,fp.a27)
@@ -231,10 +232,17 @@ dm.Board.prototype.checkSolutions = function() {
 				p_type = 'exp';
 				
 			}else{
-				g.hp  -= attack;
+				if(attack > g.def_left){
+					g.hp_left = g.hp_left + g.def_left - attack;
+					g.def_left = 0;
+				}else{
+					g.def_left -= attack;
+				}
 				s[i].keep = true;
 				p_type = 0;
 			}
+			g.deflabel.setText(g.def_left);
+			g.hplabel.setText(g.hp_left);
 		}else if(type == 'blood'){
 			p_type = 'hp'; //进度条
 			blood += fp.a13;
@@ -297,8 +305,14 @@ dm.Board.prototype.checkSolutions = function() {
 	hp_dmg = Math.max(0, total_dmg - reduce_dmg);
 	
 	this.game.data['def'] -= reduce_dmg;
+	if(this.game.data['def'] < 0){
+		this.game.data['hp'] -= this.game.data['def'];
+	}
 	this.game.data['def'] = Math.max(0,this.game.data['def'])
 	this.game.data['hp'] -= hp_dmg;
+	if(this.game.data['hp'] <= 0){
+		this.game.endGame();
+	}
     //
 	goog.events.listen(action, lime.animation.Event.STOP, function() {
         //remove objects after they have faded
@@ -333,10 +347,10 @@ dm.Board.prototype.checkSolutions = function() {
 	var killed = 0;
 	for(var element in line){
 		if(line[element].type == 'monster'){
-			if(this.show_att >= line[element].hp){
+			if(this.show_att >= line[element].hp_left + line[element].def_left){
 				//杀死怪物了
-				line[element].setSpecial('Killed!');
-				killed += line[element].attack
+				line[element].setSpecial('killed!');
+				killed += line[element].attack //死亡怪物不再造成伤害，从总显示数值中去掉。
 			}else{
 				line[element].unsetSpecial();
 			}
@@ -572,12 +586,12 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	if(e.type == 'mouseup'  || e.type == 'touchend' /*|| e.type == 'touchcancel'*/){
 		this.doing_ = false;
 		console.log("mouseup : this.selectedGems",this.selectedGems);
-		if(this.selectedGems[0].type == 'sword'){
+/*		if(this.selectedGems[0].type == 'sword'){
 			var h_exist = 1,
 				cancel = 1;
 		}else{
 			h_exist = 0;
-		}
+		}*/
 		for( i = 0 ;i < this.selectedGems.length ; i ++){
 			this.selectedGems[i].deselect();
 			if(this.selectedGems[i].type == 'sword'){
@@ -588,9 +602,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 
 		this.lineLayer.removeAllChildren();//消除线
 		if(this.selectedGems.length > 2){//消除
-			if(!h_exist || (h_exist && cancel == 0) ){
 				this.checkSolutions();
-				}
 		}
 		this.selectedGems = [];
 		return;
@@ -644,6 +656,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 			while(this.selectedGems.length > selid +1){
 				this.cancelGem = this.selectedGems.pop();
 				this.cancelGem.deselect();
+				this.drawLine();
 				if(this.cancelGem.type == 'sword'){
 					this.show_att -= this.fp.a2;
 					this.game.att.setText(this.show_att);
