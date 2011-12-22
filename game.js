@@ -86,15 +86,14 @@ dm.Game = function(size,user){
     var score_lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#4f96ed').setFontSize(24).
         setPosition(lx, lh).setText('分数').setAnchorPoint(0, 0);
     layer.appendChild(score_lbl);
+	
+
 
     // score message label
     this.score = new lime.Label().setFontColor('#000').setFontSize(24).setText('0').setPosition(lxx,lh).setAnchorPoint(0, 0).setFontWeight(700);
-
+	
 
     layer.appendChild(this.score);
-
-
-
 
 	
 	lh += gap+h;
@@ -143,14 +142,32 @@ dm.Game = function(size,user){
     this.appendChild(this.btn_menu);
 
     // Hint button
-    this.btn_hint = new dm.Button('提示').setSize(140, 70).setPosition(640, lh).setOpacity(0);
+    this.btn_hint = new dm.Button('提示').setSize(140, 70).setPosition(640, lh);
     goog.events.listen(this.btn_hint, 'click', function() {
         if (this.hint)
         this.board.showHint();
     },false, this);
     this.appendChild(this.btn_hint);
 
+	//其他显示的数据
+	var monster_lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(24).
+        setPosition(250, lh -25).setText('怪物伤害').setAnchorPoint(0, 0);
+    
+	this.appendChild(monster_lbl);
+	
+	var att_lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(24).
+        setPosition(250, lh+5).setText('玩家攻击').setAnchorPoint(0, 0);
+    this.appendChild(att_lbl);
+	
+	this.mon = new lime.Label().setFontColor('#000').setFontSize(24).setText('0').setPosition(360,lh -25
+	).setAnchorPoint(0, 0).setFontWeight(700);
+	
+	this.att = new lime.Label().setFontColor('#000').setFontSize(24).setText('0').setPosition(360,lh + 5).setAnchorPoint(0, 0).setFontWeight(700);
 
+	this.appendChild(this.mon);
+	this.appendChild(this.att);	
+
+	
     // update score when points have changed
     lime.scheduleManager.scheduleWithDelay(this.updateScore, this, 100);
 
@@ -172,7 +189,7 @@ dm.Game.prototype.newGem = function() {
     gem.index = id; 
 	gem.type = dm.GEMTYPES[id];
 	gem.label.setText(gem.type);
-	if(gem.type == 'monstor'){
+	if(gem.type == 'monster'){
 		gem.attack = 1;
 		gem.blood = 2;
 	}

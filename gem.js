@@ -14,10 +14,17 @@ dm.Gem = function() {
     this.circle = new lime.Sprite();
     this.label = new lime.Label().setFontSize(15);
     this.label.domClassName = goog.getCssName('lime-button');
+	
     this.domClassName = goog.getCssName('lime-button');
     this.appendChild(this.circle);
     this.appendChild(this.label);
-
+	
+	//最上层 特殊效果文字
+	this.special = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(30).setAnchorPoint(0.5, 0.5).setOpacity(0);
+	this.appendChild(this.special);
+	//*/
+	
+	
     this.selected_ = false;
 
     this.index = -1;
@@ -36,7 +43,7 @@ goog.inherits(dm.Gem, lime.Sprite);
 dm.Gem.prototype.canConnect = function(g) {
 	return (Math.abs(g.r - this.r) < 2 && Math.abs(g.c - this.c) < 2 )
 	&& (g.index == this.index || 
-		 (g.type == 'monstor' && this.type == 'sword')|| (this.type == 'monstor' && g.type == 'sword'))
+		 (g.type == 'monster' && this.type == 'sword')|| (this.type == 'monster' && g.type == 'sword'))
 }
 
 /**
@@ -53,7 +60,7 @@ dm.Gem.random = function() {
     gem.index = id; 
 	gem.type = dm.GEMTYPES[id];
 	gem.label.setText(gem.type);
-	if(gem.type == 'monstor'){
+	if(gem.type == 'monster'){
 		gem.attack = 1;
 		gem.hp = 4;
 	}
@@ -70,8 +77,8 @@ dm.Gem.prototype.select = function() {
     var size = this.getSize().clone();
     this.highlight = this.highlight || new lime.Sprite().setSize(size).setFill('assets/selection.png');
     this.appendChild(this.highlight, 0);
-
     this.selected_ = true;
+
 };
 
 /**
@@ -81,7 +88,21 @@ dm.Gem.prototype.deselect = function() {
     if (!this.selected_) return;
     this.removeChild(this.highlight);
     this.selected_ = false;
+	
+	if(this.type == 'monster'){
+		
+	}
 };
+
+
+dm.Gem.prototype.setSpecial = function(str) {
+	this.special.setText(str).setOpacity(1);
+}
+
+dm.Gem.prototype.unsetSpecial = function() {
+	this.special.setOpacity(0);
+}
+
 
 /**
  * @inheritDoc

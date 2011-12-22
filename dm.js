@@ -17,7 +17,8 @@ goog.require('dm.User');
 //constant iPad size
 dm.WIDTH = 720;
 dm.HEIGHT = 1004;
-dm.GEMTYPES = ['monstor','blood','defend','sword','gold'];
+dm.BOARDSIZE = 690;
+dm.GEMTYPES = ['monster','blood','defend','sword','gold'];
 //等级到每个属性定义
 dm.LVLCONF = [
 	{   
