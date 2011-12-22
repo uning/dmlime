@@ -401,12 +401,64 @@ dm.Board.prototype.getSolutions = function() {
 
 };
 
+
+/**
+ * 选中一个gem
+ * 划线
+ * 更新，相应的攻击力等
+ *
+ *
+ */
+dm.Board.prototype.addSelGem = function(g) {
+	var lidx = this.selectedGems.length - 1 ;
+	if(lidx > -1){
+		var pos = this.selectedGems[lidx].getPosition()
+		,pos1 = g.getPosition(),
+		len = goog.math.Coordinate.distance(pos,pos1),
+		rota = goog.math.Vec2.difference(pos1,pos),
+		degree = Math.atan(-rota.y/rota.x)*180/Math.PI;//+270;
+		if(rota.x < 0){
+			degree += 180;
+		}
+		var line =  new lime.Sprite().setSize(len, 4).setFill('#295081').setAnchorPoint(0,0)
+		line.setPosition(pos).setRotation(degree);
+		this.lineLayer.appendChild(line);
+	}
+    g.select();
+	//实时计算伤害：
+	if(g.type == 'sword'){
+		this.show_att += this.fp.a2;
+		//显示
+		this.game.att.setText(this.show_att);
+	}
+	this.selectedGems.push(g);
+}
+
+/**
+ * 取消选择
+ *
+ */
+dm.Board.prototype.cancelSelGem = function(dto) {
+	var lidx = this.selectedGems.length - 1 ;
+	if(lidx > 0){
+		g = this.selectedGems.pop();
+	}
+    g.deselect();
+	//实时计算伤害：
+	if(g.type == 'sword'){
+		this.show_att += this.fp.a2;
+		//显示
+		this.game.att.setText(this.show_att);
+	}
+	this.selectedGems.push(g);
+}
+
 dm.Board.prototype.updateLine = function() {
 	this.drawLine();
     //this.graphics && this.graphics.setDirty(lime.Dirty.CONTENT);
 
 }
-dm.Board.prototype.drawLine = function(ctx) {
+dm.Board.prototype.drawLine = function() {
 
 		 this.selectedGems = this.selectedGems || [];
 
@@ -532,11 +584,9 @@ dm.Board.prototype.pressHandler_ = function(e) {
 				this.show_att -= this.fp.a2;
 				this.game.att.setText(this.show_att);					
 			}
-			if(h_exist == 1 && this.selectedGems[i].type == 'monster'){
-				cancel = 0;			
-			}
 		}
 
+		this.lineLayer.removeAllChildren();//消除线
 		if(this.selectedGems.length > 2){//消除
 			if(!h_exist || (h_exist && cancel == 0) ){
 				this.checkSolutions();
@@ -547,9 +597,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	}
 
 
-
     var pos = e.position;
-
     // get the cell and row value for the touch
     var c = Math.floor(pos.x / this.GAP),
         r = this.rows - Math.ceil(pos.y / this.GAP);
@@ -559,9 +607,15 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		x_valid = pos.x - this.GAP*c;
 		y_valid = pos.y - this.GAP*(this.rows - 1 - r);
 
-	if(c >= this.cols || c < 0 || r < 0 || r >= this.rows || x_valid < valid_min || x_valid > valid_max || y_valid < valid_min || y_valid > valid_max){
+
+	if(c >= this.cols || c < 0 || r < 0 || r >= this.rows ){
 		return;
 	}
+	if(x_valid < valid_min || x_valid > valid_max || y_valid < valid_min || y_valid > valid_max){
+		this.touchPos = pos //记录try pos
+		return;
+	}
+
 	console.log(this,r,c);
     var g = this.gems[c][r];
 
@@ -632,15 +686,11 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	//实时计算伤害：
 	if(g.type == 'sword'){
 		this.show_att += this.fp.a2;
-		
 		//显示
 		this.game.att.setText(this.show_att);
 	}
 	this.selectedGems.push(g);
 	this.updateLine();
-
-
-
 };
 
 
