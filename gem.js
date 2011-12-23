@@ -55,6 +55,7 @@ dm.Gem.random = function(x, y) {
 	gem.type = dm.GEMTYPES[id];
 	gem.label.setText(gem.type);
 	gem.setSize(x,y);
+	//生成属性
 	gem.genAttribute();
     gem.circle.setFill('assets/ball_' + id + '.png');
 
@@ -68,9 +69,9 @@ dm.Gem.prototype.genAttribute= function(){
 	if (this.type == 'monster'){
 		//属性
 		this.attack = 1;
-		this.hp = 4;
+		this.hp = 1;
 		this.hp_left = this.hp;
-		this.def = 2;
+		this.def = 1;
 		this.def_left = this.def;
 		//标签
 		var size = this.getSize(), h=size.height, w=size.width;

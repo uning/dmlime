@@ -56,7 +56,9 @@ dm.start = function() {
     pseudoRandom.install();
     */
 
-	dm.director = new lime.Director(document.body, dm.WIDTH, dm.HEIGHT);
+	var el = document.getElementById('gamearea');
+	console.log('in dm.start',el);
+	dm.director = new lime.Director(el, dm.WIDTH, dm.HEIGHT);
 	dm.director.makeMobileWebAppCapable();
 
 
@@ -78,7 +80,7 @@ dm.loadMenu = function() {
     var scene = new lime.Scene(),
 	    layer = new lime.Layer().setPosition(dm.WIDTH / 2, 0);
 
-	if(dm.isBrokenChrome()) layer.setRenderer(lime.Renderer.CANVAS);
+	//if(dm.isBrokenChrome()) layer.setRenderer(lime.Renderer.CANVAS);
 
 
 /*
@@ -87,7 +89,7 @@ dm.loadMenu = function() {
 	layer.appendChild(title);
 */
 
-	var btns = new lime.Layer().setPosition(0, 430);
+	var btns = new lime.Layer().setPosition(0, 0);
 	layer.appendChild(btns);
 	var move = new lime.animation.MoveBy(-dm.WIDTH, 0).enableOptimizations();
 

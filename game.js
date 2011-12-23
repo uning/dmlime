@@ -135,17 +135,16 @@ dm.Game = function(size,user){
 	lh += gap +40;
 
     // Menu button
-    this.btn_menu = new dm.Button('主菜单').setSize(140, 70).setPosition(100, lh);
+    this.btn_menu = new dm.Button('主菜单').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setPosition(dm.Display.position.btn_menu.x,dm.Display.position.btn_menu.y);
     goog.events.listen(this.btn_menu, 'click', function() {
         dm.loadMenu();
     });
     this.appendChild(this.btn_menu);
 
     // Hint button
-    this.btn_hint = new dm.Button('提示').setSize(140, 70).setPosition(640, lh);
+    this.btn_hint = new dm.Button('人物').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setPosition(dm.Display.position.btn_hint.x, dm.Display.position.btn_hint.y);
     goog.events.listen(this.btn_hint, 'click', function() {
-        if (this.hint)
-        this.board.showHint();
+        this.changeAnim('Hello');
     },false, this);
     this.appendChild(this.btn_hint);
 
@@ -173,6 +172,13 @@ dm.Game = function(size,user){
 
      // show lime logo
     dm.builtWithLime(this);
+
+
+	//
+	//加数值动画label
+	this.notify = new lime.Label().setFontSize(80).setFontColor('#000').setPosition(dm.WIDTH/2, dm.HEIGHT/2).setOpacity(0);
+	this.appendChild(this.notify);
+
 };
 goog.inherits(dm.Game, lime.Scene);
 
@@ -302,4 +308,33 @@ dm.Game.prototype.endGame = function() {
     goog.events.listen(btn, lime.Button.Event.CLICK, function() {
         dm.loadMenu();
     });
+};
+
+/**
+ * 改变数值等动画效果
+ */
+dm.Game.prototype.changeAnim = function(str){
+	this.notify.setText(str);
+	var disappeal = new lime.animation.FadeTo(0).setDuration(4);
+	var show = new lime.animation.FadeTo(1).setDuration(2);
+	var large = new lime.animation.ScaleTo(2).setDuration(2);
+	var small = new lime.animation.ScaleTo(0.5).setDuration(2);
+	var move = new lime.animation.MoveTo(dm.Display.position.hp_p.x , dm.Display.position.hp_p.y).setDuration(3);
+	var appearl = new lime.animation.Spawn(
+		show,
+		large
+	);
+	var hide = new lime.animation.Spawn(
+		move,
+		disappeal,
+		small
+	);
+	
+	var step = new lime.animation.Sequence(
+		appearl,
+		hide
+	);
+
+	this.notify.runAction(step);
+
 };
