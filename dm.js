@@ -2,6 +2,10 @@
 goog.provide('dm');
 
 
+goog.require('goog.events');
+goog.require('goog.events.EventType');
+goog.require('goog.debug.DivConsole');
+goog.require('goog.object');
 //get requirements
 goog.require('lime.Director');
 goog.require('lime.GlossyButton');
@@ -48,23 +52,6 @@ dm.curdata={
 }
 
 
-// entrypoint
-dm.start = function() {
-/*
-    //enable for non-seeded random. useful for debugging
-    var pseudoRandom = new goog.testing.PseudoRandom(109);
-    pseudoRandom.install();
-    */
-
-	var el = document.getElementById('gamearea');
-	console.log('in dm.start',el);
-	dm.director = new lime.Director(el, dm.WIDTH, dm.HEIGHT);
-	dm.director.makeMobileWebAppCapable();
-
-
-	dm.loadMenu();
-
-};
 
 /**
  * Different modes
@@ -190,5 +177,29 @@ dm.builtWithLime = function(scene) {
 	return;
 };
 
+// entrypoint
+dm.start = function() {
+	// Set up a logger to track responses
+	dm.log = goog.debug.Logger.getLogger('dm');
+	goog.debug.LogManager.getRoot().setLevel(goog.debug.Logger.Level.ALL);
+	dm.logconsole = new goog.debug.DivConsole(document.getElementById('log'));
+	dm.logconsole.setCapturing(true);
+	// A helper function to handle events.
+	dm.handler4Event = function (elementType) {
+		return function(e) {
+			dm.log.info(elementType + ' ' + e.type + '.');
+		}
+	}
+	dm.log.fine('init');
+
+
+	var el = document.getElementById('gamearea');
+	console.log('in dm.start',el);
+	dm.director = new lime.Director(el, dm.WIDTH, dm.HEIGHT);
+	dm.director.makeMobileWebAppCapable();
+
+
+	dm.loadMenu();
+};
 //this is required for outside access after code is compiled in ADVANCED_COMPILATIONS mode
 goog.exportSymbol('dm.start', dm.start);

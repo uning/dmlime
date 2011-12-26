@@ -74,6 +74,10 @@ dm.Board = function(rows,cols,game) {
 
     // register listener
     goog.events.listen(this, ['mousedown', 'touchstart'], this.pressHandler_);
+	var EVENTS = goog.object.getValues(this.EventType);
+	dm.log.fine('Listening for: ' + EVENTS.join(', ') + '.');
+
+	//register event debugger
 
     // start moving (but give some time to load) //自动触发move 操作
     lime.scheduleManager.callAfter(this.moveGems, this, 100);
@@ -162,7 +166,6 @@ dm.Board.prototype.randExtra = function(basev,randratio,baseadd,ratio) {
  * 计算分数
  */
 dm.Board.prototype.checkSolutions = function() {
-	this.lineLayer.removeAllChildren();
 	this.isMoving_ = 1;
 
     var action = new lime.animation.Spawn(
@@ -396,9 +399,14 @@ dm.Board.prototype.getSolutions = function() {
  *
  */
 dm.Board.prototype.addSelGem = function(g) {
-	var lidx = this.selectedGems.length - 1 ;
+	var lidx = this.selectedGems.length - 1 ,
+	line,linec,exist,i
+	,LWIDTH=8
+	,LCOLOR='#00FF00'
+	,pos,pos1
+	
 	if(lidx > -1){
-		var pos = this.selectedGems[lidx].getPosition()
+		pos = this.selectedGems[lidx].getPosition()
 		,pos1 = g.getPosition(),
 		len = goog.math.Coordinate.distance(pos,pos1),
 		rota = goog.math.Vec2.difference(pos1,pos),
@@ -406,16 +414,19 @@ dm.Board.prototype.addSelGem = function(g) {
 		if(rota.x < 0){
 			degree += 180;
 		}
-		for(var i=0;i<this.selectedGems.length;i++){
+		for(i=0;i<this.selectedGems.length;i++){
 			if(g == this.selectedGems[i]){
-				var exist = 1;
+				exist = 1;
 			}
 		}
 		if(exist != 1){		
-			var line = new lime.Sprite().setSize(len, 8).setFill('#295081').setAnchorPoint(0,0.5)
-			this.drawedLines[this.drawedLines.length] = line;
-			line.setPosition(pos).setRotation(degree);
+			line = new lime.Sprite().setSize(len, LWIDTH).setFill(LCOLOR).setAnchorPoint(0,0.5).setPosition(pos).setRotation(degree); //划线
+			linec = new lime.Circle().setSize(LWIDTH+1,LWIDTH+1).setFill(LCOLOR).setPosition(pos); //画线上小圆
+
+			//this.drawedLines[this.drawedLines.length] = line;
+			this.lineLayer.appendChild(linec);
 			this.lineLayer.appendChild(line);
+
 		}
 	}
     g.select();
@@ -446,8 +457,8 @@ dm.Board.prototype.cancelSelGem = function() {
 		this.game.mon.setText(this.show_dmg);
 	}
 	var cancelLine = this.selectedGems.length - 1;
-	this.lineLayer.removeChild(this.drawedLines[cancelLine]);
-	this.drawedLines.splice(cancelLine,1);
+	this.lineLayer.removeChildAt(this.lineLayer.getNumberOfChildren()-1);
+	this.lineLayer.removeChildAt(this.lineLayer.getNumberOfChildren()-1);
 }
 
 dm.Board.prototype.updateLine = function() {
@@ -625,7 +636,7 @@ dm.Board.prototype.getDamage = function(){
     for (c = 0; c < this.cols; c++) {
         for (r = 0; r < this.gems[c].length; r++) {
 			if(this.gems[c][r].type == "monster"){
-				console.log(this.gems[c][r].attack);
+			//	console.log(this.gems[c][r].attack);
 				damage += this.gems[c][r].attack;
 				}
         }
