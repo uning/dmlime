@@ -108,7 +108,12 @@ dm.Board.prototype.fillGems = function() {
             this.layers[c].appendChild(gem);
         }
     }
+	this.show_att = this.fp.a1;
 	this.show_dmg = this.getDamage();
+	if(this.game.show_create == 1){
+		this.game.mon.setText(this.show_dmg);
+		this.game.att.setText(this.show_att);
+	}
 };
 
 /**
@@ -156,7 +161,7 @@ dm.Board.prototype.moveGems = function(opt_static) {
  */
 dm.Board.prototype.randExtra = function(basev,randratio,baseadd,ratio) {
 	if(Math.random()*100 <= randratio){
-		return basev*(1+ratio/100)+baseadd;  
+		return Math.round(basev*(1+ratio/100)+baseadd);  
 	}else{
 		return basev;
 	}
@@ -186,6 +191,7 @@ dm.Board.prototype.checkSolutions = function() {
 	,defense = fp.a3
 	,exp = 0
 	,blood = 0
+	,mana = 0
 	,p_type = [];
 	
 	var indexes = 1;
@@ -212,10 +218,6 @@ dm.Board.prototype.checkSolutions = function() {
 				g.hp_left = 0;
 				//g.def_left = 0;
 				exp += this.randExtra(fp.a31,fp.a32,fp.a33,fp.a34);
-				if(exp >= 100){
-					this.game.user.lvlUp();
-					exp -= 100;
-				}
 				p_type = 'exp';
 			}else{
 				if(attack > def_real){
@@ -235,27 +237,33 @@ dm.Board.prototype.checkSolutions = function() {
 		}else if(type == 'gold'){
 			p_type = 'gold';
 			gold += this.randExtra(fp.a27,fp.a28,fp.a29,fp.a30)
-		}else if(type == 'defend'){ //以后改成魔法
-			p_type = 'def'
-			defense += this.randExtra(fp.a35,fp.a36,fp.a37,fp.a38)
+		}else if(type == 'mana'){ //以后改成魔法
+			p_type = 'mana'
+			mana += this.randExtra(fp.a35,fp.a36,fp.a37,fp.a38)
 		}
 
 	}
 	switch(p_type){
 		case 'exp':
-		this.game.data[p_type] = exp;
+		this.game.data[p_type] += exp;
+		while(this.game.data[p_type] >= 10){
+			this.game.user.lvlUp();
+			this.game.data['hp'] += 5; //每级增加血上限
+			this.game.data['mana'] += 1; //每级增加血上限
+			this.game.data[p_type] -= 10;
+		}
 		break;
 		case 'hp':
-		this.game.data[p_type] = Math.min(100, this.game.data[p_type] + blood);
+		this.game.data[p_type] = Math.min(fp.a6, this.game.data[p_type] + blood);
 		break;
 		case 'gold':
-		this.game.data[p_type] = Math.min(100, this.game.data[p_type] + gold);
+		this.game.data[p_type] = Math.min(100, this.game.data['gold'] + gold);
 		break;
-		case 'def':
-		this.game.data[p_type] = Math.min(100, this.game.data[p_type] + defense);
+		case 'mana':
+		this.game.data[p_type] = Math.min(fp.a5, this.game.data[p_type] + mana);
 		break;
 	}
-	if(p_type!=0 && p_type!='hp' && p_type!='def'){
+	if(p_type!=0 && p_type!='hp' && p_type!='mana'){
 		this.game.show_vars[p_type]._pg.setProgress(this.game.data[p_type]/100);
 		this.game.show_vars[p_type]._lct.setText(this.game.data[p_type]+'/'+100);
 	}
@@ -273,8 +281,8 @@ dm.Board.prototype.checkSolutions = function() {
 	
 //计算剩余防御和hp
 	var total_dmg = this.getDamage();
-	var reduce_dmg = this.game.data['def']*fp.a4; 
-	var hp_dmg = Math.max(0,total_dmg - reduce_dmg);
+	//var reduce_dmg = this.game.user.fp.a3*fp.a4; 
+	var hp_dmg = Math.max(0,total_dmg);// - reduce_dmg);
 	
 	/*
 	this.game.data['def'] -= reduce_dmg;
@@ -304,12 +312,12 @@ dm.Board.prototype.checkSolutions = function() {
     action.play();
 	this.isMoving_ = 0;
 	
-	this.game.show_vars['hp']._pg.setProgress(this.game.data['hp']/100);
-	this.game.show_vars['def']._pg.setProgress(this.game.data['def']/100);
-    this.game.show_vars['hp']._lct.setText(this.game.data['hp']+'/'+100);
-	this.game.show_vars['def']._lct.setText(this.game.data['def']+'/'+100);
+	this.game.show_vars['hp']._pg.setProgress(this.game.data['hp']/fp.a6);
+	this.game.show_vars['mana']._pg.setProgress(this.game.data['mana']/fp.a5);
+    this.game.show_vars['hp']._lct.setText(this.game.data['hp']+'/'+fp.a6);
+	this.game.show_vars['mana']._lct.setText(this.game.data['mana']+'/'+fp.a5);
 	
-	this.show_att = this.fp.a2;
+	//this.show_att = this.fp.a1;
 
 	return true;
 };
@@ -661,6 +669,6 @@ dm.Board.prototype.getDamage = function(){
 				}
         }
     }
-	return damage;
+	return Math.max(0,damage - this.game.user.fp.a3*this.game.user.fp.a4);
 };
 

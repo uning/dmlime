@@ -38,6 +38,7 @@ dm.User.prototype.getFP = function(name){
 	for ( i in this.equips ){
 		v = this.equips[i] && this.equips[i].sp || {}
 		for(j in v){
+			sps[j] = sps[j] || 0;
 			sps[j] += v[j];
 		}
 		v =  this.equips[i] && this.equips[i].fp && this.equips[i].fp[name] || 0;
@@ -46,6 +47,7 @@ dm.User.prototype.getFP = function(name){
 
 	//加上自身二级属性
 	for ( i in this.sp){
+		sps[i] = sps[i] || 0;
 		sps[i] += this.sp[i]
 	}
 
@@ -69,12 +71,14 @@ dm.User.prototype.getSP=function(name){
 	for ( i in this.equips ){
 		v = this.equips[i] && this.equips[i].sp || {}
 		for(j in v){
+			sps[j] = sps[j] || 0;
 			sps[j] += v[j];
 		}
 	}
 
 	//加上自身二级属性
 	for ( i in this.sp){
+		sps[i] = sps[i] || 0;
 		sps[i] += this.sp[i]
 
 	}
@@ -112,11 +116,16 @@ dm.User.prototype.equipUp=function(name){
 	this.popuFP();
 }
 
+//购买装备
+dm.User.prototype.equipBuy=function(name){
+	this.popuFP();
+}
+
 //人物升级
 dm.User.prototype.lvlUp=function(){
 	var i;
 	for(i in this.sp){
-		this.sp[i] += parseInt(dm.conf.SP[name] && dm.conf.SP[name].add) || 0;
+		this.sp[i] += parseInt(dm.conf.SP[i] && dm.conf.SP[i].add) || 0;
 	}
 	this.popuFP();
 	this.lvl += 1;

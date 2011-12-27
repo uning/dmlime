@@ -60,8 +60,8 @@ dm.Game = function(size,user){
 	this.show_vars = {
 		exp:{color:'#00ff00',txt:'经验',curdata:this.data.exp, max:100}
 		,gold:{color:'#ffff00',txt:'金币',curdata:this.data.gold, max:100}
-		,def:{color:'#0000ff',txt:'防御',curdata:this.data.def, init:1, max:100}
-		,hp:{color:'#FF0000',txt:'血量',curdata:this.data.hp,init:1, max:100}
+		,mana:{color:'#0000ff',txt:'魔法',curdata:this.data.mana, init:1, max:this.user.fp.a5}
+		,hp:{color:'#FF0000',txt:'血量',curdata:this.data.hp,init:1, max:this.user.fp.a6}
 	}
 	
 	var odd = 0;
@@ -159,13 +159,14 @@ dm.Game = function(size,user){
         setPosition(250, lh+5).setText('玩家攻击').setAnchorPoint(0, 0);
     this.appendChild(att_lbl);
 	
-	this.mon = new lime.Label().setFontColor('#000').setFontSize(24).setText('0').setPosition(360,lh -25
+	this.mon = new lime.Label().setFontColor('#000').setFontSize(24).setText(this.board.getDamage()).setPosition(360,lh -25
 	).setAnchorPoint(0, 0).setFontWeight(700);
 	
-	this.att = new lime.Label().setFontColor('#000').setFontSize(24).setText('0').setPosition(360,lh + 5).setAnchorPoint(0, 0).setFontWeight(700);
+	this.att = new lime.Label().setFontColor('#000').setFontSize(24).setText(this.user.fp.a1).setPosition(360,lh + 5).setAnchorPoint(0, 0).setFontWeight(700);
 
 	this.appendChild(this.mon);
 	this.appendChild(this.att);	
+	this.show_create = 1;
 
 	
     // update score when points have changed
@@ -284,6 +285,7 @@ dm.Game.prototype.setScore = function(p) {
 dm.Game.prototype.endGame = function() {
 
    //unregister the event listeners and schedulers
+	//
    goog.events.unlisten(this.board, ['mousedown', 'touchstart'], this.board.pressHandler_);
    lime.scheduleManager.unschedule(this.updateScore, this);
    lime.scheduleManager.unschedule(this.decreaseTime, this);
