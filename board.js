@@ -2,6 +2,7 @@ goog.provide('dm.Board');
 
 goog.require('goog.events');
 goog.require('lime.Sprite');
+goog.require('lime.Polygon');
 goog.require('lime.animation.FadeTo');
 goog.require('lime.animation.MoveTo');
 goog.require('lime.animation.ScaleTo');
@@ -155,7 +156,9 @@ dm.Board.prototype.moveGems = function(opt_static) {
  */
 dm.Board.prototype.randExtra = function(basev,randratio,baseadd,ratio) {
 	if(Math.random()*100 <= randratio){
-		return Math.floor((baseadd + basev)*(1+ratio/100));  
+		return basev*(1+ratio/100)+baseadd;  
+	}else{
+		return basev;
 	}
 	return 0;
 }
@@ -175,10 +178,12 @@ dm.Board.prototype.checkSolutions = function() {
 
 
     var s = this.selectedGems,g,type,i
-	,fp = this.game.user.fp,keep
+	,fp = this.game.user.fp
+	,sp = this.game.user.sp
+	,keep
 	,attack = fp.a1 
 	,gold = 0
-	,defense = 0
+	,defense = fp.a3
 	,exp = 0
 	,blood = 0
 	,p_type = [];
@@ -202,51 +207,43 @@ dm.Board.prototype.checkSolutions = function() {
 		type = g.type
 		s[i].keep = false;
 		if(type == 'monster'){
-			if(attack >= g.hp_left + g.def_left){
+			var def_real = Math.round(g.def_left*(1-fp.a9/100)); //实际防御值 = 防御数值 - 忽略掉的防御值
+			if(attack >= g.hp_left + def_real){
 				g.hp_left = 0;
-				g.def_left = 0;
-				exp += fp.a23;
-				if(i > 2){
-					exp += this.randExtra(fp.a24,fp.a25,fp.a26,fp.a27)
+				//g.def_left = 0;
+				exp += this.randExtra(fp.a31,fp.a32,fp.a33,fp.a34);
+				if(exp >= 100){
+					this.game.user.lvlUp();
+					exp -= 100;
 				}
 				p_type = 'exp';
-				
 			}else{
-				if(attack > g.def_left){
-					g.hp_left = g.hp_left + g.def_left - attack;
-					g.def_left = 0;
+				if(attack > def_real){
+					g.hp_left = g.hp_left + def_real - attack;
+				//	g.def_left = 0;
 				}else{
-					g.def_left -= attack;
+				//	g.def_left = def_left - Math.round(attack/(1-fp.a9/100));
 				}
 				s[i].keep = true;
 				p_type = 0;
 			}
-			g.deflabel.setText(g.def_left);
+		//	g.deflabel.setText(g.def_left);
 			g.hplabel.setText(g.hp_left);
 		}else if(type == 'blood'){
 			p_type = 'hp'; //进度条
-			blood += fp.a13;
-			if(i > 2){
-				blood += this.randExtra(fp.a14,fp.a15,fp.a16,fp.a17)
-			}	
+			blood += this.randExtra(fp.a23,fp.a24,fp.a25,fp.a26)
 		}else if(type == 'gold'){
 			p_type = 'gold';
-			gold += fp.a18;
-			if(i > 2){
-				gold += this.randExtra(fp.a19,fp.a20,fp.a21,fp.a22)
-			}
-		}else if(type == 'defend'){
+			gold += this.randExtra(fp.a27,fp.a28,fp.a29,fp.a30)
+		}else if(type == 'defend'){ //以后改成魔法
 			p_type = 'def'
-			defense += fp.a28;
-			if(i > 2){
-				defense += this.randExtra(fp.a29,fp.a30,fp.a31,fp.a32)
-			}
+			defense += this.randExtra(fp.a35,fp.a36,fp.a37,fp.a38)
 		}
 
 	}
 	switch(p_type){
 		case 'exp':
-		this.game.data[p_type] = Math.min(100, this.game.data[p_type] + exp);
+		this.game.data[p_type] = exp;
 		break;
 		case 'hp':
 		this.game.data[p_type] = Math.min(100, this.game.data[p_type] + blood);
@@ -275,15 +272,17 @@ dm.Board.prototype.checkSolutions = function() {
 	this.game.setScore(solutions.length * (solutions.length - 2));
 	
 //计算剩余防御和hp
-	var total_dmg = this.getDamage(),
-	reduce_dmg = Math.round(total_dmg/2),
-	hp_dmg = Math.max(0, total_dmg - reduce_dmg);
+	var total_dmg = this.getDamage();
+	var reduce_dmg = this.game.data['def']*fp.a4; 
+	var hp_dmg = Math.max(0,total_dmg - reduce_dmg);
 	
+	/*
 	this.game.data['def'] -= reduce_dmg;
 	if(this.game.data['def'] < 0){
 		this.game.data['hp'] -= this.game.data['def'];
 	}
 	this.game.data['def'] = Math.max(0,this.game.data['def'])
+	*/
 	this.game.data['hp'] -= hp_dmg;
 	if(this.game.data['hp'] <= 0){
 		this.game.endGame();
@@ -404,8 +403,13 @@ dm.Board.prototype.addSelGem = function(g) {
 	,LWIDTH=8
 	,LCOLOR='#00FF00'
 	,pos,pos1
+	,tw = LWIDTH*2,th = LWIDTH*2
+	,lecolor=LCOLOR
 	
+	//初始化三角形
+	this.lineEnd = this.lineEnd || new lime.Polygon().addPoints(-tw/2,-th/2, tw/2,0, -tw/2,th/2).setFill(lecolor);//.setAnchorPoint(0,0);//这是相对位置 
 	if(lidx > -1){
+		//末尾三角形
 		pos = this.selectedGems[lidx].getPosition()
 		,pos1 = g.getPosition(),
 		len = goog.math.Coordinate.distance(pos,pos1),
@@ -423,9 +427,15 @@ dm.Board.prototype.addSelGem = function(g) {
 			line = new lime.Sprite().setSize(len, LWIDTH).setFill(LCOLOR).setAnchorPoint(0,0.5).setPosition(pos).setRotation(degree); //划线
 			linec = new lime.Circle().setSize(LWIDTH+1,LWIDTH+1).setFill(LCOLOR).setPosition(pos); //画线上小圆
 
-			//this.drawedLines[this.drawedLines.length] = line;
 			this.lineLayer.appendChild(linec);
 			this.lineLayer.appendChild(line);
+
+			//*
+			this.lineLayer.removeChild(this.lineEnd);
+			this.lineEnd.setPosition(pos1);
+			this.lineEnd.setRotation(degree);
+			this.lineLayer.appendChild(this.lineEnd);
+			//*/
 
 		}
 	}
@@ -456,9 +466,20 @@ dm.Board.prototype.cancelSelGem = function() {
 		this.show_dmg += g.attack;
 		this.game.mon.setText(this.show_dmg);
 	}
-	var cancelLine = this.selectedGems.length - 1;
-	this.lineLayer.removeChildAt(this.lineLayer.getNumberOfChildren()-1);
-	this.lineLayer.removeChildAt(this.lineLayer.getNumberOfChildren()-1);
+	var rotation,lc=this.lineLayer.children_;
+	this.lineLayer.removeChildAt(lc.length-1); //箭头
+	this.lineLayer.removeChildAt(lc.length-1); //圆角
+	this.lineLayer.removeChildAt(lc.length-1); //线
+
+
+	if(this.selectedGems.length > 1){
+		this.lineEnd.setPosition(this.selectedGems[ this.selectedGems.length - 1 ].getPosition());
+		
+		rotation = lc[lc.length-1].getRotation();
+		console.log(lc[lc.length-1],rotation);
+		this.lineEnd.setRotation(rotation);//线的旋转角度
+		this.lineLayer.appendChild(this.lineEnd);
+	}
 }
 
 dm.Board.prototype.updateLine = function() {
@@ -521,7 +542,6 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		return;
 	}
 
-	console.log(this,r,c);
     var g = this.gems[c][r];
 
 

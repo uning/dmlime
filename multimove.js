@@ -5,6 +5,7 @@ goog.require('lime.animation.MoveBy');
 /**
  * Object for moving lot of elements together.
  * Done as a specific test. No real effect unless very big board (and first animation)
+ * @constructor
  */
 dm.MultiMove = function() {
     this.requests_ = {};

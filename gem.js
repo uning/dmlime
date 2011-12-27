@@ -69,7 +69,7 @@ dm.Gem.prototype.genAttribute= function(){
 	if (this.type == 'monster'){
 		//属性
 		this.attack = 1;
-		this.hp = 1;
+		this.hp = 3;
 		this.hp_left = this.hp;
 		this.def = 1;
 		this.def_left = this.def;
@@ -104,9 +104,6 @@ dm.Gem.prototype.deselect = function() {
     this.removeChild(this.highlight);
     this.selected_ = false;
 	
-	if(this.type == 'monster'){
-		
-	}
 };
 
 

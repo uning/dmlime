@@ -26,8 +26,9 @@ foreach( $files  as $f=>$v){
 
 
 
-
+	$rows = array();
 	read_csv($inf,$columns,$rows);
+
 	$out .= json_encode($rows,JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 	//$out .= json_encode($rows);
 	file_put_contents($outf,$out);

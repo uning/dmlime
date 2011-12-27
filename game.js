@@ -28,11 +28,12 @@ dm.Game = function(size,user){
 	for( i = 0 ; i < dm.GEMTYPES.length ; ++i){
 		this.data.appearNum[i] = 0;
 	}
+	this.data.hp    = this.user.fp.a6;
+	this.data.mana  = this.user.fp.a5;
+	this.data.def   = this.user.fp.a3;
 	this.data.score = 0;
-	this.data.hp    = 100;
 	this.data.lvl   = 0;
 	this.data.exp   = 0;
-	this.data.def   = 100;
 	this.data.gold   = 0;
 	
 		
@@ -224,8 +225,14 @@ dm.Game.prototype.decreaseTime = function() {
 dm.Game.prototype.updateScore = function() {
     var curscore = parseInt(this.score.getText(), 10);
     if (curscore < this.points) {
-        this.score.setText(curscore + 1);
-    }
+		this.step += 1;
+		if(this.step < 5)
+			this.score.setText(curscore + 1);
+		else{
+			this.score.setText(this.points);
+		}
+	}else
+		this.step = 0;
 };
 
 /**
