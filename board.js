@@ -246,19 +246,22 @@ dm.Board.prototype.checkSolutions = function() {
 	switch(p_type){
 		case 'exp':
 		this.game.data[p_type] += exp;
-		while(this.game.data[p_type] >= 10){
+		while(this.game.data[p_type] >= 100){
 			this.game.user.lvlUp();
-			this.game.user.equipBuy();
 			this.game.data['hp'] += 5; //每级增加血上限
 			this.game.data['mana'] += 1; //每级增加血上限
-			this.game.data[p_type] -= 10;
+			this.game.data[p_type] -= 100;
 		}
 		break;
 		case 'hp':
 		this.game.data[p_type] = Math.min(fp.a6, this.game.data[p_type] + blood);
 		break;
 		case 'gold':
-		this.game.data[p_type] = Math.min(100, this.game.data['gold'] + gold);
+		this.game.data[p_type] += gold;
+		while(this.game.data[p_type] >= 3){
+			this.game.user.enterShop();
+			this.game.data[p_type] -= 3;
+		}
 		break;
 		case 'mana':
 		this.game.data[p_type] = Math.min(fp.a5, this.game.data[p_type] + mana);
