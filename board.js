@@ -217,7 +217,7 @@ dm.Board.prototype.checkSolutions = function() {
 			if(attack >= g.hp_left + def_real){
 				g.hp_left = 0;
 				//g.def_left = 0;
-				exp += this.randExtra(fp.a31,fp.a32,fp.a33,fp.a34);
+				exp += this.randExtra(fp.a17,fp.a18,fp.a19,fp.a20);
 				p_type = 'exp';
 			}else{
 				if(attack > def_real){
@@ -233,13 +233,13 @@ dm.Board.prototype.checkSolutions = function() {
 			g.hplabel.setText(g.hp_left);
 		}else if(type == 'blood'){
 			p_type = 'hp'; //进度条
-			blood += this.randExtra(fp.a23,fp.a24,fp.a25,fp.a26)
+			blood += this.randExtra(fp.a9,fp.a10,fp.a11,fp.a12)
 		}else if(type == 'gold'){
 			p_type = 'gold';
-			gold += this.randExtra(fp.a27,fp.a28,fp.a29,fp.a30)
+			gold += this.randExtra(fp.a13,fp.a14,fp.a15,fp.a16)
 		}else if(type == 'mana'){ //以后改成魔法
 			p_type = 'mana'
-			mana += this.randExtra(fp.a35,fp.a36,fp.a37,fp.a38)
+			mana += this.randExtra(fp.a21,fp.a22,fp.a23,fp.a24)
 		}
 
 	}
@@ -248,6 +248,7 @@ dm.Board.prototype.checkSolutions = function() {
 		this.game.data[p_type] += exp;
 		while(this.game.data[p_type] >= 10){
 			this.game.user.lvlUp();
+			this.game.user.equipBuy();
 			this.game.data['hp'] += 5; //每级增加血上限
 			this.game.data['mana'] += 1; //每级增加血上限
 			this.game.data[p_type] -= 10;

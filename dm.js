@@ -35,6 +35,10 @@ goog.require('dm.User');
 
 goog.require('dm.Display');
 
+goog.require('goog.net.XhrIo');
+
+goog.require('goog.json');
+
 dm.WIDTH = 720;
 
 dm.HEIGHT = 1004;
@@ -62,14 +66,23 @@ dm.LVLCONF = [
   }
 ];
 
-dm.curdata = {
-  gold: 0,
-  defense: 0,
-  lvl: 0,
-  exp: 0,
-  hp: 100,
-  mhp: 0,
-  mdfense: 0
+dm.APIURL = 'api.php';
+dm.api = function(m, param, callback) {
+  var proc;
+  console.log(m, 'api call ', param);
+  proc = function(e) {
+    var obj, xhr;
+    xhr = e.target;
+    obj = xhr.getResponseJson();
+    console.log(m, 'api response', obj);
+    return callback && callback(obj);
+  };
+  return goog.net.XhrIo.send(dm.APIURL + '?m=' + m, proc, 'POST', goog.json.serialize({
+    m: m,
+    p: param
+  }), {
+    'Content-Type': 'application/json;charset=utf-8'
+  });
 };
 
 dm.loadMenu = function() {
@@ -150,7 +163,7 @@ dm.start = function() {
   }));
   el = document.getElementById('gamearea');
   el || (el = document.body);
-  logdiv.innerHTML = "<div id='clearlog' style='border: 1px solid #cccccc;'>		                 <a href='javascript:void dm.logconsole.clear()'>Clear Log</a>					 </div>	                 <div id='log-div' style='top: 40px;border: 1px solid #cccccc;'>					 </div>";
+  logdiv.innerHTML = "	                 <div id='clearlog' style='border: 1px solid #cccccc;'>\n		                 <a href='javascript:void dm.logconsole.clear()'>Clear Log</a>\n</div>\n	                 <div id='log-div' style='top: 40px;border: 1px solid #cccccc;'></div>";
   goog.dom.appendChild(el, logdiv);
   dm.logconsole = new goog.debug.DivConsole(document.getElementById('log-div'));
   dm.logconsole.setCapturing(true);

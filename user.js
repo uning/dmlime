@@ -1,6 +1,7 @@
 goog.provide('dm.User');
 goog.require('dm.conf.FP');
 goog.require('dm.conf.SP');
+goog.require('dm.conf.EP');
 
 
 
@@ -12,7 +13,7 @@ dm.User = function(uid){
   //从服务器获取自身信息
   this.lvl = 0;
   this.skills = {};
-  this.equips ={};
+  this.equips ={};//0:head,1:body,2:cape,3:jewel,4:武器
   this.id = uid;
   this.sp = {};
   this.fp = {};//计算结果
@@ -113,11 +114,44 @@ dm.User.prototype.skillUp=function(name){
 
 //升级装备
 dm.User.prototype.equipUp=function(name){
+
 	this.popuFP();
 }
 
 //购买装备
 dm.User.prototype.equipBuy=function(name){
+	var rand = Math.round(Math.random()*6);
+	switch(rand){
+		case 0:
+			//head
+			this.equips[0] = dm.conf.EP['head_'+this.lvl] || {};
+			break;
+		case 1:
+			//body
+			this.equips[1] = dm.conf.EP['body_'+this.lvl] || {};
+			break;
+		case 2:
+			//cape
+			this.equips[2] = dm.conf.EP['cape_'+this.lvl] || {};
+			break;
+		case 3:
+			//jewel
+			this.equips[3] = dm.conf.EP['jew_'+this.lvl] || {};
+			break;
+		default:
+			//arm
+			this.equips[4] = dm.conf.EP['arm_'+this.lvl] || {};
+			break;
+	}
+	//处理属性
+
+	/*
+	if(rand < 4){
+		this.equip[rand]
+	}else{
+		this.equip[4]
+	}
+	*/
 	this.popuFP();
 }
 
@@ -130,3 +164,5 @@ dm.User.prototype.lvlUp=function(){
 	this.popuFP();
 	this.lvl += 1;
 }
+
+//装备属性
