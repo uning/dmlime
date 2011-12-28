@@ -14,7 +14,10 @@ dm.User = function(uid){
   this.lvl = 0;
   this.skills = {};
   this.equips ={};//0:head,1:body,2:cape,3:jewel,4:武器
+  this.eqp_att = {};//存装备的附加属性
   this.id = uid;
+  this.attr_arm = dm.conf.EP.attack.attr;
+  this.attr_def = dm.conf.EP.defense.attr;
   this.sp = {};
   this.fp = {};//计算结果
   this.popuFP();
@@ -42,7 +45,7 @@ dm.User.prototype.getFP = function(name){
 			sps[j] = sps[j] || 0;
 			sps[j] += v[j];
 		}
-		v =  this.equips[i] && this.equips[i].fp && this.equips[i].fp[name] || 0;
+		v = parseInt(this.equips[i] && this.equips[i].fp && this.equips[i].fp[name]) || 0;
 		ret += v;
 	}
 
@@ -112,48 +115,71 @@ dm.User.prototype.skillUp=function(name){
 
 }
 
-//升级装备
-dm.User.prototype.equipUp=function(name){
-
-	this.popuFP();
+/**
+ *当用户集齐100个金币的时候，可以进入商店
+ *    商店中随机选择3个部位，可以对该部位装备进行升级或者更新。
+ *    升级可以升级装备主属性或者附加属性。
+ *    选择更新，则会随机替换一个附加属性(变成初级附加属性)。
+ */
+dm.User.prototype.enterShop=function(){
+	var i,eqps;
+	var rand = Math.round(Math.random()*4);
+	this.upgrade(rand,0);
 }
 
-//购买装备
-dm.User.prototype.equipBuy=function(name){
-	var rand = Math.round(Math.random()*6);
-	switch(rand){
+
+//升级属性：选择升级主属性或者附加属性
+//eqpid:
+//      0 head, 1 body, 2 cape, 3 jew, 4 arm
+dm.User.prototype.upgrade=function(eqpid, type){ //type = 0:主属性,type = 1:附加属性1, =2:附加属性2
+	equiplvl = parseInt(this.equips[eqpid] && this.equips[eqpid].lvlneed || 0) +1;
+	if(!type){//升级主属性
+	switch(eqpid){
 		case 0:
 			//head
-			this.equips[0] = dm.conf.EP['head_'+this.lvl] || {};
+			this.equips[0] = dm.conf.EP['head_'+equiplvl] || {};
 			break;
 		case 1:
 			//body
-			this.equips[1] = dm.conf.EP['body_'+this.lvl] || {};
+			this.equips[1] = dm.conf.EP['body_'+equiplvl] || {};
 			break;
 		case 2:
 			//cape
-			this.equips[2] = dm.conf.EP['cape_'+this.lvl] || {};
+			this.equips[2] = dm.conf.EP['cape_'+equiplvl] || {};
 			break;
 		case 3:
 			//jewel
-			this.equips[3] = dm.conf.EP['jew_'+this.lvl] || {};
+			this.equips[3] = dm.conf.EP['jew_'+equiplvl] || {};
 			break;
 		default:
 			//arm
-			this.equips[4] = dm.conf.EP['arm_'+this.lvl] || {};
+			this.equips[4] = dm.conf.EP['arm_'+equiplvl] || {};
 			break;
 	}
-	//处理属性
-
-	/*
-	if(rand < 4){
-		this.equip[rand]
 	}else{
-		this.equip[4]
+		type = type -1;
+		//升级附加属性
 	}
-	*/
 	this.popuFP();
 }
+
+/*
+ * 刷新装备，随机属性会改变
+ *
+ */
+dm.User.prototype.refresh=function(eqpid){
+	if(this.eqp_att[eqpid].length < 2){
+		//生成新属性
+	}else{ //随机升级一个属性
+	}
+	this.popuFP();
+}
+
+//生成的随机属性加入到装备中去，得以保存
+dm.User.prototype.addatt=function(id){
+
+}
+
 
 //人物升级
 dm.User.prototype.lvlUp=function(){
