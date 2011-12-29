@@ -18,6 +18,7 @@ goog.require('lime.animation.Loop');
 dm.Game = function(size,user){
 
 	this.user = user || new dm.User(1);
+	this.user.game = this;
 	size  = size ||  6;
 
 	var i ,p,j,plen

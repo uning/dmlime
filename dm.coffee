@@ -20,6 +20,7 @@ goog.require 'dm.Display'
 
 goog.require 'goog.net.XhrIo'
 goog.require 'goog.json'
+goog.require 'dm.Log'
 
 
 #constant iPad size
@@ -67,13 +68,14 @@ dm.loadMenu =  ->
 	layer.appendChild btns
 	move = new lime.animation.MoveBy(-dm.WIDTH, 0).enableOptimizations()
 	btn = dm.makeButton('开始').setPosition 0, 200
-	goog.events.listen btn, 'click',
+	goog.events.listen btn, ['click','touchstart'],
 		->
 			console.log 'game start' 
 			btns.runAction move
 
 	btns.appendChild btn
 	#second area that will slide in
+	
 	btns2 = new lime.Layer 
 	btns2.setPosition dm.WIDTH, 0
 
@@ -135,44 +137,49 @@ dm.builtWithLime = (scene) ->
 # entrypoint
 dm.start = ->
 	# Set up a logger to track responses
-	dm.log = goog.debug.Logger.getLogger 'dm'
-	goog.debug.LogManager.getRoot().setLevel goog.debug.Logger.Level.ALL
-
-	logdiv = document.getElementById 'log-wrapper'
-	logdiv or= goog.dom.createDom 'div',{
-		style:'
-						 position: absolute;
-						 top: 40px;
-						 width: 30%;
-						 right: 0%;
-						 height: 100%;
-						 overflow: auto;
-						 border: 1px solid #cccccc;',
-		id:'log-wrapper'
-	}
 	el = document.getElementById 'gamearea'
 	el or= document.body
+	dm.log = goog.debug.Logger.getLogger 'dm'
 
-	logdiv.innerHTML="""
-	                 <div id='clearlog' style='border: 1px solid #cccccc;'>
-		                 <a href='javascript:void dm.logconsole.clear()'>Clear Log</a>
-					 </div>
-	                 <div id='log-div' style='top: 40px;border: 1px solid #cccccc;'></div>
+	logdiv = document.getElementById 'log-wrapper'
+	if not logdiv
+		logdiv = goog.dom.createDom 'div',{style:'
+						 position: absolute;
+						 width: 20%;
+						 right: 0%;
+						 height: 100%;
+						 top: 40px;
+						 overflow: auto;
+						 border: 1px solid #cccccc;',id:'log-wrapper'}
+		logdiv.innerHTML="""
+					 <button id='log-clear-btn' class='lime-button'
+					 style='width: 100%; height: 50px;  display: block;'
+					 onclick="dm.Log.clear()">Clear</button>
+						 <div id='log-div' style='border: 1px solid #cccccc; overflow: auto;'></div>
 					 """
-	goog.dom.appendChild el,logdiv
+		goog.dom.appendChild el,logdiv
+		goog.events.listen document.getElementById('log-clear-btn'), ['click','touchstart'],dm.Log.clear
+		
+
+
+	
 
 
 
 
 
 
-
+	###
+	goog.debug.LogManager.getRoot().setLevel goog.debug.Logger.Level.ALL
 	dm.logconsole = new goog.debug.DivConsole document.getElementById 'log-div'
 	dm.logconsole.setCapturing true
 	# A helper function to handle events.
 	dm.handler4Event = (elementType)->
 		(e) ->
 			dm.log.info elementType + ' ' + e.type + '.'
+	###
+	dm.Log.init document.getElementById('log-div','fine')
+	dm.log = dm.Log
 
 
 	dm.log.fine 'init'

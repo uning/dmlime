@@ -39,13 +39,15 @@ goog.require('goog.net.XhrIo');
 
 goog.require('goog.json');
 
+goog.require('dm.Log');
+
 dm.WIDTH = 720;
 
 dm.HEIGHT = 1004;
 
 dm.BOARDSIZE = 690;
 
-dm.GEMTYPES = ['monster', 'blood', 'defend', 'sword', 'gold'];
+dm.GEMTYPES = ['monster', 'blood', 'mana', 'sword', 'gold'];
 
 dm.LVLCONF = [
   {
@@ -67,6 +69,7 @@ dm.LVLCONF = [
 ];
 
 dm.APIURL = 'api.php';
+
 dm.api = function(m, param, callback) {
   var proc;
   console.log(m, 'api call ', param);
@@ -147,31 +150,37 @@ dm.builtWithLime = function(scene) {};
 
 dm.start = function() {
   var el, logdiv;
-  dm.log = goog.debug.Logger.getLogger('dm');
-  goog.debug.LogManager.getRoot().setLevel(goog.debug.Logger.Level.ALL);
-  logdiv = document.getElementById('log-wrapper');
-  logdiv || (logdiv = goog.dom.createDom('div', {
-    style: '\
-						 position: absolute;\
-						 top: 40px;\
-						 width: 30%;\
-						 right: 0%;\
-						 height: 100%;\
-						 overflow: auto;\
-						 border: 1px solid #cccccc;',
-    id: 'log-wrapper'
-  }));
   el = document.getElementById('gamearea');
   el || (el = document.body);
-  logdiv.innerHTML = "	                 <div id='clearlog' style='border: 1px solid #cccccc;'>\n		                 <a href='javascript:void dm.logconsole.clear()'>Clear Log</a>\n</div>\n	                 <div id='log-div' style='top: 40px;border: 1px solid #cccccc;'></div>";
-  goog.dom.appendChild(el, logdiv);
-  dm.logconsole = new goog.debug.DivConsole(document.getElementById('log-div'));
-  dm.logconsole.setCapturing(true);
-  dm.handler4Event = function(elementType) {
-    return function(e) {
-      return dm.log.info(elementType + ' ' + e.type + '.');
-    };
-  };
+  dm.log = goog.debug.Logger.getLogger('dm');
+  logdiv = document.getElementById('log-wrapper');
+  if (!logdiv) {
+    logdiv = goog.dom.createDom('div', {
+      style: '\
+						 position: absolute;\
+						 width: 20%;\
+						 right: 0%;\
+						 height: 100%;\
+						 top: 40px;\
+						 overflow: auto;\
+						 border: 1px solid #cccccc;',
+      id: 'log-wrapper'
+    });
+    logdiv.innerHTML = "<button id='log-clear-btn' class='lime-button'\nstyle='width: 100%; height: 50px;  display: block;'\nonclick=\"dm.Log.clear()\">Clear</button>\n						 <div id='log-div' style='border: 1px solid #cccccc; overflow: auto;'></div>";
+    goog.dom.appendChild(el, logdiv);
+    goog.events.listen(document.getElementById('log-clear-btn'), ['click', 'touchstart'], dm.Log.clear);
+  }
+  /*
+  	goog.debug.LogManager.getRoot().setLevel goog.debug.Logger.Level.ALL
+  	dm.logconsole = new goog.debug.DivConsole document.getElementById 'log-div'
+  	dm.logconsole.setCapturing true
+  	# A helper function to handle events.
+  	dm.handler4Event = (elementType)->
+  		(e) ->
+  			dm.log.info elementType + ' ' + e.type + '.'
+  */
+  dm.Log.init(document.getElementById('log-div', 'fine'));
+  dm.log = dm.Log;
   dm.log.fine('init');
   console.log('in dm.start', el);
   dm.director = new lime.Director(el, dm.WIDTH, dm.HEIGHT);

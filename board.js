@@ -9,6 +9,7 @@ goog.require('lime.animation.ScaleTo');
 goog.require('lime.animation.Spawn');
 goog.require('dm.Gem');
 goog.require('dm.MultiMove');
+goog.require('dm.Log');
 
 
 
@@ -22,6 +23,7 @@ goog.require('dm.MultiMove');
  */
 dm.Board = function(rows,cols,game) {
     lime.Sprite.call(this);
+	//this.setRenderer(lime.Renderer.CANVAS);
 
     this.game = game ;
 
@@ -74,7 +76,7 @@ dm.Board = function(rows,cols,game) {
     this.fillGems();
 
     // register listener
-    goog.events.listen(this, ['mousedown', 'touchstart'], this.pressHandler_);
+    goog.events.listen(this, ['mousedown', 'touchstart','gesturestart'], this.pressHandler_);
 	var EVENTS = goog.object.getValues(this.EventType);
 	dm.log.fine('Listening for: ' + EVENTS.join(', ') + '.');
 
@@ -229,7 +231,6 @@ dm.Board.prototype.checkSolutions = function() {
 				s[i].keep = true;
 				p_type = 0;
 			}
-		//	g.deflabel.setText(g.def_left);
 			g.hplabel.setText(g.hp_left);
 		}else if(type == 'blood'){
 			p_type = 'hp'; //进度条
@@ -246,11 +247,11 @@ dm.Board.prototype.checkSolutions = function() {
 	switch(p_type){
 		case 'exp':
 		this.game.data[p_type] += exp;
-		while(this.game.data[p_type] >= 100){
+		while(this.game.data[p_type] >= 3){
 			this.game.user.lvlUp();
 			this.game.data['hp'] += 5; //每级增加血上限
 			this.game.data['mana'] += 1; //每级增加血上限
-			this.game.data[p_type] -= 100;
+			this.game.data[p_type] -= 3;
 		}
 		break;
 		case 'hp':
@@ -259,11 +260,13 @@ dm.Board.prototype.checkSolutions = function() {
 		case 'gold':
 		this.game.data[p_type] += gold;
 		while(this.game.data[p_type] >= 3){
-			this.game.user.enterShop();
+			//this.game.user.enterShop();
 			this.game.data[p_type] -= 3;
 		}
 		break;
 		case 'mana':
+			//del
+		//	this.game.user.enterShop();
 		this.game.data[p_type] = Math.min(fp.a5, this.game.data[p_type] + mana);
 		break;
 	}
@@ -272,29 +275,21 @@ dm.Board.prototype.checkSolutions = function() {
 		this.game.show_vars[p_type]._lct.setText(this.game.data[p_type]+'/'+100);
 	}
 	
-	var solutions = s;
-    for(i = 0; i < solutions.length; i++){
-		if(solutions[i].keep == false){
+    for(i = 0; i < s.length; i++){
+		if(s[i].keep == false){
         //action.addTarget(solutions[i]);
         // remove form array but not yet form display list
-			goog.array.remove(this.gems[solutions[i].c], solutions[i]);
+			goog.array.remove(this.gems[s[i].c], s[i]);
 		}
     }
 
-	this.game.setScore(solutions.length * (solutions.length - 2));
+	this.game.setScore(s.length * (s.length - 2));
 	
 //计算剩余防御和hp
 	var total_dmg = this.getDamage();
 	//var reduce_dmg = this.game.user.fp.a3*fp.a4; 
 	var hp_dmg = Math.max(0,total_dmg);// - reduce_dmg);
 	
-	/*
-	this.game.data['def'] -= reduce_dmg;
-	if(this.game.data['def'] < 0){
-		this.game.data['hp'] -= this.game.data['def'];
-	}
-	this.game.data['def'] = Math.max(0,this.game.data['def'])
-	*/
 	this.game.data['hp'] -= hp_dmg;
 	if(this.game.data['hp'] <= 0){
 		this.game.endGame();
@@ -302,7 +297,7 @@ dm.Board.prototype.checkSolutions = function() {
     //
 	goog.events.listen(action, lime.animation.Event.STOP, function() {
         //remove objects after they have faded
-        goog.array.forEach(solutions, function(g) {
+        goog.array.forEach(s, function(g) {
             if(g.keep == false)
 				g.parent_.removeChild(g);
         },this);
@@ -402,6 +397,7 @@ dm.Board.prototype.getSolutions = function() {
 };
 
 
+
 /**
  * 选中一个gem
  * 划线
@@ -409,79 +405,86 @@ dm.Board.prototype.getSolutions = function() {
  *
  *
  */
-dm.Board.prototype.addSelGem = function(g) {
+dm.Board.prototype.addSelGem = function(g,trypos) {
 	var lidx = this.selectedGems.length - 1 ,
 	line,linec,exist,i
 	,LWIDTH=8
-	,LCOLOR='#00FF00'
+	,LCOLOR= trypos && '#FF0000' || '#00FF00'
 	,pos,pos1
 	,tw = LWIDTH*2,th = LWIDTH*2
 	,lecolor=LCOLOR
-	
+
+	 
 	//初始化三角形
 	this.lineEnd = this.lineEnd || new lime.Polygon().addPoints(-tw/2,-th/2, tw/2,0, -tw/2,th/2).setFill(lecolor);//.setAnchorPoint(0,0);//这是相对位置 
+	this.lineEnd.setFill(lecolor);
+	
 	if(lidx > -1){
 		//末尾三角形
 		pos = this.selectedGems[lidx].getPosition()
-		,pos1 = g.getPosition(),
+		,pos1 = g&& g.getPosition() || trypos,
 		len = goog.math.Coordinate.distance(pos,pos1),
 		rota = goog.math.Vec2.difference(pos1,pos),
 		degree = Math.atan(-rota.y/rota.x)*180/Math.PI;//+270;
 		if(rota.x < 0){
 			degree += 180;
 		}
-		for(i=0;i<this.selectedGems.length;i++){
-			if(g == this.selectedGems[i]){
-				exist = 1;
-			}
+		line = new lime.Sprite().setSize(len, LWIDTH).setFill(LCOLOR).setAnchorPoint(0,0.5).setPosition(pos).setRotation(degree); //划线
+		linec = new lime.Circle().setSize(LWIDTH,LWIDTH).setFill(LCOLOR).setPosition(pos); //画线上小圆
+		if(this.trypos){
+			this.lineLayer.removeChildAt(this.lineLayer.children_.length - 2);
+			this.lineLayer.removeChildAt(this.lineLayer.children_.length - 2);
+			this.trypos = false;
 		}
-		if(exist != 1){		
-			line = new lime.Sprite().setSize(len, LWIDTH).setFill(LCOLOR).setAnchorPoint(0,0.5).setPosition(pos).setRotation(degree); //划线
-			linec = new lime.Circle().setSize(LWIDTH+1,LWIDTH+1).setFill(LCOLOR).setPosition(pos); //画线上小圆
 
-			this.lineLayer.appendChild(linec);
-			this.lineLayer.appendChild(line);
+		this.lineLayer.appendChild(linec);
+		this.lineLayer.appendChild(line);
 
-			//*
-			this.lineLayer.removeChild(this.lineEnd);
-			this.lineEnd.setPosition(pos1);
-			this.lineEnd.setRotation(degree);
-			this.lineLayer.appendChild(this.lineEnd);
-			//*/
+		//*
+		this.lineLayer.removeChild(this.lineEnd);
+		this.lineEnd.setPosition(pos1);
+		this.lineEnd.setRotation(degree);
+		this.lineLayer.appendChild(this.lineEnd);
+		//*/
+		this.trypos = trypos || false;
 
+	}
+	if(g){
+		g.select();
+		//实时计算伤害：
+		if(g.type == 'sword'){
+			this.show_att += this.fp.a2;
+			//显示
+			this.game.att.setText(this.show_att);
 		}
+		this.selectedGems.push(g);
 	}
-    g.select();
-	//实时计算伤害：
-	if(g.type == 'sword'){
-		this.show_att += this.fp.a2;
-		//显示
-		this.game.att.setText(this.show_att);
-	}
-	this.selectedGems.push(g);
 }
 
 /**
  * 取消选择
  *
  */
-dm.Board.prototype.cancelSelGem = function() {
-	g = this.selectedGems.pop();
-	g.deselect();
-	if(g.type == 'sword'){
-		this.show_att -= this.fp.a2;
-		this.game.att.setText(this.show_att);
-
-	}
-	if(g.type == 'monster'){
-		g.unsetSpecial();
-		this.show_dmg += g.attack;
-		this.game.mon.setText(this.show_dmg);
-	}
+dm.Board.prototype.cancelSelGem = function(selid){
 	var rotation,lc=this.lineLayer.children_;
 	this.lineLayer.removeChildAt(lc.length-1); //箭头
-	this.lineLayer.removeChildAt(lc.length-1); //圆角
-	this.lineLayer.removeChildAt(lc.length-1); //线
+	while(this.selectedGems.length > selid + 1){
+		g = this.selectedGems.pop();
+		g.deselect();
+
+		if(g.type == 'sword'){
+			this.show_att -= this.fp.a2;
+			this.game.att.setText(this.show_att);
+
+		}
+		if(g.type == 'monster'){
+			g.unsetSpecial();
+			this.show_dmg += g.attack;
+			this.game.mon.setText(this.show_dmg);
+		}
+		this.lineLayer.removeChildAt(lc.length-1); //圆角
+		this.lineLayer.removeChildAt(lc.length-1); //线
+	}
 
 
 	if(this.selectedGems.length > 1){
@@ -506,15 +509,15 @@ dm.Board.prototype.updateLine = function() {
 dm.Board.prototype.pressHandler_ = function(e) {
     // no touching allowed when still moving
     if (this.isMoving_) return;
-	if((e.type =='mousemove' || e.type == 'touchmove')){
+	if((e.type =='mousemove' || e.type == 'touchmove' || e.type == 'gesturechange')){
 		if(! this.doing_ )
 			return;
 
 	}
 	this.selectedGems = this.selectedGems || [];
-	this.checkLine(this.selectedGems);
 	//结束
-	if(e.type == 'mouseup'  || e.type == 'touchend' || e.type == 'touchcancel'){
+	if(e.type == 'mouseup'  || e.type == 'touchend' || e.type == 'touchcancel' || e.type == 'gestureend'){
+		dm.log.fine('pressHandler_: end ,event '+e.type);
 		this.doing_ = false;
 		for( i = 0 ;i < this.selectedGems.length ; i ++){
 			this.selectedGems[i].deselect();
@@ -525,15 +528,17 @@ dm.Board.prototype.pressHandler_ = function(e) {
 			}
 		}
 
-		this.lineLayer.removeAllChildren();//消除线
 		if(this.selectedGems.length > 2){//消除
 				this.checkSolutions();
 		}
 		this.selectedGems = [];
 		this.drawedLines = [];
+		this.lineLayer.removeAllChildren();//消除线
+		this.checkLine(this.selectedGems);
 		return;
 	}
 
+	this.checkLine(this.selectedGems);
 
     var pos = e.position;
     // get the cell and row value for the touch
@@ -547,10 +552,12 @@ dm.Board.prototype.pressHandler_ = function(e) {
 
 
 	if(c >= this.cols || c < 0 || r < 0 || r >= this.rows ){
+		dm.log.fine('pressHandler_: outboard return '+e.type);
 		return;
 	}
 	if(x_valid < valid_min || x_valid > valid_max || y_valid < valid_min || y_valid > valid_max){
-		this.touchPos = pos //记录try pos
+		this.touchPos = pos 
+		dm.log.fine('pressHandler_: not on gem '+e.type);
 		return;
 	}
 
@@ -578,10 +585,8 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	if((e.type =='mousemove' || e.type == 'touchmove')){
 		if(selid > -1){
 			//if(selid == this.selectedGems.length - 2 ){//取消最近一条线
-			while(this.selectedGems.length > selid +1){
-				this.cancelSelGem();
+				this.cancelSelGem(selid);
 				return;
-			}
 
 		}
 
@@ -589,34 +594,24 @@ dm.Board.prototype.pressHandler_ = function(e) {
 
 	
     // flick from one cell to another is also supported
-    if (e.type == 'mousedown' || e.type == 'touchstart') {
+    if (e.type == 'mousedown' || e.type == 'touchstart' || e.type =='gesturestart') {
 		for( i = 0 ;i < this.selectedGems.length ; i ++){
 			this.selectedGems[i].deselect();
 		}
 		this.doing_ = true;
 		this.selectedGems = [];
-		this.drawedLines = [];
-        e.swallow(['mouseup','mousemove','touchmove', 'touchend','touchcancel'], dm.Board.prototype.pressHandler_);
+		this.lineLayer.removeAllChildren();
+		dm.log.fine('pressHandler_ start:'+e.type);
+        e.swallow(['mouseup','mousemove','touchmove', 'touchend','touchcancel','gestureend','gesturechange'], dm.Board.prototype.pressHandler_);
     }
 
 	
 	//如果不相邻
 	if(lastg && !lastg.canConnect(g)){
+		this.addSelGem(null,e.position);//记录try pos
 		return;
 	}
 	this.addSelGem(g);	
-	/*
-    g.select();
-	
-	//实时计算伤害：
-	if(g.type == 'sword'){
-		this.show_att += this.fp.a2;
-		//显示
-		this.game.att.setText(this.show_att);
-	}
-	this.selectedGems.push(g);
-	this.updateLine();
-	*/
 };
 
 
