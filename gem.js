@@ -56,7 +56,6 @@ dm.Gem.random = function(x, y) {
 	gem.label.setText(gem.type);
 	gem.setSize(x,y);
 	//生成属性
-	gem.genAttribute();
     gem.circle.setFill('assets/ball_' + id + '.png');
 
     return gem;
@@ -65,14 +64,15 @@ dm.Gem.random = function(x, y) {
 /**
  * 产生特殊属性，如怪物技能等
  */
-dm.Gem.prototype.genAttribute= function(){
+dm.Gem.prototype.genAttribute= function(turn){
 	if (this.type == 'monster'){
 		//属性
-		this.attack = 1;
-		this.hp = 3;
-		this.hp_left = this.hp;
-		this.def = 1;
+		
+		this.attack = Math.floor(turn/50)+1;
+		this.hp = Math.floor(turn/40)+3;
+		this.def = Math.floor(turn/50)+1;
 		this.def_left = this.def;
+		this.hp_left = this.hp;
 		//标签
 		var size = this.getSize(), h=size.height, w=size.width;
 		this.attlabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.attack);

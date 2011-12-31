@@ -7,7 +7,7 @@ goog.provide('dm.conf.SP');
             "a17": "0.2"
         },
         "def": "0",
-        "add": "1",
+        "inc": "1",
         "name": "力量",
         "desc": "每点增加1基础攻击力,0.2%双倍伤害暴击几率"
     },
@@ -18,7 +18,7 @@ goog.provide('dm.conf.SP');
             "a18": "0.2"
         },
         "def": "0",
-        "add": "1",
+        "inc": "1",
         "name": "灵巧",
         "desc": "每点增加1防御力,0.2%闪避攻击几率"
     },
@@ -29,7 +29,7 @@ goog.provide('dm.conf.SP');
             "a5": "1"
         },
         "def": "0",
-        "add": "1",
+        "inc": "1",
         "name": "耐力",
         "desc": "每点增加5HP,1MP"
     },
@@ -46,7 +46,7 @@ goog.provide('dm.conf.SP');
             "a38": "5"
         },
         "def": "0",
-        "add": "1",
+        "inc": "1",
         "name": "幸运",
         "desc": "血魔钱经验:增加1%暴击几率,5%增加比例"
     }

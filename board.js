@@ -102,6 +102,7 @@ dm.Board.prototype.fillGems = function() {
         for (r = this.gems[c].length; r < this.rows; r++) {
             i++;
             var gem = dm.Gem.random(this.GAP, this.GAP);
+			gem.genAttribute(this.game.data.turn);
             gem.r = r;
             gem.c = c;
             gem.setPosition((c + .5) * this.GAP, (-i + .5) * this.GAP);
@@ -176,6 +177,7 @@ dm.Board.prototype.randExtra = function(basev,randratio,baseadd,ratio) {
  * 计算分数
  */
 dm.Board.prototype.checkSolutions = function() {
+	
 	this.isMoving_ = 1;
 
     var action = new lime.animation.Spawn(
@@ -194,7 +196,8 @@ dm.Board.prototype.checkSolutions = function() {
 	,exp = 0
 	,blood = 0
 	,mana = 0
-	,p_type = [];
+	,p_type = []
+	,ispoping = 0;
 	
 	var indexes = 1;
 
@@ -247,11 +250,12 @@ dm.Board.prototype.checkSolutions = function() {
 	switch(p_type){
 		case 'exp':
 		this.game.data[p_type] += exp;
-		while(this.game.data[p_type] >= 3){
-			this.game.user.lvlUp();
+		while(this.game.data[p_type] >= 100){
+			this.popWindow('lvl Up');
+			ispoping = 1;
 			this.game.data['hp'] += 5; //每级增加血上限
 			this.game.data['mana'] += 1; //每级增加血上限
-			this.game.data[p_type] -= 3;
+			this.game.data[p_type] -= 100;
 		}
 		break;
 		case 'hp':
@@ -259,9 +263,10 @@ dm.Board.prototype.checkSolutions = function() {
 		break;
 		case 'gold':
 		this.game.data[p_type] += gold;
-		while(this.game.data[p_type] >= 3){
-			//this.game.user.enterShop();
-			this.game.data[p_type] -= 3;
+		while(this.game.data[p_type] >= 100){
+			this.popWindow('Shop');
+			ispoping = 1;
+			this.game.data[p_type] -= 100;
 		}
 		break;
 		case 'mana':
@@ -311,10 +316,12 @@ dm.Board.prototype.checkSolutions = function() {
     action.play();
 	this.isMoving_ = 0;
 	
-	this.game.show_vars['hp']._pg.setProgress(this.game.data['hp']/fp.a6);
-	this.game.show_vars['mana']._pg.setProgress(this.game.data['mana']/fp.a5);
-    this.game.show_vars['hp']._lct.setText(this.game.data['hp']+'/'+fp.a6);
-	this.game.show_vars['mana']._lct.setText(this.game.data['mana']+'/'+fp.a5);
+	if(!ispoping){
+		this.game.show_vars['hp']._pg.setProgress(this.game.data['hp']/fp.a6);
+		this.game.show_vars['mana']._pg.setProgress(this.game.data['mana']/fp.a5);
+		this.game.show_vars['hp']._lct.setText(this.game.data['hp']+'/'+fp.a6);
+		this.game.show_vars['mana']._lct.setText(this.game.data['mana']+'/'+fp.a5);
+	}
 	
 	//this.show_att = this.fp.a1;
 
@@ -614,8 +621,6 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	this.addSelGem(g);	
 };
 
-
-
 /**
  * Swap two object in bubbles array
  * @param {dm.Gem} g1 First.
@@ -671,3 +676,83 @@ dm.Board.prototype.getDamage = function(){
 	return Math.max(0,damage - this.game.user.fp.a3*this.game.user.fp.a4);
 };
 
+/*
+ *
+ * 弹窗口
+ *
+ */
+ dm.Board.prototype.popWindow = function(text){
+	
+	 goog.events.unlisten(this, ['mousedown', 'touchstart'], this.pressHandler_);
+	 var board,game,btn,btn2,rand;
+	 this.popdialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(690, 690).setPosition(690/2,690/2).
+		 setAnchorPoint(.5, .5).setRadius(20);
+	 this.appendChild(this.popdialog);
+	 switch(text){
+		 case 'lvl Up':
+			 btn = new dm.Button().setText(text).setSize(200, 100);
+			 this.popdialog.appendChild(btn);
+			 goog.events.listen(btn, lime.Button.Event.CLICK, function() {
+				 board = this.getParent().getParent();
+				 game = board.game
+				 game.user.lvlUp();
+
+				 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+				 board.show_att = board.getBaseAttack();
+				 board.show_dmg = board.getDamage();
+				 game.att.setText(board.show_att);
+				 game.mon.setText(board.show_dmg);
+				 game.show_vars['hp']._pg.setProgress(game.data['hp']/game.user.fp.a6);
+				 game.show_vars['mana']._pg.setProgress(game.data['mana']/game.user.fp.a5);
+				 game.show_vars['hp']._lct.setText(game.data['hp']+'/'+game.user.fp.a6);
+				 game.show_vars['mana']._lct.setText(game.data['mana']+'/'+game.user.fp.a5);
+				 board.removeChild(this.getParent());
+				 delete this.getParent();  
+			 });
+		 break;
+		 case 'Shop':
+			 rand = Math.round(Math.random()*5);
+			 if(rand > 4)
+				rand = 4;
+			 btn = new dm.Button().setText('Buy').setSize(200, 100).setPosition(0,-100);
+			 this.popdialog.appendChild(btn);
+			 goog.events.listen(btn, lime.Button.Event.CLICK, function() {
+				 board = this.getParent().getParent();
+				 board.game.user.upgrade(rand,0);
+			 });
+			 btn2 = new dm.Button().setText('refresh').setSize(200, 100).setPosition(0,100);
+			 this.popdialog.appendChild(btn2);
+			 goog.events.listen(btn2, lime.Button.Event.CLICK, function() {
+				 board = this.getParent().getParent();
+				 board.game.user.refresh(rand);
+			 });
+		 break;
+	 }
+
+	 
+/*
+	 btn = new dm.Button().setText(text).setSize(200, 100);
+	 this.popdialog.appendChild(btn);
+	 goog.events.listen(btn, lime.Button.Event.CLICK, function() {
+		 board = this.getParent().getParent();
+		 switch(text){
+			 case 'lvl Up':
+				 board.game.user.lvlUp();
+			 break;
+			 case 'Shop':
+				 board.game.user.enterShop();
+			 break;
+		 }
+		 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+		 board.show_att = board.getBaseAttack();
+		 board.game.att.setText(board.show_att);
+		 board.removeChild(this.getParent());
+		 delete this.getParent();  
+	 });
+	 */
+ }
+
+
+ dm.Board.prototype.getBaseAttack = function(){
+	return this.game.user.fp['a1'] || 0;
+ }

@@ -97,9 +97,13 @@ dm.User.prototype.getSP=function(name){
  * 在计算之前算一次，随装备变化
  */
 dm.User.prototype.popuFP=function(){
-	var i;
+	var i,max;
 	for( i in dm.conf.FP){
 		this.fp[i] = this.getFP(i);
+		max = parseInt(dm.conf.FP[i].max);
+		if(-1 != max){
+			this.fp[i] = Math.min(this.fp[i], max);
+		}
 	}
 }
 
@@ -124,16 +128,18 @@ dm.User.prototype.skillUp=function(name){
  */
 dm.User.prototype.enterShop=function(){
 	var i,eqps;
-	var rand = Math.round(Math.random()*4);
-	this.upgrade(4,0);//rand,0);
-	this.refresh(4);
+	var rand = Math.round(Math.random()*5);
+	if(rand > 4)
+		rand = 4;
+	this.upgrade(4,0);
+	//this.refresh(rand);
 }
 
 
 //升级属性：选择升级主属性或者附加属性
 //eqpid:
 //      0 head, 1 body, 2 cape, 3 jew, 4 arm
-dm.User.prototype.upgrade=function(eqpid, type){ //type = 0:主属性,type = 1:附加属性;//1, =2:附加属性2
+dm.User.prototype.upgrade=function(eqpid, type){ //type = 0:主属性,type = 1:附加属性
 	equiplvl = parseInt(this.equips[eqpid] && this.equips[eqpid].lvlneed || 0) +1;
 	if(!type){//升级主属性
 	switch(eqpid){
@@ -180,6 +186,7 @@ dm.User.prototype.upgrade=function(eqpid, type){ //type = 0:主属性,type = 1:�
 			j++;
 		}
 	}
+	console.log(eqpid);
 	this.popuFP();
 }
 
@@ -248,6 +255,8 @@ dm.User.prototype.addatt=function(eqpid){
 				eqp['func'][i] = add_att[i];
 				break;
 			case 'b':
+				eqp['sp'][i] = add_att[i];
+				eqp['func'][i] = add_att[i];
 				break;
 		}
 	}
@@ -260,7 +269,7 @@ dm.User.prototype.lvlUp=function(){
 	
 	var i;
 	for(i in this.sp){
-		this.sp[i] += parseInt(dm.conf.SP[i] && dm.conf.SP[i].add) || 0;
+		this.sp[i] += parseInt(dm.conf.SP[i] && dm.conf.SP[i].inc) || 0;
 	}
 	this.popuFP();
 	this.lvl += 1;

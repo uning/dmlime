@@ -146,7 +146,8 @@ dm.Game = function(size,user){
     // Hint button
     this.btn_hint = new dm.Button('人物').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setPosition(dm.Display.position.btn_hint.x, dm.Display.position.btn_hint.y);
     goog.events.listen(this.btn_hint, 'click', function() {
-        this.changeAnim('Hello');
+        //this.changeAnim('Hello');
+		this.board.popWindow();
     },false, this);
     this.appendChild(this.btn_hint);
 
