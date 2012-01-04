@@ -189,6 +189,7 @@ dm.Board.prototype.checkSolutions = function() {
     var s = this.selectedGems,g,type,i
 	,fp = this.game.user.fp
 	,sp = this.game.user.sp
+	,data = this.game.data
 	,keep
 	,attack = fp.a1 
 	,gold = 0
@@ -249,30 +250,36 @@ dm.Board.prototype.checkSolutions = function() {
 	}
 	switch(p_type){
 		case 'exp':
-		this.game.data[p_type] += exp;
-		while(this.game.data[p_type] >= 100){
+		data[p_type] += exp;
+		while(data[p_type] >= 3){
 			this.popWindow('lvl Up');
 			ispoping = 1;
-			this.game.data['hp'] += 5; //每级增加血上限
-			this.game.data['mana'] += 1; //每级增加血上限
-			this.game.data[p_type] -= 100;
+			//data['hp'] += 5; //每级增加血上限
+			//data['mana'] += 1; //每级增加血上限
+			data[p_type] -= 3;
 		}
 		break;
 		case 'hp':
-		this.game.data[p_type] = Math.min(fp.a6, this.game.data[p_type] + blood);
+		data[p_type] = Math.min(fp.a6, data[p_type] + blood);
 		break;
 		case 'gold':
-		this.game.data[p_type] += gold;
-		while(this.game.data[p_type] >= 100){
+		data[p_type] += gold;
+		while(data[p_type] >= 3){
 			this.popWindow('Shop');
 			ispoping = 1;
-			this.game.data[p_type] -= 100;
+			data[p_type] -= 3;
 		}
 		break;
 		case 'mana':
-			//del
-		//	this.game.user.enterShop();
-		this.game.data[p_type] = Math.min(fp.a5, this.game.data[p_type] + mana);
+		//this.game.data[p_type] = Math.min(fp.a5, this.game.data[p_type] + mana);
+		data[p_type] += mana;
+		skillexp = data[p_type] - fp.a5;
+		data[p_type] = Math.min(fp.a5, data[p_type]);
+		while(skillexp >= 3){
+			this.popWindow('Skill');
+			//ispoping = 1;
+			skillexp -= 3;
+		}
 		break;
 	}
 	if(p_type!=0 && p_type!='hp' && p_type!='mana'){
@@ -683,8 +690,10 @@ dm.Board.prototype.getDamage = function(){
  */
  dm.Board.prototype.popWindow = function(text){
 	
+	 var i,ct=0,id,board,game,btn,btn2,rand,equips;
+	 id = [];
+	 equips = this.game.user.equips;
 	 goog.events.unlisten(this, ['mousedown', 'touchstart'], this.pressHandler_);
-	 var board,game,btn,btn2,rand;
 	 this.popdialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(690, 690).setPosition(690/2,690/2).
 		 setAnchorPoint(.5, .5).setRadius(20);
 	 this.appendChild(this.popdialog);
@@ -702,6 +711,8 @@ dm.Board.prototype.getDamage = function(){
 				 board.show_dmg = board.getDamage();
 				 game.att.setText(board.show_att);
 				 game.mon.setText(board.show_dmg);
+				 game.data['hp'] += 5; //每级增加血上限
+				 game.data['mana'] += 1; //每级增加血上限
 				 game.show_vars['hp']._pg.setProgress(game.data['hp']/game.user.fp.a6);
 				 game.show_vars['mana']._pg.setProgress(game.data['mana']/game.user.fp.a5);
 				 game.show_vars['hp']._lct.setText(game.data['hp']+'/'+game.user.fp.a6);
@@ -710,6 +721,19 @@ dm.Board.prototype.getDamage = function(){
 				 delete this.getParent();  
 			 });
 		 break;
+		 case 'Skill':
+			 btn = new dm.Button().setText(text).setSize(200, 100);
+			 this.popdialog.appendChild(btn);
+			 goog.events.listen(btn, lime.Button.Event.CLICK, function() {
+				 board = this.getParent().getParent();
+				 game = board.game
+				 game.user.skillUp();
+
+				 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+				 board.removeChild(this.getParent());
+				 delete this.getParent();  
+			 });
+			 break;
 		 case 'Shop':
 			 rand = Math.round(Math.random()*5);
 			 if(rand > 4)
@@ -718,14 +742,32 @@ dm.Board.prototype.getDamage = function(){
 			 this.popdialog.appendChild(btn);
 			 goog.events.listen(btn, lime.Button.Event.CLICK, function() {
 				 board = this.getParent().getParent();
+				 game = board.game
 				 board.game.user.upgrade(rand,0);
+				 board.show_att = board.getBaseAttack();
+				 board.show_dmg = board.getDamage();
+				 game.att.setText(board.show_att);
+				 game.mon.setText(board.show_dmg);
+				 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+				 board.removeChild(this.getParent());
+				 delete this.getParent();  
 			 });
+			 for(i in equips){
+				 id[ct] = parseInt(i);
+				 ct++;
+			 }
+			 if(ct){
+			 rand = Math.round(Math.random()*(ct-1));
 			 btn2 = new dm.Button().setText('refresh').setSize(200, 100).setPosition(0,100);
 			 this.popdialog.appendChild(btn2);
 			 goog.events.listen(btn2, lime.Button.Event.CLICK, function() {
 				 board = this.getParent().getParent();
-				 board.game.user.refresh(rand);
+				 board.game.user.refresh(id[rand]);
+				 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+				 board.removeChild(this.getParent());
+				 delete this.getParent();  
 			 });
+			 }
 		 break;
 	 }
 

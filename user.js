@@ -232,7 +232,7 @@ dm.User.prototype.refresh=function(eqpid){
 		}else{
 			sub = ch;
 		}
-		eqp_add[ch] = parseInt(fp[ch].def);
+		eqp_add[ch] = parseInt(fp[ch].inc);
 	}else{
 		this.eqp_add[eqpid] = {};
 		eqp_add = this.eqp_add[eqpid];

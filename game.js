@@ -35,7 +35,8 @@ dm.Game = function(size,user){
 	this.data.score = 0;
 	this.data.lvl   = 0;
 	this.data.exp   = 0;
-	this.data.gold   = 0;
+	this.data.gold  = 0;
+	this.data.skillexp = 0;
 	
 		
 
