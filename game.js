@@ -16,35 +16,16 @@ goog.require('lime.animation.Loop');
 
 
 dm.Game = function(size,user){
-
+	size  = size ||  6;
+    lime.Scene.call(this);
 	this.user = user || new dm.User(1);
 	this.user.game = this;
-	size  = size ||  6;
+	//初始化数据
+	this.initData();
+	//初始化面板
+	this.panel = new lime.Layer();
 
 	var i ,p,j,plen
-	//初始化数据
-	this.data = {};
-	this.data.turn = 0; //回合数
-	this.data.appearNum = {};
-	for( i = 0 ; i < dm.GEMTYPES.length ; ++i){
-		this.data.appearNum[i] = 0;
-	}
-	this.data.hp    = this.user.fp.a6;
-	this.data.mana  = this.user.fp.a5;
-	this.data.def   = this.user.fp.a3;
-	this.data.score = 0;
-	this.data.lvl   = 0;
-	this.data.exp   = 0;
-	this.data.gold  = 0;
-	this.data.skillexp = 0;
-
-
-    lime.Scene.call(this);
-    this.points = 0;
-
-    //UI constent
-	this.UI = dm.Display;
-
     //empty layer for contents
     var layer = new lime.Layer();
     this.appendChild(layer);
@@ -172,26 +153,27 @@ dm.Game = function(size,user){
 	this.appendChild(this.att);	
 	this.show_create = 1;
 
+	this.createPanel();
 	/*
 	 *新的UI
 	 */
 	//var test = new lime.Layer();
 	/*
-	var tailer = this.UI.boardtailer;
+	var tailer = dm.Display.boardtailer;
     var show_board = new lime.Sprite().setSize(690, 140).setAnchorPoint(0,0).setPosition(tailer.location.x, tailer.location.y).setFill(dm.IconManager.getFileIcon('assets/tiles.png', tailer.img.x, tailer.img.y, 690/320, 140/76, 1));
-	this.appendChild(show_board);
+	this.panel.appendChild(show_board);
 	//test.appendChild(show_board);
 
 	//技能槽
 	var slot;
 	for(var ii=0;ii<4;ii++){
 		slot = new lime.Sprite().setSize(90,90).setAnchorPoint(0,0).setPosition(25+ ii*92, 0).setFill(dm.IconManager.getFileIcon('assets/menus.png', 248, 0, 90/53, 90/53, 1));
-		this.appendChild(slot);
+		this.panel.appendChild(slot);
 		//test.appendChild(slot);
 	}
-	*/
-	//this.appendChild(test);
+//	this.appendChild(this.panel);
 
+*/
 	
     // update score when points have changed
     lime.scheduleManager.scheduleWithDelay(this.updateScore, this, 100);
@@ -371,3 +353,52 @@ dm.Game.prototype.changeAnim = function(str){
 	this.notify.runAction(step);
 
 };
+
+/*
+ * 面板的UI生成
+ */
+dm.Game.prototype.createPanel = function(){
+	var i,slot,taile,show_board; //slot 技能槽
+	tailer = dm.Display.boardtailer;
+	show_board = new lime.Sprite().setSize(690, 140).setAnchorPoint(0,0).setPosition(tailer.location.x, tailer.location.y).setFill(dm.IconManager.getFileIcon('assets/tiles.png', tailer.img.x, tailer.img.y, 690/320, 140/76, 1));
+	this.panel.appendChild(show_board);
+	for( i=0;i<4;i++){
+		slot = new lime.Sprite().setSize(90,90).setAnchorPoint(0,0).setPosition(25+ i*92, 0).setFill(dm.IconManager.getFileIcon('assets/menus.png', 248, 0, 90/53, 90/53, 1));
+		this.panel.appendChild(slot);
+		//test.appendChild(slot);
+	}
+	this.appendChild(this.panel);
+}
+
+/*
+ * create board
+ */
+dm.Game.prototype.createBoard = function(size){
+    this.board = new dm.Board(size, size, this).setPosition(25, 134);
+    
+    if(dm.isBrokenChrome()) this.board.setRenderer(lime.Renderer.CANVAS);
+	
+    layer.appendChild(this.board);
+}
+
+/*
+ * 游戏数据初始化
+ */
+dm.Game.prototype.initData = function(){
+	//初始化数据
+	this.data = {};
+	this.data.turn = 0; //回合数
+	this.data.appearNum = {};
+	for( i = 0 ; i < dm.GEMTYPES.length ; ++i){
+		this.data.appearNum[i] = 0;
+	}
+	this.data.hp    = this.user.fp.a6;
+	this.data.mana  = this.user.fp.a5;
+	this.data.def   = this.user.fp.a3;
+	this.data.score = 0;
+	this.data.lvl   = 0;
+	this.data.exp   = 0;
+	this.data.gold  = 0;
+	this.data.skillexp = 0;
+    this.points = 0;
+}

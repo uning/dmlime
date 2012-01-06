@@ -3,6 +3,7 @@ goog.provide('dm.Board');
 goog.require('goog.events');
 goog.require('lime.Sprite');
 goog.require('lime.Polygon');
+goog.require('lime.Circle');
 goog.require('lime.animation.FadeTo');
 goog.require('lime.animation.MoveTo');
 goog.require('lime.animation.ScaleTo');
