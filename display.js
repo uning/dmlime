@@ -84,9 +84,6 @@ dm.Display = {
 	position:{
 		btn_hint:{x:650,y:874}, //board面板下面的按钮
 		btn_menu:{x:100,y:874},
-		/*score:{x,y},
-		turn:{x,y},
-		*/
 		damage: {x:250, y:849},
 		dmg_num:{x:360, y:849},
 		attack :{x:250, y:879},
@@ -101,6 +98,14 @@ dm.Display = {
 		hp_l:   {x:370, y:57},
 		hp_p:   {x:560, y:57}
 		
+	},
+
+
+	//下面的面板
+	boardtailer:{
+		size:{width:700,height:170},
+		location:{x:24,y:830},
+		img:{x:0,y:437}
 	}
 }
 

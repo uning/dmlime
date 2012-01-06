@@ -37,12 +37,13 @@ dm.Game = function(size,user){
 	this.data.exp   = 0;
 	this.data.gold  = 0;
 	this.data.skillexp = 0;
-	
-		
+
 
     lime.Scene.call(this);
     this.points = 0;
 
+    //UI constent
+	this.UI = dm.Display;
 
     //empty layer for contents
     var layer = new lime.Layer();
@@ -89,14 +90,14 @@ dm.Game = function(size,user){
     var score_lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#4f96ed').setFontSize(24).
         setPosition(lx, lh).setText('分数').setAnchorPoint(0, 0);
     layer.appendChild(score_lbl);
+    //this.appendChild(score_lbl);
 	
 
 
     // score message label
     this.score = new lime.Label().setFontColor('#000').setFontSize(24).setText('0').setPosition(lxx,lh).setAnchorPoint(0, 0).setFontWeight(700);
-	
-
     layer.appendChild(this.score);
+    //this.appendChild(this.score);
 
 	
 	lh += gap+h;
@@ -170,6 +171,26 @@ dm.Game = function(size,user){
 	this.appendChild(this.mon);
 	this.appendChild(this.att);	
 	this.show_create = 1;
+
+	/*
+	 *新的UI
+	 */
+	//var test = new lime.Layer();
+	/*
+	var tailer = this.UI.boardtailer;
+    var show_board = new lime.Sprite().setSize(690, 140).setAnchorPoint(0,0).setPosition(tailer.location.x, tailer.location.y).setFill(dm.IconManager.getFileIcon('assets/tiles.png', tailer.img.x, tailer.img.y, 690/320, 140/76, 1));
+	this.appendChild(show_board);
+	//test.appendChild(show_board);
+
+	//技能槽
+	var slot;
+	for(var ii=0;ii<4;ii++){
+		slot = new lime.Sprite().setSize(90,90).setAnchorPoint(0,0).setPosition(25+ ii*92, 0).setFill(dm.IconManager.getFileIcon('assets/menus.png', 248, 0, 90/53, 90/53, 1));
+		this.appendChild(slot);
+		//test.appendChild(slot);
+	}
+	*/
+	//this.appendChild(test);
 
 	
     // update score when points have changed

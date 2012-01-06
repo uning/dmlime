@@ -1,5 +1,13 @@
 
 
+COFFEESRCS = dm.coffee  iconmanager.coffee 
+
+JSOBJS = $(patsubst %.coffee,%.js,$(COFFEESRCS))
+
+%.js: %.coffee
+	coffee -b -c $< 
+
+
 
 all:
 	@echo "make build  -- 编译所有js"
@@ -7,8 +15,8 @@ all:
 	@echo "make genc   -- 生成配置"
 	@echo "make js   -- coffee到js"
 
-js: dm.coffee
-	coffee -b -c dm.coffee 
+js: $(JSOBJS) $(COFFEESRCS)
+	@echo $(JSOBJS) $(COFFEESRCS)
 
 up:
 	@../bin/lime.py update

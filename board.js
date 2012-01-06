@@ -41,6 +41,7 @@ dm.Board = function(rows,cols,game) {
 	//
 	this.selectedGems = [];
 	this.drawedLines = [];
+	this.m_arr = [];
 
 	//用于显示的数值
 	
@@ -53,6 +54,9 @@ dm.Board = function(rows,cols,game) {
 
     // mask out edges so bubbles flowing in won't be over game controls.
     this.maskSprite = new lime.Sprite().setSize(this.SIZE, this.SIZE).setFill(100, 0, 0, .1).setAnchorPoint(0, 0);
+
+	this.backGround = new lime.Sprite().setSize(this.SIZE, this.SIZE).setFill(255,255,255).setAnchorPoint(0,0);//背景
+	this.appendChild(this.backGround);
     this.appendChild(this.maskSprite);
     this.setMask(this.maskSprite);
 
@@ -177,161 +181,160 @@ dm.Board.prototype.randExtra = function(basev,randratio,baseadd,ratio) {
  * 计算分数
  */
 dm.Board.prototype.checkSolutions = function() {
-	
 	this.isMoving_ = 1;
-
     var action = new lime.animation.Spawn(
         new lime.animation.ScaleTo(0).setDuration(.1),
         new lime.animation.FadeTo(0).setDuration(.1)
     ).enableOptimizations();
 
-
-    var s = this.selectedGems,g,type,i
+    var s = this.selectedGems,g,type,i,leech,attack_real,dtom
 	,fp = this.game.user.fp
 	,sp = this.game.user.sp
 	,data = this.game.data
 	,keep
 	,attack = fp.a1 
-	,gold = 0
 	,defense = fp.a3
-	,exp = 0
-	,blood = 0
-	,mana = 0
 	,p_type = []
 	,ispoping = 0;
 	
 	var indexes = 1;
-
-	//计算攻击力
-	for(i = 0; i < s.length; i++){
-		type= s[i].type;
-		//计算经验
-		if(type == 'sword'){
-			attack += fp.a2
-		}else if(type != 'monster'){
-			break;			
-		}
-		
-	}
-
-	for(i = 0; i < s.length; i++){
-		g = s[i]
-		type = g.type
-		s[i].keep = false;
-		if(type == 'monster'){
-			var def_real = Math.round(g.def_left*(1-fp.a9/100)); //实际防御值 = 防御数值 - 忽略掉的防御值
-			if(attack >= g.hp_left + def_real){
-				g.hp_left = 0;
-				//g.def_left = 0;
-				exp += this.randExtra(fp.a17,fp.a18,fp.a19,fp.a20);
-				p_type = 'exp';
-			}else{
-				if(attack > def_real){
-					g.hp_left = g.hp_left + def_real - attack;
-				//	g.def_left = 0;
-				}else{
-				//	g.def_left = def_left - Math.round(attack/(1-fp.a9/100));
-				}
-				s[i].keep = true;
-				p_type = 0;
+	//* 分类处理
+	if(s[0].type == 'sword' || s[0].type == 'monster'){
+		for(i = 0; i < s.length; i++){
+			if(s[i].type == 'sword'){
+				attack += fp.a2;
 			}
-			g.hplabel.setText(g.hp_left);
-		}else if(type == 'blood'){
-			p_type = 'hp'; //进度条
-			blood += this.randExtra(fp.a9,fp.a10,fp.a11,fp.a12)
-		}else if(type == 'gold'){
-			p_type = 'gold';
-			gold += this.randExtra(fp.a13,fp.a14,fp.a15,fp.a16)
-		}else if(type == 'mana'){ //以后改成魔法
-			p_type = 'mana'
-			mana += this.randExtra(fp.a21,fp.a22,fp.a23,fp.a24)
+		}
+		for(i = 0; i < s.length; i++){
+			g = s[i];
+			type = g.type;
+			if(type == 'monster'){
+				var def_real = Math.round(g.def_left*(100-fp.a9)/100); //实际防御值 = 防御数值 - 忽略掉的防御值
+				if(Math.random()*100 < fp.a37){//双倍伤害
+					attack_real = attack * 2;
+				}else{
+					attack_real = attack;
+				}
+				if(attack_real >= g.hp_left + def_real){
+					g.hp_left = 0;
+					g.keep = false;
+					data['exp'] += this.randExtra(fp.a17,fp.a18,fp.a19,fp.a20);
+					p_type = 'exp';
+					leech = g.hp*fp.a36/100; //生命偷取
+				}else{
+					if(attack_real > def_real){
+						g.hp_left = g.hp_left + def_real - attack_real;
+						leech = attack_real*fp.a36/100;
+					}
+					g.keep = true;
+					if(Math.random()*100 < fp.a32){//毒伤害
+                        g.setSpecial('poison');
+						g.poison = Math.round(attack_real*10/100) || 1;//fp.a33/100);
+						g.poison_start = 1;
+					}
+					if(Math.random()*100 < 100){ //fp.a35){//石化
+						g.setSpecial('freeze');
+						g.stone = 1;
+					}
+					p_type = 0;
+				}
+				g.hplabel.setText(g.hp_left);
+			}
 		}
 
-	}
-	switch(p_type){
-		case 'exp':
-		data[p_type] += exp;
-		while(data[p_type] >= 3){
+		while(data['exp'] >= 100){
 			this.popWindow('lvl Up');
 			ispoping = 1;
-			//data['hp'] += 5; //每级增加血上限
-			//data['mana'] += 1; //每级增加血上限
-			data[p_type] -= 3;
+			data['exp'] -= 100;
 		}
-		break;
-		case 'hp':
-		data[p_type] = Math.min(fp.a6, data[p_type] + blood);
-		break;
-		case 'gold':
-		data[p_type] += gold;
-		while(data[p_type] >= 3){
+	}
+
+	if(s[0].type == 'gold'){
+		p_type = 'gold';
+		data['gold'] += s.length*fp.a13;
+		if(s.length > 3)
+			data['gold'] += this.randExtra(fp.a13,fp.a14,fp.a15,fp.a16)
+
+		while(data['gold'] >= 100){
 			this.popWindow('Shop');
 			ispoping = 1;
-			data[p_type] -= 3;
+			data['gold'] -= 100;
 		}
-		break;
-		case 'mana':
-		//this.game.data[p_type] = Math.min(fp.a5, this.game.data[p_type] + mana);
-		data[p_type] += mana;
-		skillexp = data[p_type] - fp.a5;
-		data[p_type] = Math.min(fp.a5, data[p_type]);
-		while(skillexp >= 3){
-			this.popWindow('Skill');
-			//ispoping = 1;
-			skillexp -= 3;
-		}
-		break;
 	}
-	if(p_type!=0 && p_type!='hp' && p_type!='mana'){
-		this.game.show_vars[p_type]._pg.setProgress(this.game.data[p_type]/100);
-		this.game.show_vars[p_type]._lct.setText(this.game.data[p_type]+'/'+100);
+
+	if(s[0].type == 'blood'){
+		p_type = 'hp';
+		data['hp'] += s.length*fp.a9;
+		if(s.length > 3)
+			data['hp'] += this.randExtra(fp.a9,fp.a10,fp.a11,fp.a12)
+		data['hp'] = Math.min(data['hp'], fp.a6);
 	}
 	
+	if(s[0].type == 'mana'){
+		p_type = 'mana';
+		data['mana'] += s.length*fp.a21;
+		if(s.length > 3)
+			data['mana'] += this.randExtra(fp.a21,fp.a22,fp.a23,fp.a24)
+		data['skillexp'] += Math.min(data['mana'] - fp.a5);
+		data['mana'] = Math.min(fp.a5, data[p_type]);
+		while(data['skillexp'] >= 100){
+			this.popWindow('Skill');
+			data['skillexp'] -= 100;
+		}
+	}
+	//回合结束其他动作
+	this.Poison(s); //其他怪物的毒伤害等
+	//
+	//反弹伤害
+	//
     for(i = 0; i < s.length; i++){
 		if(s[i].keep == false){
-        //action.addTarget(solutions[i]);
-        // remove form array but not yet form display list
 			goog.array.remove(this.gems[s[i].c], s[i]);
 		}
     }
+	 
 
 	this.game.setScore(s.length * (s.length - 2));
-	
-//计算剩余防御和hp
+
 	var total_dmg = this.getDamage();
-	//var reduce_dmg = this.game.user.fp.a3*fp.a4; 
-	var hp_dmg = Math.max(0,total_dmg);// - reduce_dmg);
-	
-	this.game.data['hp'] -= hp_dmg;
+	//闪避？
+	if(Math.random()*100 > fp.a38){
+		//伤害减少
+		total_dmg = Math.ceil(total_dmg*(100-fp.a29)/100);
+		this.game.data['hp'] -= total_dmg;
+		dtom = Math.round(total_dmg*fp.a28/100);//伤害转到魔法的增加
+		data['mana'] = Math.min(fp.a5, data['mana']+dtom);
+	}
+
 	if(this.game.data['hp'] <= 0){
 		this.game.endGame();
 	}
-    //
+	//生命魔法恢复
+	if(fp.a26 && fp.a26>0){
+		data['hp'] = Math.min(fp.a6, data['hp']+fp.a26);
+	}
+	if(fp.a27 && fp.a27>0){
+		data['mana'] = Math.min(fp.a5, data['mana']+fp.a27);
+	}
+	this.unStone();
+
+	if(!ispoping){
+		this.turnEndShow();
+	}
+	this.changeProg(this.game, p_type);
 	goog.events.listen(action, lime.animation.Event.STOP, function() {
-        //remove objects after they have faded
         goog.array.forEach(s, function(g) {
             if(g.keep == false)
 				g.parent_.removeChild(g);
         },this);
-        // move other bubbles to place.
         this.moveGems();
     },false, this);
-    // fill the gaps
-	this.game.data.turn += 1;
 
+	this.game.data.turn += 1;
     this.fillGems();
     action.play();
 	this.isMoving_ = 0;
 	
-	if(!ispoping){
-		this.game.show_vars['hp']._pg.setProgress(this.game.data['hp']/fp.a6);
-		this.game.show_vars['mana']._pg.setProgress(this.game.data['mana']/fp.a5);
-		this.game.show_vars['hp']._lct.setText(this.game.data['hp']+'/'+fp.a6);
-		this.game.show_vars['mana']._lct.setText(this.game.data['mana']+'/'+fp.a5);
-	}
-	
-	//this.show_att = this.fp.a1;
-
 	return true;
 };
 
@@ -355,69 +358,11 @@ dm.Board.prototype.checkSolutions = function() {
 	this.game.mon.setText(Math.max(0,this.getDamage() - killed));
 	//
  }
- 
-/**
- * Return possible solutions for current board layout.
- * @return {Array.<lime.Gem>} Array of solutions.
- */
-dm.Board.prototype.getSolutions = function() {
-    var r, c, g, group, res = [];
-
-	/*
-    //todo: this can be done with one loop
-
-    //check rows
-    for (r = 0; r < this.rows; r++) {
-        i = -1;
-        group = [];
-        for (c = 0; c < this.cols; c++) {
-            g = this.gems[c][r];
-            if (g.index == i) {
-                group.push(g);
-            }
-
-            if (g.index != i || c == (this.cols - 1)) {
-                if (group.length >= 3) {
-                    goog.array.insertArrayAt(res, group);
-                }
-                group = [g];
-            }
-            i = g.index;
-        }
-    }
-
-    //check cols
-    for (c = 0; c < this.cols; c++) {
-        i = -1;
-        group = [];
-        for (r = 0; r < this.rows; r++) {
-            g = this.gems[c][r];
-            if (g.index == i) {
-                group.push(g);
-            }
-
-            if (g.index != i || r == (this.rows - 1)) {
-                if (group.length >= 3) {
-                    goog.array.insertArrayAt(res, group);
-                }
-                group = [g];
-            }
-            i = g.index;
-        }
-    }
-	*/
-    return res;
-
-};
-
-
 
 /**
  * 选中一个gem
  * 划线
  * 更新，相应的攻击力等
- *
- *
  */
 dm.Board.prototype.addSelGem = function(g,trypos) {
 	var lidx = this.selectedGems.length - 1 ,
@@ -542,17 +487,15 @@ dm.Board.prototype.pressHandler_ = function(e) {
 			}
 		}
 
-		if(this.selectedGems.length > 2){//消除
+		if(this.selectedGems.length > 2){
 				this.checkSolutions();
 		}
 		this.selectedGems = [];
 		this.drawedLines = [];
-		this.lineLayer.removeAllChildren();//消除线
+		this.lineLayer.removeAllChildren();
 		this.checkLine(this.selectedGems);
 		return;
 	}
-
-	this.checkLine(this.selectedGems);
 
     var pos = e.position;
     // get the cell and row value for the touch
@@ -598,8 +541,8 @@ dm.Board.prototype.pressHandler_ = function(e) {
 
 	if((e.type =='mousemove' || e.type == 'touchmove')){
 		if(selid > -1){
-			//if(selid == this.selectedGems.length - 2 ){//取消最近一条线
 				this.cancelSelGem(selid);
+				this.checkLine(this.selectedGems);
 				return;
 
 		}
@@ -607,7 +550,6 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	}
 
 	
-    // flick from one cell to another is also supported
     if (e.type == 'mousedown' || e.type == 'touchstart' || e.type =='gesturestart') {
 		for( i = 0 ;i < this.selectedGems.length ; i ++){
 			this.selectedGems[i].deselect();
@@ -626,6 +568,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		return;
 	}
 	this.addSelGem(g);	
+	this.checkLine(this.selectedGems);
 };
 
 /**
@@ -643,43 +586,20 @@ dm.Board.prototype.swap = function(g1,g2) {
     this.gems[g2.c][g2.r] = g2;
 };
 
-/**
- * Animate current hint bubble.
+/*
+ * 计算当前怪物伤害
  */
-dm.Board.prototype.showHint = function() {
-    if (this.hint)
-    this.hint.runAction(
-        new lime.animation.Sequence(
-            new lime.animation.ScaleTo(1.3).setDuration(.4),
-            new lime.animation.ScaleTo(1).setDuration(.4)
-        )
-    );
-};
-
-/**
- * Return best hint for current board state.
- * Best hint is a bubble the wen swapping with another
- * make most combinations
- */
-dm.Board.prototype.getHint = function() {
-    var maxhint, hintvalue = 0;
-    this.hint = this.gems[0][0];
-    //send also to game object
-    this.game.setHint(this.hint);
-
-    return maxhint;
-};
-
 dm.Board.prototype.getDamage = function(){
 	var c, r, damage = 0;
-    for (c = 0; c < this.cols; c++) {
-        for (r = 0; r < this.gems[c].length; r++) {
+	for (c = 0; c < this.cols; c++) {
+		for (r = 0; r < this.gems[c].length; r++) {
 			if(this.gems[c][r].type == "monster"){
-			//	console.log(this.gems[c][r].attack);
-				damage += this.gems[c][r].attack;
+				if(this.gems[c][r].stone == 0){
+					damage += this.gems[c][r].attack;
 				}
-        }
-    }
+			}
+		}
+	}
 	return Math.max(0,damage - this.game.user.fp.a3*this.game.user.fp.a4);
 };
 
@@ -692,8 +612,10 @@ dm.Board.prototype.getDamage = function(){
 	
 	 var i,ct=0,id,board,game,btn,btn2,rand,equips;
 	 id = [];
+
 	 equips = this.game.user.equips;
 	 goog.events.unlisten(this, ['mousedown', 'touchstart'], this.pressHandler_);
+
 	 this.popdialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(690, 690).setPosition(690/2,690/2).
 		 setAnchorPoint(.5, .5).setRadius(20);
 	 this.appendChild(this.popdialog);
@@ -711,12 +633,9 @@ dm.Board.prototype.getDamage = function(){
 				 board.show_dmg = board.getDamage();
 				 game.att.setText(board.show_att);
 				 game.mon.setText(board.show_dmg);
-				 game.data['hp'] += 5; //每级增加血上限
-				 game.data['mana'] += 1; //每级增加血上限
-				 game.show_vars['hp']._pg.setProgress(game.data['hp']/game.user.fp.a6);
-				 game.show_vars['mana']._pg.setProgress(game.data['mana']/game.user.fp.a5);
-				 game.show_vars['hp']._lct.setText(game.data['hp']+'/'+game.user.fp.a6);
-				 game.show_vars['mana']._lct.setText(game.data['mana']+'/'+game.user.fp.a5);
+				 game.data['hp'] += parseInt(dm.conf.FP.a6.inc); //每级增加血上限
+				 game.data['mana'] += parseInt(dm.conf.FP.a5.inc);
+				 board.turnEndShow();
 				 board.removeChild(this.getParent());
 				 delete this.getParent();  
 			 });
@@ -770,31 +689,112 @@ dm.Board.prototype.getDamage = function(){
 			 }
 		 break;
 	 }
-
-	 
-/*
-	 btn = new dm.Button().setText(text).setSize(200, 100);
-	 this.popdialog.appendChild(btn);
-	 goog.events.listen(btn, lime.Button.Event.CLICK, function() {
-		 board = this.getParent().getParent();
-		 switch(text){
-			 case 'lvl Up':
-				 board.game.user.lvlUp();
-			 break;
-			 case 'Shop':
-				 board.game.user.enterShop();
-			 break;
-		 }
-		 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
-		 board.show_att = board.getBaseAttack();
-		 board.game.att.setText(board.show_att);
-		 board.removeChild(this.getParent());
-		 delete this.getParent();  
-	 });
-	 */
  }
 
 
  dm.Board.prototype.getBaseAttack = function(){
 	return this.game.user.fp['a1'] || 0;
+ }
+
+ //传入game对象，要设定的类型
+ //更新显示数值
+ dm.Board.prototype.changeProg = function(game,type){
+	 switch(type){
+		 case 'exp':
+		 case 'gold':
+			 game.show_vars[type]._pg.setProgress(game.data[type]/100);
+			 game.show_vars[type]._lct.setText(game.data[type]+'/'+100);
+			 break;
+		 case 'hp':
+			 game.show_vars['hp']._pg.setProgress(game.data['hp']/game.user.fp.a6);
+			 game.show_vars['hp']._lct.setText(game.data['hp']+'/'+game.user.fp.a6);
+			 break;
+		 case 'mana':
+			 game.show_vars['mana']._pg.setProgress(game.data['mana']/game.user.fp.a5);
+			 game.show_vars['mana']._lct.setText(game.data['mana']+'/'+game.user.fp.a5);
+			 break;
+	 }
+
+ }
+
+ /*
+  *每回合结束更新显示
+  */
+ dm.Board.prototype.turnEndShow = function(){
+	 this.changeProg(this.game, 'hp');
+	 this.changeProg(this.game, 'mana');
+ }
+
+ /*
+  * 找出本轮所有的怪物
+  */
+  dm.Board.prototype.findMonster = function(){
+	var c,r,g,gem,exist,index;
+    for (c = 0; c < this.cols; c++) {
+        for (r in this.gems[c]) {
+			g = this.gems[c][r];
+            if(g.type == 'monster' && g.hp_left > 0){
+				exist = 0;
+				index = 0;
+				for(gem in this.m_arr){
+					if(this.m_arr[gem].hp_left <= 0){
+						this.m_arr.splice(index,1);
+					}else{
+						index++
+					}
+					if(this.m_arr[gem] == g){
+						exist = 1;
+					}
+				}
+				if(exist != 1)
+					this.m_arr.push(g);
+			}
+		}
+	}
+  }
+
+ /*
+  * 每回合结束对怪物造成毒伤害
+  */
+  dm.Board.prototype.Poison = function(s){
+	var c,r,g,gem,exist=0;
+    for (c = 0; c < this.cols; c++) {
+        for (r in this.gems[c]) {
+			g = this.gems[c][r];
+            if(g.type == 'monster' && g.hp_left > 0 && g.poison && g.poison > 0){
+				if(g.poison_start <= 0){
+					g.hp_left -= g.poison;
+				}
+				g.poison_start--;
+				if(g.hp_left <= 0){
+					g.hplabel.setText(0);
+					g.setSpecial('Killed');
+					g.keep = false;
+					exist = 0;
+					for(gem in s){
+						if(s[gem] == g){
+							exist = 1;
+						}
+					}
+					if(exist == 0){
+						s.push(g);
+					}
+				}
+				g.hplabel.setText(g.hp_left);
+			}   
+        }
+    }
+ }
+
+ dm.Board.prototype.unStone = function(){
+	var c,r,g,gem,exist=0;
+    for (c = 0; c < this.cols; c++) {
+        for (r in this.gems[c]) {
+			g = this.gems[c][r];
+            if(g.type == 'monster' && g.stone == 1){
+				g.stone = 0;
+				g.unsetSpecial();
+			}
+		}
+	}
  }

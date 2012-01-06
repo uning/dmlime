@@ -1,0 +1,122 @@
+
+<!DOCTYPE HTML>
+
+<html>
+<head>
+	<title>dm</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<script type="text/javascript" src="../../closure/closure/goog/base.js"></script>
+
+	<link rel="stylesheet" href="../../closure/closure/goog/demos/css/demo.css">
+	<link rel="stylesheet" href="../../closure/closure/goog/css/menubutton.css">
+	<link rel="stylesheet" href="../../closure/closure/goog/css/menu.css">
+	<link rel="stylesheet" href="../../closure/closure/goog/css/menuitem.css">
+	<link rel="stylesheet" href="../../closure/closure/goog/css/menuseparator.css">
+	<link rel="stylesheet" href="../../closure/closure/goog/css/flatmenubutton.css">
+	<script>
+		goog.require('lime');
+		goog.require('lime.Button');
+		goog.require('lime.Circle');
+		goog.require('lime.CoverNode');
+		goog.require('lime.Director');
+		goog.require('lime.Label');
+		goog.require('lime.Layer');
+		goog.require('lime.Scene');
+		goog.require('lime.Sprite');
+		goog.require('lime.transitions.SlideIn');
+		goog.require('dm.IconManager');
+
+		goog.require('goog.ui.Component.EventType');    
+		goog.require('goog.ui.FlatMenuButtonRenderer');
+		goog.require('goog.ui.Option');
+		goog.require('goog.ui.Select');
+		goog.require('goog.ui.Separator');
+		goog.require('goog.ui.decorate');
+
+		var NPARAMS = ['offsetX','offsetY','scalex','scaley','offset_s']
+		var NPARAMS_DEF = ['0','0','1',1,0]
+		
+	</script>
+</head>
+
+<body>
+		<label id="select1">选择图片文件: </label> <span class="good" id="value1" style=' vertical-align: middle;'></span>
+		<br/>
+		<div id='numberp'></div>
+		<button id='dochrop' onclick='mydraw()'>应用</button>
+
+		<div id='gamescene' style='height:900px; width:90%;align: center'></div>
+</body>
+</html>
+<script>
+	var html = '',p,def;
+	var mydraw
+	for(i = 0 ;i < NPARAMS.length ; i ++){
+		 p = NPARAMS[i];
+		 def = NPARAMS_DEF[i];
+
+		html += "<label>"+p+":</label><input id='input_"+p+"' size='4px' value='"+ def +"' ></input>"
+	}
+	goog.dom.getElement('numberp').innerHTML = html 
+
+	var test = {}
+	document.body.onload = function(){
+
+		var select1 = new goog.ui.Select();
+		select1.addItem(new goog.ui.MenuItem('icons.png'));
+		select1.addItem(new goog.ui.MenuItem('menus.png'));
+		select1.addItem(new goog.ui.MenuItem('tiles.png'));
+		select1.setSelectedIndex(0);
+		select1.render(goog.dom.getElement('select1'));
+
+
+		var imgsrc = '../dmdata/dmimg/icons.png';
+		goog.events.listen(select1, goog.ui.Component.EventType.ACTION, function(e) {
+			var select = e.target 
+			var value =  select.getValue() 
+			imgsrc = '../dmdata/dmimg/' + value 
+			var hvalue = '<a href="' + imgsrc + '">'+value +'</a>'
+			mydraw();
+			goog.dom.getElement('value1').innerHTML = hvalue
+		});
+
+		//director
+
+	
+		
+
+		var director = new lime.Director(document.getElementById('gamescene'));
+		director.makeMobileWebAppCapable();
+
+
+		mydraw = function(){
+			params = []
+			hashps = {}
+			for(i = 0 ;i < NPARAMS.length ; i ++){
+				p = NPARAMS[i];
+				v =  parseFloat(document.getElementById('input_'+p).value);
+				params.push(v);
+				hashps[p] = v 
+			}
+			var scene = new lime.Scene;
+			var layer2 = new lime.Layer()
+			scene.appendChild(layer2);
+			test.im = new dm.IconManager(imgsrc);
+			test.afill = test.im.getIcon();
+			test.ms = new lime.Sprite().setFill(test.afill).setPosition(0,200).setAnchorPoint(0,0);//.setPosition(250,250).setSize(200,100);
+
+			console.log(test.im,params)
+			//test.sfill = test.im.getIcon(50,50,4)//.apply(test.im,params)
+			test.sfill = test.im.getIcon.apply(test.im,params)
+			test.sms  = new lime.Sprite().setFill(test.sfill).setPosition(200,0).setAnchorPoint(0,0).setSize(100,100)
+
+			layer2.appendChild(test.sms);
+			layer2.appendChild(test.ms);
+			
+			// set active scene
+			director.replaceScene(scene);
+		}
+		mydraw();
+
+}
+</script>

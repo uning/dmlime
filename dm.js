@@ -25,6 +25,8 @@ goog.require('lime.transitions.Dissolve');
 
 goog.require('dm.Board');
 
+goog.require('dm.IconManager');
+
 goog.require('dm.Button');
 
 goog.require('dm.Game');
@@ -96,7 +98,7 @@ dm.loadMenu = function() {
   layer.appendChild(btns);
   move = new lime.animation.MoveBy(-dm.WIDTH, 0).enableOptimizations();
   btn = dm.makeButton('开始').setPosition(0, 200);
-  goog.events.listen(btn, 'click', function() {
+  goog.events.listen(btn, ['click', 'touchstart'], function() {
     console.log('game start');
     return btns.runAction(move);
   });
