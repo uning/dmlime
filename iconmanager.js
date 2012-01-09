@@ -90,3 +90,10 @@ dm.IconManager.getFileIcon = function(file, offset, scalex, scaley, offset_perc)
   inst.file = file;
   return inst.getIcon(offset, scalex, scaley, offset_perc);
 };
+
+dm.IconManager.getImg = function(file) {
+  var inst, _base;
+  inst = (_base = dm.IconManager.prototype).inst || (_base.inst = new dm.IconManager(file));
+  inst.file = file;
+  return inst.getIcon(0, 1, 1, 1);
+};

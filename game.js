@@ -16,164 +16,11 @@ goog.require('lime.animation.Loop');
 
 
 dm.Game = function(size,user){
-	size  = size ||  6;
     lime.Scene.call(this);
-	this.user = user || new dm.User(1);
-	this.user.game = this;
 	//初始化数据
-	this.initData();
-	//初始化面板
-	this.panel = new lime.Layer();
-
-	var i ,p,j,plen
-    //empty layer for contents
-    var layer = new lime.Layer();
-    this.appendChild(layer);
-
-
-    // label for score message
-	var fcolor = '#4f96ed' //label颜色
-	,h = 30  //每行高度
-	,lh = 22 //起始
-	,gap = 5 //间隔
-	,lx=30   //lbl 坐标起点
-	,lxx=90  //第二个x坐标起点
-	//exp 
-	fcolor = '#00ff00';
-	plen = 260;
-	this.show_vars = {
-		exp:{color:'#00ff00',txt:'经验',curdata:this.data.exp, max:100}
-		,gold:{color:'#ffff00',txt:'金币',curdata:this.data.gold, max:100}
-		,mana:{color:'#0000ff',txt:'魔法',curdata:this.data.mana, init:1, max:this.user.fp.a5}
-		,hp:{color:'#FF0000',txt:'血量',curdata:this.data.hp,init:1, max:this.user.fp.a6}
-	}
-	
-	var odd = 0;
-	for( i in this.show_vars){
-		p = this.show_vars[i];
-		j =  odd * (plen + lxx - lx +20);
-		p._lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontSize(24).setPosition(lx + j, lh).setText(p.txt).setAnchorPoint(0, 0);
-		
-		layer.appendChild(p._lbl);
-		
-		p.init = p.init || 0.001;
-		p._pg = new dm.Progress(p.init ,p.color,plen,h,10,2,p.bcolor).setPosition(lxx + j, lh);//
-		layer.appendChild(p._pg);
-		
-		p._lct = new lime.Label().setFontFamily('Trebuchet MS').setFontSize(24).setPosition(plen/2 + lxx + j, lh).setAnchorPoint(0.5, 0).setText(p.curdata+'/'+p.max);
-		layer.appendChild(p._lct);
-		
-		if(odd)
-			lh += h + gap;
-		odd = odd ? 0 : 1;
-	}
-
-    var score_lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#4f96ed').setFontSize(24).
-        setPosition(lx, lh).setText('分数').setAnchorPoint(0, 0);
-    layer.appendChild(score_lbl);
-    //this.appendChild(score_lbl);
-	
-
-
-    // score message label
-    this.score = new lime.Label().setFontColor('#000').setFontSize(24).setText('0').setPosition(lxx,lh).setAnchorPoint(0, 0).setFontWeight(700);
-    layer.appendChild(this.score);
-    //this.appendChild(this.score);
-
-	
-	lh += gap+h;
-    // graphical lines for visual effect
-    var line = new lime.Sprite().setSize(670, 2).setFill('#295081').setPosition(720 * .5, lh);
-    layer.appendChild(line);
-
-	lh += gap+2;
-    //make board
-    this.board = new dm.Board(size, size, this).setPosition(25, lh);
-    
-    if(dm.isBrokenChrome()) this.board.setRenderer(lime.Renderer.CANVAS);
-    // static background bubbles for baord. try dfkit.Renderer.CANVAS for this one as it is quite static
-	
-	///*
-    var back = new lime.RoundedRect().setSize(690, 690).setAnchorPoint(0, 0).setPosition(17, lh - 8).setRadius(30);
-    for (var c = 0; c < this.board.cols; c++) {
-        for (var r = 0; r < this.board.rows; r++) {
-            var b = new lime.Sprite().setFill('assets/shadow.png').setAnchorPoint(0, 0).
-                setSize(this.board.GAP * .94, this.board.GAP * .94).
-                setPosition(11 + c * this.board.GAP, 11 + r * this.board.GAP);
-            b.qualityRenderer = true; // no jagged edges on moz for this one
-            back.appendChild(b);
-        }
-    }
-
-
-    layer.appendChild(back);
-	//*/
-    layer.appendChild(this.board);
-
-	lh += 690+gap;
-    // graphical lines for visual effect
-    line = new lime.Sprite().setSize(670, 2).setFill('#295081').setPosition(720 * .5, lh );
-    layer.appendChild(line);
-
-
-	
-	lh += gap +40;
-
-    // Menu button
-    this.btn_menu = new dm.Button('主菜单').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setPosition(dm.Display.position.btn_menu.x,dm.Display.position.btn_menu.y);
-    goog.events.listen(this.btn_menu, 'click', function() {
-        dm.loadMenu();
-    });
-    this.appendChild(this.btn_menu);
-
-    // Hint button
-    this.btn_hint = new dm.Button('人物').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setPosition(dm.Display.position.btn_hint.x, dm.Display.position.btn_hint.y);
-    goog.events.listen(this.btn_hint, 'click', function() {
-        //this.changeAnim('Hello');
-		this.board.popWindow();
-    },false, this);
-    this.appendChild(this.btn_hint);
-
-	//其他显示的数据
-	var monster_lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(24).
-        setPosition(250, lh -25).setText('怪物伤害').setAnchorPoint(0, 0);
-    
-	this.appendChild(monster_lbl);
-	
-	var att_lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(24).
-        setPosition(250, lh+5).setText('玩家攻击').setAnchorPoint(0, 0);
-    this.appendChild(att_lbl);
-	
-	this.mon = new lime.Label().setFontColor('#000').setFontSize(24).setText(this.board.getDamage()).setPosition(360,lh -25
-	).setAnchorPoint(0, 0).setFontWeight(700);
-	
-	this.att = new lime.Label().setFontColor('#000').setFontSize(24).setText(this.user.fp.a1).setPosition(360,lh + 5).setAnchorPoint(0, 0).setFontWeight(700);
-
-	this.appendChild(this.mon);
-	this.appendChild(this.att);	
-	this.show_create = 1;
-
+	this.initData(size, user);
+	this.createBoard();
 	this.createPanel();
-	/*
-	 *新的UI
-	 */
-	//var test = new lime.Layer();
-	/*
-	var tailer = dm.Display.boardtailer;
-    var show_board = new lime.Sprite().setSize(690, 140).setAnchorPoint(0,0).setPosition(tailer.location.x, tailer.location.y).setFill(dm.IconManager.getFileIcon('assets/tiles.png', tailer.img.x, tailer.img.y, 690/320, 140/76, 1));
-	this.panel.appendChild(show_board);
-	//test.appendChild(show_board);
-
-	//技能槽
-	var slot;
-	for(var ii=0;ii<4;ii++){
-		slot = new lime.Sprite().setSize(90,90).setAnchorPoint(0,0).setPosition(25+ ii*92, 0).setFill(dm.IconManager.getFileIcon('assets/menus.png', 248, 0, 90/53, 90/53, 1));
-		this.panel.appendChild(slot);
-		//test.appendChild(slot);
-	}
-//	this.appendChild(this.panel);
-
-*/
 	
     // update score when points have changed
     lime.scheduleManager.scheduleWithDelay(this.updateScore, this, 100);
@@ -192,41 +39,6 @@ goog.inherits(dm.Game, lime.Scene);
 
 
 /**
- * 填充一个格子,不同策略实现
- */
-dm.Game.prototype.newGem = function() {
-
-    var gem = new dm.Gem();
-	//默认随机
-    var id = Math.floor(Math.random() * dm.GEMTYPES.length);
-    //var color = dm.Gem.colors[id];
-    gem.index = id; 
-	gem.type = dm.GEMTYPES[id];
-	gem.label.setText(gem.type);
-	if(gem.type == 'monster'){
-		gem.attack = 1;
-		gem.blood = 2;
-	}
-    gem.circle.setFill('assets/ball_' + id + '.png');
-	this.data.appearNum[id] += 1;
-	return gem;
-
-}
-
-
-/**
- * Subtract one second from left time in timed mode
- */
-dm.Game.prototype.decreaseTime = function() {
-    this.curTime--;
-    if (this.curTime < 1) {
-        this.endGame();
-    }
-    // update progressbar
-    this.time_left.setProgress(this.curTime / this.maxTime);
-};
-
-/**
  * Increase value of score label when points have changed
  */
 dm.Game.prototype.updateScore = function() {
@@ -242,36 +54,6 @@ dm.Game.prototype.updateScore = function() {
 		this.step = 0;
 };
 
-/**
- * Register new hint from board object. Activate button
- * if no action soon
- * @param {dm.Gem} hint Hint gem.
- */
-dm.Game.prototype.setHint = function(hint) {
-    this.hint = hint;
-    if (!goog.isDef(hint)) {
-        return this.endGame();
-    }
-    else {
-        lime.scheduleManager.callAfter(this.showHint, this, 3500);
-    }
-};
-
-/**
- * Hide hint button
- */
-dm.Game.prototype.clearHint = function() {
-    lime.scheduleManager.unschedule(this.showHint, this);
-    this.btn_hint.runAction(new lime.animation.FadeTo(0));
-    delete this.hint;
-};
-
-/**
- * Show hint button
- */
-dm.Game.prototype.showHint = function() {
-    this.btn_hint.runAction(new lime.animation.FadeTo(1));
-};
 
 /**
  * Update points
@@ -358,34 +140,145 @@ dm.Game.prototype.changeAnim = function(str){
  * 面板的UI生成
  */
 dm.Game.prototype.createPanel = function(){
+	var panel = new lime.Layer();
 	var i,slot,taile,show_board; //slot 技能槽
 	tailer = dm.Display.boardtailer;
 	show_board = new lime.Sprite().setSize(690, 140).setAnchorPoint(0,0).setPosition(tailer.location.x, tailer.location.y).setFill(dm.IconManager.getFileIcon('assets/tiles.png', tailer.img.x, tailer.img.y, 690/320, 140/76, 1));
-	this.panel.appendChild(show_board);
+	panel.appendChild(show_board);
+	var icon = dm.IconManager.getFileIcon('assets/menus.png', 248, 0, 110/53, 110/53, 1);
 	for( i=0;i<4;i++){
-		slot = new lime.Sprite().setSize(90,90).setAnchorPoint(0,0).setPosition(25+ i*92, 0).setFill(dm.IconManager.getFileIcon('assets/menus.png', 248, 0, 90/53, 90/53, 1));
-		this.panel.appendChild(slot);
-		//test.appendChild(slot);
+		slot = new lime.Sprite().setSize(110,110).setAnchorPoint(0,0).setPosition(60 + i*120, 0).setFill(icon);
+		panel.appendChild(slot);
 	}
-	this.appendChild(this.panel);
+	//menu
+	icon = dm.IconManager.getFileIcon('assets/tiles.png', 268, 336, 148/72, 50/26, 1);
+	var menu = new lime.Sprite().setSize(152, 50).setAnchorPoint(0, 0).setPosition(60 + 4*120, 0).setFill(icon);
+	panel.appendChild(menu);
+	//stat
+	icon = dm.IconManager.getFileIcon('assets/tiles.png', 342, 336, 148/72, 50/26, 1);
+	var stat = new lime.Sprite().setSize(152, 50).setAnchorPoint(0, 0).setPosition(60 + 4*120, 60).setFill(icon);
+	panel.appendChild(stat);
+
+	this.appendChild(panel);
+
+   /**********/
+
+    //empty layer for contents
+    var layer = new lime.Layer();
+    //this.appendChild(layer);
+
+
+    // label for score message
+	var fcolor = '#4f96ed' //label颜色
+	,h = 30  //每行高度
+	,lh = 22 //起始
+	,gap = 5 //间隔
+	,lx=30   //lbl 坐标起点
+	,lxx=90  //第二个x坐标起点
+	//exp 
+	fcolor = '#00ff00';
+	plen = 260;
+	this.show_vars = {
+		exp:{color:'#00ff00',txt:'经验',curdata:this.data.exp, max:100}
+		,gold:{color:'#ffff00',txt:'金币',curdata:this.data.gold, max:100}
+		,mana:{color:'#0000ff',txt:'魔法',curdata:this.data.mana, init:1, max:this.user.fp.a5}
+		,hp:{color:'#FF0000',txt:'血量',curdata:this.data.hp,init:1, max:this.user.fp.a6}
+	}
+	
+	var odd = 0;
+	for( i in this.show_vars){
+		p = this.show_vars[i];
+		j =  odd * (plen + lxx - lx +20);
+		p._lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontSize(24).setPosition(lx + j, lh).setText(p.txt).setAnchorPoint(0, 0);
+		
+		layer.appendChild(p._lbl);
+		
+		p.init = p.init || 0.001;
+		p._pg = new dm.Progress(p.init ,p.color,plen,h,10,2,p.bcolor).setPosition(lxx + j, lh);//
+		layer.appendChild(p._pg);
+		
+		p._lct = new lime.Label().setFontFamily('Trebuchet MS').setFontSize(24).setPosition(plen/2 + lxx + j, lh).setAnchorPoint(0.5, 0).setText(p.curdata+'/'+p.max);
+		layer.appendChild(p._lct);
+		
+		if(odd)
+			lh += h + gap;
+		odd = odd ? 0 : 1;
+	}
+
+    var score_lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#4f96ed').setFontSize(24).
+        setPosition(lx, lh).setText('分数').setAnchorPoint(0, 0);
+    layer.appendChild(score_lbl);
+    //this.appendChild(score_lbl);
+	
+
+
+    // score message label
+    this.score = new lime.Label().setFontColor('#000').setFontSize(24).setText('0').setPosition(lxx,lh).setAnchorPoint(0, 0).setFontWeight(700);
+    layer.appendChild(this.score);
+    //this.appendChild(this.score);
+
+	
+	lh += gap+h;
+    // graphical lines for visual effect
+    var line = new lime.Sprite().setSize(670, 2).setFill('#295081').setPosition(720 * .5, lh);
+    layer.appendChild(line);
+
+	lh += gap+2;
+	lh += 690+gap;
+    // graphical lines for visual effect
+    line = new lime.Sprite().setSize(670, 2).setFill('#295081').setPosition(720 * .5, lh );
+    layer.appendChild(line);
+	
+	lh += gap +40;
+    // Menu button
+    this.btn_menu = new dm.Button('主菜单').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setPosition(dm.Display.position.btn_menu.x,dm.Display.position.btn_menu.y);
+    goog.events.listen(this.btn_menu, 'click', function() {
+        dm.loadMenu();
+    });
+    //this.appendChild(this.btn_menu);
+
+    // Hint button
+    this.btn_hint = new dm.Button('人物').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setPosition(dm.Display.position.btn_hint.x, dm.Display.position.btn_hint.y);
+    goog.events.listen(this.btn_hint, 'click', function() {
+        //this.changeAnim('Hello');
+		this.board.popWindow();
+    },false, this);
+    //this.appendChild(this.btn_hint);
+
+	//其他显示的数据
+	var monster_lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(24).
+        setPosition(250, lh -25).setText('怪物伤害').setAnchorPoint(0, 0);
+    
+	//this.appendChild(monster_lbl);
+	
+	var att_lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(24).
+        setPosition(250, lh+5).setText('玩家攻击').setAnchorPoint(0, 0);
+
+	this.mon = new lime.Label().setFontColor('#000').setFontSize(24).setText(this.board.getDamage()).setPosition(360,lh -25).setAnchorPoint(0, 0).setFontSize(40);
+	this.att = new lime.Label().setFontColor('#000').setFontSize(24).setText(this.user.fp.a1).setPosition(360,lh + 5).setAnchorPoint(0, 0).setFontSize(40);
+	panel.appendChild(this.mon);
+	panel.appendChild(this.att);	
+	this.show_create = 1;
+
 }
 
 /*
  * create board
  */
-dm.Game.prototype.createBoard = function(size){
-    this.board = new dm.Board(size, size, this).setPosition(25, 134);
-    
+dm.Game.prototype.createBoard = function(){
+    this.board = new dm.Board(this.size, this.size, this).setPosition(25, 134);
     if(dm.isBrokenChrome()) this.board.setRenderer(lime.Renderer.CANVAS);
-	
-    layer.appendChild(this.board);
+    this.appendChild(this.board);
 }
 
 /*
  * 游戏数据初始化
  */
-dm.Game.prototype.initData = function(){
+dm.Game.prototype.initData = function(size, user){
 	//初始化数据
+	this.size  = size ||  6;
+	this.user = user || new dm.User(1);
+	this.user.game = this;
 	this.data = {};
 	this.data.turn = 0; //回合数
 	this.data.appearNum = {};

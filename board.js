@@ -148,12 +148,14 @@ dm.Board.prototype.moveGems = function(opt_static) {
             }
         }
     }
+	dm.log.fine('in moveGems : action.play start')
     var action = mm.play(opt_static);
 
     if (action) {
         // check if new solutions have appeared after move
         goog.events.listen(action, lime.animation.Event.STOP, function() {
-        this.isMoving_ = 0;
+			dm.log.fine('in moveGems : action.play stop')
+			this.isMoving_ = 0;
         },false, this);
     }
     return action || false;
@@ -324,15 +326,18 @@ dm.Board.prototype.checkSolutions = function() {
 	}
 	this.changeProg(this.game, p_type);
 	goog.events.listen(action, lime.animation.Event.STOP, function() {
+		dm.log.fine('in checkSolutions : action stop');
         goog.array.forEach(s, function(g) {
             if(g.keep == false)
 				g.parent_.removeChild(g);
         },this);
+		dm.log.fine('in checkSolutions : moveGems start');
         this.moveGems();
     },false, this);
 
 	this.game.data.turn += 1;
     this.fillGems();
+	dm.log.fine('in checkSolutions : action start');
     action.play();
 	this.isMoving_ = 0;
 	
@@ -503,8 +508,8 @@ dm.Board.prototype.pressHandler_ = function(e) {
     var c = Math.floor(pos.x / this.GAP),
         r = this.rows - Math.ceil(pos.y / this.GAP);
 
-	var valid_min = this.GAP*0.15,
-		valid_max = this.GAP*0.85,  //落在GEM矩形框内中心部分才有效
+	var valid_min = this.GAP*0.10,
+		valid_max = this.GAP*0.90,  //落在GEM矩形框内中心部分才有效
 		x_valid = pos.x - this.GAP*c;
 		y_valid = pos.y - this.GAP*(this.rows - 1 - r);
 

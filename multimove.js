@@ -72,6 +72,7 @@ dm.MultiMove.prototype.play = function(opt_static) {
                 }
             },false, layer);
             layer.runAction(action);
+			//this.tempMove();
         }
         else {
             for (j = 0; j < req.length; j++) {
@@ -82,3 +83,20 @@ dm.MultiMove.prototype.play = function(opt_static) {
     }
     return longest_action;
 };
+
+
+dm.MultiMove.prototype.tempMove = function(){
+	var parent = this.getParent();
+	parent.removeChild(this);
+	var pos = this.getPosition();
+	var i = this.children_.length - 1;
+	while (i >= 0) {
+		var n = this.children_[i];
+		this.removeChild(n);
+		n.setRenderer(lime.Renderer.DOM);
+		grandparent.layers[n.c].appendChild(n);
+		var pp = (goog.math.Coordinate.sum(pos, n.getPosition()));
+		n.setPosition(goog.math.Coordinate.sum(pos, n.getPosition()));
+		i--;
+	}
+}

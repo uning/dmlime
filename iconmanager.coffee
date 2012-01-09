@@ -76,3 +76,7 @@ dm.IconManager.getFileIcon = (file,offset,scalex,scaley,offset_perc) ->
 	inst.file = file
 	inst.getIcon offset,scalex,scaley,offset_perc
 
+dm.IconManager.getImg = (file)->
+	inst  =  dm.IconManager::inst or= new dm.IconManager(file)
+	inst.file = file
+	inst.getIcon 0,1,1,1
