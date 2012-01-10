@@ -91,6 +91,11 @@ dm.Board = function(rows,cols,game) {
     lime.scheduleManager.callAfter(this.moveGems, this, 100);
 
 
+	//tool function sense neighbor
+	
+	
+
+
 };
 goog.inherits(dm.Board, lime.Sprite);
 
@@ -131,8 +136,6 @@ dm.Board.prototype.fillGems = function() {
  * @return {boolean} If something was moved or not.
  */
 dm.Board.prototype.moveGems = function(opt_static) {
-	this.updateLine();
-
     // multimove is a custom helper object that puts bubbles in their own
     // owen layer before moving. everything works same way without it and
     // even without any performance change on 90% of devices.
@@ -150,7 +153,6 @@ dm.Board.prototype.moveGems = function(opt_static) {
     }
 	dm.log.fine('in moveGems : action.play start')
     var action = mm.play(opt_static);
-
     if (action) {
         // check if new solutions have appeared after move
         goog.events.listen(action, lime.animation.Event.STOP, function() {
@@ -258,10 +260,10 @@ dm.Board.prototype.checkSolutions = function() {
 		if(s.length > 3)
 			data['gold'] += this.randExtra(fp.a13,fp.a14,fp.a15,fp.a16)
 
-		while(data['gold'] >= 100){
+		while(data['gold'] >= 3){
 			this.popWindow('Shop');
 			ispoping = 1;
-			data['gold'] -= 100;
+			data['gold'] -= 3;
 		}
 	}
 
@@ -280,9 +282,9 @@ dm.Board.prototype.checkSolutions = function() {
 			data['mana'] += this.randExtra(fp.a21,fp.a22,fp.a23,fp.a24)
 		data['skillexp'] += Math.min(data['mana'] - fp.a5);
 		data['mana'] = Math.min(fp.a5, data[p_type]);
-		while(data['skillexp'] >= 100){
+		while(data['skillexp'] >= 5){
 			this.popWindow('Skill');
-			data['skillexp'] -= 100;
+			data['skillexp'] -= 5;
 		}
 	}
 	//回合结束其他动作
@@ -325,20 +327,27 @@ dm.Board.prototype.checkSolutions = function() {
 		this.turnEndShow();
 	}
 	this.changeProg(this.game, p_type);
-	goog.events.listen(action, lime.animation.Event.STOP, function() {
-		dm.log.fine('in checkSolutions : action stop');
+
+	var me = this;
+	var animationStop = function() {
+		dm.log.fine('checkSolutions : animation stop');
         goog.array.forEach(s, function(g) {
-            if(g.keep == false)
+            if(g.keep == false){
 				g.parent_.removeChild(g);
+			    delete g;
+			}
         },this);
+		me.fillGems();
 		dm.log.fine('in checkSolutions : moveGems start');
-        this.moveGems();
-    },false, this);
+        me.moveGems();
+    }
+	goog.events.listen(action, lime.animation.Event.STOP,animationStop ,false, this);
 
 	this.game.data.turn += 1;
-    this.fillGems();
 	dm.log.fine('in checkSolutions : action start');
-    action.play();
+    //action.play();
+	animationStop(); //不播动画
+	
 	this.isMoving_ = 0;
 	
 	return true;
@@ -416,6 +425,7 @@ dm.Board.prototype.addSelGem = function(g,trypos) {
 	}
 	if(g){
 		g.select();
+		dm.log.fine('addSelGem',g.r,g.c)
 		//实时计算伤害：
 		if(g.type == 'sword'){
 			this.show_att += this.fp.a2;
@@ -467,11 +477,33 @@ dm.Board.prototype.updateLine = function() {
 	this.lineLayer.removeAllChildren();
 
 }
+
+
+/* 
+ *
+ * 根据新的移动位置，寻找可能选择的gem
+ *
+ */
+dm.Board.prototype.selSense_= function (lastg,pos){
+	pos1 = lastg.getPosition();
+	rota = goog.math.Vec2.difference(pos1,pos),
+	degree = Math.atan(rota.y/rota.x);
+	if(rota.x < 0){
+		degree += Math.PI;
+	}
+
+	nc = lastg.c +  Math.cos(degree)
+	
+
+}
+
 /**
  * Handle presses on the board
  * @param {lime.Event} e Event.
  */
 dm.Board.prototype.pressHandler_ = function(e) {
+
+
     // no touching allowed when still moving
     if (this.isMoving_) return;
 	if((e.type =='mousemove' || e.type == 'touchmove' || e.type == 'gesturechange')){
@@ -508,8 +540,8 @@ dm.Board.prototype.pressHandler_ = function(e) {
     var c = Math.floor(pos.x / this.GAP),
         r = this.rows - Math.ceil(pos.y / this.GAP);
 
-	var valid_min = this.GAP*0.10,
-		valid_max = this.GAP*0.90,  //落在GEM矩形框内中心部分才有效
+	var valid_min = this.GAP*0.05,
+		valid_max = this.GAP*0.95,  //落在GEM矩形框内中心部分才有效
 		x_valid = pos.x - this.GAP*c;
 		y_valid = pos.y - this.GAP*(this.rows - 1 - r);
 
@@ -520,7 +552,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	}
 	if(x_valid < valid_min || x_valid > valid_max || y_valid < valid_min || y_valid > valid_max){
 		this.touchPos = pos 
-		dm.log.fine('pressHandler_: not on gem '+e.type);
+		dm.log.fine('pressHandler_: not on focus gem '+e.type);
 		return;
 	}
 
@@ -528,12 +560,13 @@ dm.Board.prototype.pressHandler_ = function(e) {
 
 
 	var lastg;
+
+	//需要更智能,移动方向
 	if(this.selectedGems.length > 0)
 		lastg = this.selectedGems[this.selectedGems.length - 1];
 	if(lastg  === g){
 		return ; //
 	}
-	
 
 	
 	var selid = -1;
@@ -545,6 +578,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	}
 
 
+	//处理取消
 	if((e.type =='mousemove' || e.type == 'touchmove')){
 		if(selid > -1){
 				this.cancelSelGem(selid);
@@ -570,27 +604,16 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	
 	//如果不相邻
 	if(lastg && !lastg.canConnect(g)){
-		this.addSelGem(null,e.position);//记录try pos
+	
+		
+	//	this.addSelGem(null,e.position);//记录try pos
 		return;
 	}
+	this.lastPos = e.poistion;
 	this.addSelGem(g);	
 	this.checkLine(this.selectedGems);
 };
 
-/**
- * Swap two object in bubbles array
- * @param {dm.Gem} g1 First.
- * @param {dm.Gem} g2 Second.
- */
-dm.Board.prototype.swap = function(g1,g2) {
-    var tempc = g1.c, tempr = g1.r;
-    g1.c = g2.c;
-    g1.r = g2.r;
-    g2.c = tempc;
-    g2.r = tempr;
-    this.gems[g1.c][g1.r] = g1;
-    this.gems[g2.c][g2.r] = g2;
-};
 
 /*
  * 计算当前怪物伤害

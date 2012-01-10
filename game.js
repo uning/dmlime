@@ -1,5 +1,4 @@
 goog.provide('dm.Game');
-
 goog.require('dm.Progress');
 goog.require('lime.CanvasContext');
 goog.require('lime.animation.RotateBy');
@@ -140,7 +139,8 @@ dm.Game.prototype.changeAnim = function(str){
  * 面板的UI生成
  */
 dm.Game.prototype.createPanel = function(){
-	var panel = new lime.Layer();
+	this.panel = new lime.Layer();
+	var panel  = this.panel;
 	var i,slot,taile,show_board; //slot 技能槽
 	tailer = dm.Display.boardtailer;
 	show_board = new lime.Sprite().setSize(690, 140).setAnchorPoint(0,0).setPosition(tailer.location.x, tailer.location.y).setFill(dm.IconManager.getFileIcon('assets/tiles.png', tailer.img.x, tailer.img.y, 690/320, 140/76, 1));
@@ -148,17 +148,60 @@ dm.Game.prototype.createPanel = function(){
 	var icon = dm.IconManager.getFileIcon('assets/menus.png', 248, 0, 110/53, 110/53, 1);
 	for( i=0;i<4;i++){
 		slot = new lime.Sprite().setSize(110,110).setAnchorPoint(0,0).setPosition(60 + i*120, 0).setFill(icon);
+		slot.domClassName = goog.getCssName('lime-button');
+		this.skillslot[i] = slot;
 		panel.appendChild(slot);
 	}
-	//menu
-	icon = dm.IconManager.getFileIcon('assets/tiles.png', 268, 336, 148/72, 50/26, 1);
-	var menu = new lime.Sprite().setSize(152, 50).setAnchorPoint(0, 0).setPosition(60 + 4*120, 0).setFill(icon);
-	panel.appendChild(menu);
-	//stat
-	icon = dm.IconManager.getFileIcon('assets/tiles.png', 342, 336, 148/72, 50/26, 1);
-	var stat = new lime.Sprite().setSize(152, 50).setAnchorPoint(0, 0).setPosition(60 + 4*120, 60).setFill(icon);
-	panel.appendChild(stat);
 
+	//menu
+	icon = dm.IconManager.getFileIcon('assets/tiles.png', 342, 336, 148/72, 50/26, 1);
+	var menu = new lime.Sprite().setSize(152, 50).setAnchorPoint(0, 0).setPosition(60 + 4*120, 0).setFill(icon);
+    menu.domClassName = goog.getCssName('lime-button');
+	panel.appendChild(menu);
+    goog.events.listen(menu, lime.Button.Event.CLICK, function() {
+		var game = this.getParent().getParent();
+		var board = game.board;
+		goog.events.unlisten(board, ['mousedown', 'touchstart'], board.pressHandler_);
+		var dialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(500, 480).setPosition(120, 260).setAnchorPoint(0, 0).setRadius(20);
+		game.appendChild(dialog);
+		var label = new lime.Label().setText('退回主菜单将丢失本轮游戏进度').setFontColor('#FFF').setFontSize(30).setAnchorPoint(0, 0).setPosition(50, 200);
+		dialog.appendChild(label);
+		var btn_ok = new dm.Button('重来').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setAnchorPoint(0, 0).setPosition(180,300);
+		var btn_cancel = new dm.Button('返回').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setAnchorPoint(0, 0).setPosition(350,300);
+		dialog.appendChild(btn_ok);
+		dialog.appendChild(btn_cancel);
+		goog.events.listen(btn_ok, lime.Button.Event.CLICK, function() {
+
+			var dialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(500, 480).setPosition(120, 260).setAnchorPoint(0, 0).setRadius(20);
+			this.getParent().getParent().appendChild(dialog);
+			var btn_ok = new dm.Button('确定').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setAnchorPoint(0, 0).setPosition(180,300);
+			var btn_cancel = new dm.Button('取消').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setAnchorPoint(0, 0).setPosition(350,300);
+			dialog.appendChild(btn_ok);
+			dialog.appendChild(btn_cancel);
+			this.getParent().getParent().removeChild(this.getParent());
+			goog.events.listen(btn_ok, lime.Button.Event.CLICK, function() {
+				dm.loadMenu();
+			});
+			goog.events.listen(btn_cancel, lime.Button.Event.CLICK, function() {
+				var board = this.getParent().getParent().board;
+				this.getParent().getParent().removeChild(this.getParent());
+				goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+		});
+		});
+		goog.events.listen(btn_cancel, lime.Button.Event.CLICK, function() {
+			var board = this.getParent().getParent().board;
+			this.getParent().getParent().removeChild(this.getParent());
+			goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+		});
+    });
+	//stat
+	icon = dm.IconManager.getFileIcon('assets/tiles.png', 268, 336, 148/72, 50/26, 1);
+	var stat = new lime.Sprite().setSize(152, 50).setAnchorPoint(0, 0).setPosition(60 + 4*120, 60).setFill(icon);
+    stat.domClassName = goog.getCssName('lime-button');
+	panel.appendChild(stat);
+    goog.events.listen(stat, lime.Button.Event.CLICK, function() {
+		this.getParent().getParent().statShow();
+    });
 	this.appendChild(panel);
 
    /**********/
@@ -233,6 +276,7 @@ dm.Game.prototype.createPanel = function(){
     // Menu button
     this.btn_menu = new dm.Button('主菜单').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setPosition(dm.Display.position.btn_menu.x,dm.Display.position.btn_menu.y);
     goog.events.listen(this.btn_menu, 'click', function() {
+		
         dm.loadMenu();
     });
     //this.appendChild(this.btn_menu);
@@ -294,4 +338,33 @@ dm.Game.prototype.initData = function(size, user){
 	this.data.gold  = 0;
 	this.data.skillexp = 0;
     this.points = 0;
+	this.panel;
+	this.skillslot = [];
 }
+
+dm.Game.prototype.statShow = function(){
+	var i,dialog,eqpslot,sloticon,eqp,eqpicon;
+	goog.events.unlisten(this.board, ['mousedown','touchstart'], this.board.pressHandler_);
+    dialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(500, 480).setPosition(120, 260).setAnchorPoint(0, 0).setRadius(20);
+	this.appendChild(dialog);
+	//
+	sloticon = dm.IconManager.getFileIcon('assets/menus.png', 50, 0, 1.9, 1.85, 1);
+	eqp = this.user.equips;
+	for(i=0;i<5;i++){
+		eqpslot = new lime.Sprite().setSize(100, 100).setAnchorPoint(0,0).setFill(sloticon).setPosition(10+(i%2)*110, 10+(i%3)*110);
+		if(eqp[i] && eqp[i].icon){
+			eqpicon = dm.IconManager.getFileIcon('assets/icons.png',eqp[i].icon['x'],eqp[i].icon['y'],2,2,1);
+			eqpslot.setFill(eqpicon);
+		}
+		dialog.appendChild(eqpslot);
+	}
+	//
+    btn = new dm.Button().setText('return').setSize(200, 90).setPosition(110, 400);
+    dialog.appendChild(btn);
+    goog.events.listen(btn, lime.Button.Event.CLICK, function() {
+		var game = this.getParent().getParent();
+		game.removeChild(this.getParent());
+		goog.events.listen(game.board, ['mousedown','touchstart'], game.board.pressHandler_);
+    });
+}
+

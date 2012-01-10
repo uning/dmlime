@@ -188,7 +188,7 @@ dm.start = ->
 
 	console.log 'in dm.start',el
 	dm.director = new lime.Director el, dm.WIDTH, dm.HEIGHT
-	dm.director.makeMobileWebAppCapable
+	dm.director.makeMobileWebAppCapable()
 	dm.loadMenu()
 
 

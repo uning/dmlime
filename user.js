@@ -2,6 +2,7 @@ goog.provide('dm.User');
 goog.require('dm.conf.FP');
 goog.require('dm.conf.SP');
 goog.require('dm.conf.EP');
+goog.require('dm.conf.SK');
 
 
 
@@ -114,9 +115,43 @@ dm.User.prototype.popuSP=function(){
 	}
 }
 
-
-//升级技能
+/*
+ * 升级技能
+ * 是否4个技能已满? 没满则会随机出新技能,否则升级技能
+ */
 dm.User.prototype.skillUp=function(name){
+	var i,j,sn=0,sks,cansel,chose=[];
+	sks = dm.conf.SK;
+	for(i in this.skills){
+		sn++; //统计技能数量
+		delete sks[i];
+	};
+	if(sn < 4){
+		//test
+		cansel = this.findKey(sks);
+		j = Math.round(Math.random()*cansel.length);
+		this.skills[cansel[j]] = sks[cansel[j]];
+		var img = dm.IconManager.getFileIcon('assets/tiles.png', 510+((parseInt(sks[cansel[j]].no)-1)%10)*50, Math.floor(parseInt(sks[cansel[j]].no)/10)*50 , 2, 2.1, 1);
+		this.game.skillslot[sn].setFill(img);
+	}
+	//
+		/*
+	}else{
+		cansel = this.findKey(sks);
+		if(sn == 0){
+			for(i=0;i<2;i++){
+				j = Math.round(Math.random()*cansel.length);
+				//this.skills[cansel[j]] = sks[cansel[j]];
+				chose.push(sks[cansel[j]]);
+				cansel.slice(j,1);
+				cansel.length -= 1;
+			}
+
+		}else{
+
+		}
+	}
+	*/
 
 }
 
@@ -166,6 +201,10 @@ dm.User.prototype.upgrade=function(eqpid, type){ //type = 0:主属性,type = 1:�
 			this.equips[4] = dm.conf.EP['arm_'+equiplvl] || {};
 			break;
 	}
+	this.equips[eqpid].icon = {
+		x:((equiplvl-1))%20*50,
+		y:this.equips[eqpid].loc*4*50
+	}; 
 	}else{
 		//type = type -1;
 		var i,j=0,num;
@@ -186,7 +225,6 @@ dm.User.prototype.upgrade=function(eqpid, type){ //type = 0:主属性,type = 1:�
 			j++;
 		}
 	}
-	console.log(eqpid);
 	this.popuFP();
 }
 
@@ -278,6 +316,8 @@ dm.User.prototype.lvlUp=function(){
 
 //
 //在{附加属性：附加值}对中，找到附加属性键名并返回为数组形式
+//param obj -- 要查找键值对的对象
+//ret -- 返回 array
 //
 dm.User.prototype.findKey=function(array){
 	array = array || {};

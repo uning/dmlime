@@ -11,7 +11,7 @@
  *
  */
 
-$files= array('first_property.csv'=> 'FP', 'second_property.csv'=>'SP', 'equips.csv'=>'EP');
+$files= array('first_property.csv'=> 'FP', 'second_property.csv'=>'SP', 'equips.csv'=>'EP', 'skill.csv'=>'SK');
 $conf_dir = __DIR__.'/dmdata/';
 $conf_js_dir = __DIR__.'/conf/';
 
