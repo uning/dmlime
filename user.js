@@ -133,6 +133,7 @@ dm.User.prototype.skillUp=function(name){
 		this.skills[cansel[j]] = sks[cansel[j]];
 		var img = dm.IconManager.getFileIcon('assets/tiles.png', 510+((parseInt(sks[cansel[j]].no)-1)%10)*50, Math.floor(parseInt(sks[cansel[j]].no)/10)*50 , 2, 2.1, 1);
 		this.game.skillslot[sn].setFill(img);
+		this.game.skillslot[sn].no = cansel[j];
 	}
 	//
 		/*

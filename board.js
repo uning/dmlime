@@ -731,15 +731,15 @@ dm.Board.prototype.getDamage = function(){
 	 switch(type){
 		 case 'exp':
 		 case 'gold':
-			 game.show_vars[type]._pg.setProgress(game.data[type]/100);
+			 //game.show_vars[type]._pg.setProgress(game.data[type]/100);
 			 game.show_vars[type]._lct.setText(game.data[type]+'/'+100);
 			 break;
 		 case 'hp':
-			 game.show_vars['hp']._pg.setProgress(game.data['hp']/game.user.fp.a6);
+			 //game.show_vars['hp']._pg.setProgress(game.data['hp']/game.user.fp.a6);
 			 game.show_vars['hp']._lct.setText(game.data['hp']+'/'+game.user.fp.a6);
 			 break;
 		 case 'mana':
-			 game.show_vars['mana']._pg.setProgress(game.data['mana']/game.user.fp.a5);
+			 //game.show_vars['mana']._pg.setProgress(game.data['mana']/game.user.fp.a5);
 			 game.show_vars['mana']._lct.setText(game.data['mana']+'/'+game.user.fp.a5);
 			 break;
 	 }
