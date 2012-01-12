@@ -151,7 +151,7 @@ dm.Game.prototype.createPanel = function(){
 		this.skillslot[i] = slot;
 		panel.appendChild(slot);
 		goog.events.listen(this.skillslot[i], 'click', function() {
-			this.getParent().getParent().skillShow(this.no);
+			this.getParent().getParent().skillShow(this);
 		});
 	}
 
@@ -362,7 +362,8 @@ dm.Game.prototype.statShow = function(){
 		eqpslot.no = i;
 		eqpslot.disp = frame;
 		if(eqp[i] && eqp[i].icon){
-			eqpicon = dm.IconManager.getFileIcon('assets/icons.png',eqp[i].icon['x'],eqp[i].icon['y'],2,2,1);
+			//eqpicon = dm.IconManager.getFileIcon('assets/icons.png',eqp[i].icon['x'],eqp[i].icon['y'],2,2,1);
+			eqpicon = this.user.equips[i].icon;
 			eqpslot.setFill(eqpicon); //装备图标
 			goog.events.listen(eqpslot, 'click', function() {
 				this.disp.removeAllChildren();
@@ -452,27 +453,26 @@ dm.Game.prototype.mainShow = function(){
 
 }
 
-dm.Game.prototype.skillShow = function(no){
-	var board = this.board;
-	goog.events.unlisten(board, ['mousedown', 'touchstart'], board.pressHandler_);
-	var sk_ch = dm.conf.SK[no];
+dm.Game.prototype.skillShow = function(slot){
+	goog.events.unlisten(this.board, ['mousedown', 'touchstart'], this.board.pressHandler_);
+	var sk = slot.sk;
 	var dialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(500, 480).setPosition(120, 260).setAnchorPoint(0, 0).setRadius(20);
 	this.appendChild(dialog);
 
 	var nm = new lime.Label().setFontColor('#FFF').setFontSize(30).setAnchorPoint(0, 0).setPosition(50, 10);
-	nm.setText(' 技能：'+sk_ch['name']);
+	nm.setText(' 技能：'+sk['name']);
 	dialog.appendChild(nm);
 
 	var disc = new lime.Label().setFontColor('#FFF').setFontSize(30).setAnchorPoint(0, 0).setPosition(50, 40);
-	disc.setText(' 描述：'+sk_ch['disc']);
+	disc.setText(' 描述：'+sk['disc']);
 	dialog.appendChild(disc);
 
 	var cd = new lime.Label().setFontColor('#FFF').setFontSize(30).setAnchorPoint(0, 0).setPosition(50, 70);
-	cd.setText(' 冷却时间(轮)：'+sk_ch['cd']);
+	cd.setText(' 冷却时间(轮)：'+sk['cd']);
 	dialog.appendChild(cd);
 
 	var cost = new lime.Label().setFontColor('#FFF').setFontSize(30).setAnchorPoint(0, 0).setPosition(50, 100);
-	cost.setText(' 魔法消耗：'+sk_ch['mana']);
+	cost.setText(' 魔法消耗：'+sk['mana']);
 	dialog.appendChild(cost);
 
 	var btn_ok = new dm.Button('使用技能').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setAnchorPoint(0, 0).setPosition(180,300);
@@ -480,7 +480,7 @@ dm.Game.prototype.skillShow = function(no){
 	dialog.appendChild(btn_ok);
 	dialog.appendChild(btn_cancel);
 	goog.events.listen(btn_ok, lime.Button.Event.CLICK, function() {
-		alert(sk_ch['disc'] + ' 冷却时间(轮)：'+sk_ch['cd']+' 魔法消耗：'+sk_ch['mana']);
+		var board = this.getParent().getParent().board;
 		this.getParent().getParent().removeChild(this.getParent());
 		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 	});

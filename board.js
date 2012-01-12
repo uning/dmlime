@@ -247,10 +247,10 @@ dm.Board.prototype.checkSolutions = function() {
 			}
 		}
 
-		while(data['exp'] >= 100){
+		while(data['exp'] >= 5){
 			this.popWindow('lvl Up');
 			ispoping = 1;
-			data['exp'] -= 100;
+			data['exp'] -= 5;
 		}
 	}
 
@@ -260,10 +260,10 @@ dm.Board.prototype.checkSolutions = function() {
 		if(s.length > 3)
 			data['gold'] += this.randExtra(fp.a13,fp.a14,fp.a15,fp.a16)
 
-		while(data['gold'] >= 3){
+		while(data['gold'] >= 5){
 			this.popWindow('Shop');
 			ispoping = 1;
-			data['gold'] -= 3;
+			data['gold'] -= 5;
 		}
 	}
 
@@ -639,19 +639,26 @@ dm.Board.prototype.getDamage = function(){
  */
  dm.Board.prototype.popWindow = function(text){
 	
-	 var i,ct=0,id,board,game,btn,btn2,rand,equips;
-	 id = [];
-
-	 equips = this.game.user.equips;
+	 var i,j,ct=0,id=[],board,game,btn,btn2,rand,
+	 user = this.game.user,
+	 equips = user.equips;
 	 goog.events.unlisten(this, ['mousedown', 'touchstart'], this.pressHandler_);
 
-	 this.popdialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(690, 690).setPosition(690/2,690/2).
-		 setAnchorPoint(.5, .5).setRadius(20);
-	 this.appendChild(this.popdialog);
+	 var popdialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(500, 500).setPosition(95,95).setRadius(20).setAnchorPoint(0,0);
+	 this.appendChild(popdialog);
+
 	 switch(text){
 		 case 'lvl Up':
-			 btn = new dm.Button().setText(text).setSize(200, 100);
-			 this.popdialog.appendChild(btn);
+			 btn = new dm.Button().setText(text).setSize(200, 100).setPosition(250,440);
+			 popdialog.appendChild(btn);
+			 var labal, spname, spval, loc=80;
+			 for(i in dm.conf.SP){
+				 spname = dm.conf.SP[i].name;
+				 spval = this.game.user.sp[i];
+				 label = new lime.Label().setFontSize(40).setFontColor('#FFF').setText(spname +' '+spval+' + '+dm.conf.SP[i].inc);
+				 popdialog.appendChild(label.setAnchorPoint(0.5,0).setPosition(250, loc));
+				 loc += label.getSize().height;
+			 }
 			 goog.events.listen(btn, lime.Button.Event.CLICK, function() {
 				 board = this.getParent().getParent();
 				 game = board.game
@@ -669,45 +676,153 @@ dm.Board.prototype.getDamage = function(){
 				 delete this.getParent();  
 			 });
 		 break;
+
+		 //
 		 case 'Skill':
-			 btn = new dm.Button().setText(text).setSize(200, 100);
-			 this.popdialog.appendChild(btn);
+
+			 //-------------------------------------------------
+			 var sn=0, icon, frame, sk_key;
+		 for(i in this.game.user.skills){
+			 sn++;
+		 }
+			 if(sn < 4){ //可以随机新技能
+				 sk_key = user.randSel(user.findKey(dm.conf.SK), 2); //随机两个技能，选择学习或者升级
+			 }else if(sn == 4){
+				 sk_key = user.randSel(user.findKey(user.skills), 2);
+			 }
+			 frame = new lime.RoundedRect().setSize(500, 300).setPosition(0, 130).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
+			 btn = new dm.Button().setText(text).setSize(200, 50).setPosition(250, 470);
+			 popdialog.appendChild(frame);
+			 popdialog.appendChild(btn);
+
+			 for(i in sk_key){
+				 icon = new lime.Sprite().setSize(100, 100).setPosition(100+ i*200, 20).setAnchorPoint(0,0);
+				 icon.skill = dm.conf.SK[sk_key[i]]; //传递选中技能
+				 icon.button = btn; // 传递选中技能到btn中
+				 icon.frame = frame;
+				 icon.setFill(dm.IconManager.getFileIcon('assets/tiles.png', 510+((parseInt(icon.skill.no)-1)%10)*50, Math.floor((parseInt(icon.skill.no))/10)*50 , 2, 2.1, 1));
+				 popdialog.appendChild(icon);
+				 //
+
+				 goog.events.listen(icon, lime.Button.Event.CLICK, function() {
+					 //技能相关描述
+					 this.frame.removeAllChildren();
+					 this.button.skill = this.skill;
+
+					 var nm = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 10);
+					 nm.setText(' 技能：'+this.skill['name']);
+					 this.frame.appendChild(nm);
+
+					 var disc = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 40);
+					 disc.setText(' 描述：'+this.skill['disc']);
+					 this.frame.appendChild(disc);
+
+					 var cd = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 70);
+					 cd.setText(' 冷却时间(轮)：'+this.skill['cd']);
+					 this.frame.appendChild(cd);
+
+					 var cost = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 100);
+					 cost.setText(' 魔法消耗：'+this.skill['mana']);
+					 this.frame.appendChild(cost);
+				 });
+			 };
+
+		 //-------------------------------------------------
 			 goog.events.listen(btn, lime.Button.Event.CLICK, function() {
 				 board = this.getParent().getParent();
 				 game = board.game
-				 game.user.skillUp();
+				 if(this.skill){
+					 game.user.skillUp(this.skill);
+					 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+					 board.removeChild(this.getParent());
+					 delete this.getParent();  
+				 }else{
+					 alert('choose one!');
+				 }
 
-				 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
-				 board.removeChild(this.getParent());
-				 delete this.getParent();  
 			 });
 			 break;
+
+
+
 		 case 'Shop':
-			 rand = Math.round(Math.random()*5);
-			 if(rand > 4)
-				rand = 4;
-			 btn = new dm.Button().setText('Buy').setSize(200, 100).setPosition(0,-100);
-			 this.popdialog.appendChild(btn);
-			 goog.events.listen(btn, lime.Button.Event.CLICK, function() {
-				 board = this.getParent().getParent();
-				 game = board.game
-				 board.game.user.upgrade(rand,0);
-				 board.show_att = board.getBaseAttack();
-				 board.show_dmg = board.getDamage();
-				 game.att.setText(board.show_att);
-				 game.mon.setText(board.show_dmg);
-				 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
-				 board.removeChild(this.getParent());
-				 delete this.getParent();  
-			 });
+			 btn = new dm.Button().setText('Buy').setSize(200, 50).setPosition(250, 410);
+			 popdialog.appendChild(btn);
+			 frame = new lime.RoundedRect().setSize(400, 200).setPosition(50, 140).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
+			 popdialog.appendChild(frame);
 			 for(i in equips){
 				 id[ct] = parseInt(i);
 				 ct++;
 			 }
 			 if(ct){
-			 rand = Math.round(Math.random()*(ct-1));
-			 btn2 = new dm.Button().setText('refresh').setSize(200, 100).setPosition(0,100);
-			 this.popdialog.appendChild(btn2);
+				 btn2 = new dm.Button().setText('refresh').setSize(200, 50).setPosition(250,470);
+				 popdialog.appendChild(btn2);
+			 }
+
+			 var eqp_sel = this.game.user.randSel([0,1,2,3,4], 3); //随机选3个部位购买装备
+			 var eqp = this.game.user.equips;
+			 j=0;
+			 for(i in eqp_sel){
+				 icon = new lime.Sprite().setSize(100, 100).setPosition(80 + j*120, 20).setAnchorPoint(0,0);
+				 j++;
+				 var eqplvl = (eqp[eqp_sel[i]] && (parseInt(eqp[eqp_sel[i]].lvlneed) + 1)) || 1;
+				 var eqpicon = dm.IconManager.getFileIcon('assets/icons.png', ((eqplvl-1)%20)*50, parseInt(eqp_sel[i])*4*50, 2, 2, 1);
+				 icon.setFill(eqpicon);
+				 icon.frame = frame;
+				 icon.eqpid = parseInt(eqp_sel[i]);
+				 icon.eqplvl = eqplvl;
+				 icon.eqpic = eqpicon;
+
+				 icon.btn = btn;
+				 if(btn2){
+					 icon.btn2 = btn2;
+				 }
+
+				 popdialog.appendChild(icon);
+
+				 goog.events.listen(icon, lime.Button.Event.CLICK, function() {
+					 this.frame.removeAllChildren();
+					 var h = 0, fpname, fpval;
+					 var user = this.getParent().getParent().game.user;
+					 for(j in dm.conf.EP[this.eqpid+'_'+this.eqplvl].func){
+						 fpname = dm.conf.FP[j].disp;
+						 fpval  = dm.conf.EP[this.eqpid+'_'+this.eqplvl].fp[j];
+						 var wpinfo = new lime.Label().setFontColor('#FFF').setAnchorPoint(0, 0).setFontSize(30).setPosition(0, h);
+						 wpinfo.setText(fpname + ' +' + fpval);
+						 h += wpinfo.getSize().height;
+						 this.frame.appendChild(wpinfo);
+					 }
+					 this.btn.icon ={};
+					 this.btn.icon = this;
+					 if(this.btn2){
+						 this.btn2.icon ={};
+						 this.btn2.icon = this;
+					 }
+				 });
+			 }
+			 
+			 goog.events.listen(btn, lime.Button.Event.CLICK, function() {
+				 board = this.getParent().getParent();
+				 game = board.game
+				 if(this.icon){
+					 board.game.user.upgrade(this.icon);
+					 board.turnEndShow();
+					 board.show_att = board.getBaseAttack();
+					 board.show_dmg = board.getDamage();
+					 game.att.setText(board.show_att);
+					 game.mon.setText(board.show_dmg);
+					 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+					 board.removeChild(this.getParent());
+					 delete this.getParent();  
+				 }else{
+					 alert('choose one');
+				 }
+			 });
+			 /*
+			 if(ct){
+			 //rand = Math.round(Math.random()*(ct-1));
+			 btn2 = new dm.Button().setText('refresh').setSize(200, 100).setPosition(250,350);
+			 popdialog.appendChild(btn2);
 			 goog.events.listen(btn2, lime.Button.Event.CLICK, function() {
 				 board = this.getParent().getParent();
 				 board.game.user.refresh(id[rand]);
@@ -716,6 +831,7 @@ dm.Board.prototype.getDamage = function(){
 				 delete this.getParent();  
 			 });
 			 }
+			 */
 		 break;
 	 }
  }
@@ -827,3 +943,4 @@ dm.Board.prototype.getDamage = function(){
 		}
 	}
  }
+

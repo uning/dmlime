@@ -10,7 +10,7 @@ goog.require('dm.conf.SK');
  * Single User
  * @constructor
  */
-dm.User = function(uid){
+dm.User = function(uid, game){
   //从服务器获取自身信息
   this.lvl = 0;
   this.skills = {};
@@ -119,41 +119,21 @@ dm.User.prototype.popuSP=function(){
  * 升级技能
  * 是否4个技能已满? 没满则会随机出新技能,否则升级技能
  */
-dm.User.prototype.skillUp=function(name){
-	var i,j,sn=0,sks,cansel,chose=[];
-	sks = dm.conf.SK;
+dm.User.prototype.skillUp=function(sk){
+	var i,sn=0;
 	for(i in this.skills){
+		if(this.skills[i] == sk){
+			break;
+		}
 		sn++; //统计技能数量
-		delete sks[i];
 	};
 	if(sn < 4){
-		//test
-		cansel = this.findKey(sks);
-		j = Math.round(Math.random()*cansel.length);
-		this.skills[cansel[j]] = sks[cansel[j]];
-		var img = dm.IconManager.getFileIcon('assets/tiles.png', 510+((parseInt(sks[cansel[j]].no)-1)%10)*50, Math.floor(parseInt(sks[cansel[j]].no)/10)*50 , 2, 2.1, 1);
+		this.skills[sk.id] = sk;
+		var img = dm.IconManager.getFileIcon('assets/tiles.png', 510+((parseInt(sk.no)-1)%10)*50, Math.floor(parseInt(sk.no)/10)*50 , 2, 2.1, 1);
 		this.game.skillslot[sn].setFill(img);
-		this.game.skillslot[sn].no = cansel[j];
+		this.game.skillslot[sn].no = sk.no;
+		this.game.skillslot[sn].sk = sk;
 	}
-	//
-		/*
-	}else{
-		cansel = this.findKey(sks);
-		if(sn == 0){
-			for(i=0;i<2;i++){
-				j = Math.round(Math.random()*cansel.length);
-				//this.skills[cansel[j]] = sks[cansel[j]];
-				chose.push(sks[cansel[j]]);
-				cansel.slice(j,1);
-				cansel.length -= 1;
-			}
-
-		}else{
-
-		}
-	}
-	*/
-
 }
 
 /**
@@ -175,50 +155,51 @@ dm.User.prototype.enterShop=function(){
 //升级属性：选择升级主属性或者附加属性
 //eqpid:
 //      0 head, 1 body, 2 cape, 3 jew, 4 arm
-dm.User.prototype.upgrade=function(eqpid, type){ //type = 0:主属性,type = 1:附加属性
-	equiplvl = parseInt(this.equips[eqpid] && this.equips[eqpid].lvlneed || 0) +1;
+dm.User.prototype.upgrade=function(eqp, type){ //type = 0:主属性,type = 1:附加属性
+	var id = eqp.eqpid;
+	var lvl   = eqp.eqplvl;
+	var icon  = eqp.eqpic;
+	type = type || 0;
+	//equiplvl = parseInt(this.equips[eqpid] && this.equips[eqpid].lvlneed || 0) +1;
 	if(!type){//升级主属性
-	switch(eqpid){
-		case 0:
-			//head
-			this.equips[0] = dm.conf.EP['head_'+equiplvl] || {};
+		switch(id){
+			case 0:
+				case 1:
+				case 2:
+				case 3:
+				this.equips[id] = dm.conf.EP[id+'_'+lvl] || {};
 			break;
-		case 1:
-			//body
-			this.equips[1] = dm.conf.EP['body_'+equiplvl] || {};
+/*
+			this.equips[1] = dm.conf.EP['head_'+equiplvl] || {};
 			break;
 		case 2:
-			//cape
 			this.equips[2] = dm.conf.EP['cape_'+equiplvl] || {};
 			break;
 		case 3:
-			//jewel
-			this.equips[3] = dm.conf.EP['jew_'+equiplvl] || {};
-			this.game.data.hp += parseInt(this.equips[3].fp.a6 - dm.conf.EP['jew_'+(equiplvl-1)].fp.a6);
-			this.game.data.mana += parseInt(this.equips[3].fp.a5 - dm.conf.EP['jew_'+(equiplvl-1)].fp.a5);
+			this.equips[3] = dm.conf.EP['body_'+equiplvl] || {};
 			break;
-		default:
-			//arm
-			this.equips[4] = dm.conf.EP['arm_'+equiplvl] || {};
+*/
+			default:
+				//arm
+				this.equips[4] = dm.conf.EP['4_'+lvl] || {};
+			this.game.data.hp += parseInt(this.equips[4].fp.a6 - dm.conf.EP['4_'+(lvl-1)].fp.a6);
+			this.game.data.mana += parseInt(this.equips[4].fp.a5 - dm.conf.EP['4_'+(lvl-1)].fp.a5);
 			break;
-	}
-	this.equips[eqpid].icon = {
-		x:((equiplvl-1))%20*50,
-		y:this.equips[eqpid].loc*4*50
-	}; 
+		}
+		this.equips[id].icon = icon;
 	}else{
 		//type = type -1;
 		var i,j=0,num;
 		num = Math.round(Math.random());
-		for(i in this.equips[eqpid].attr){
+		for(i in this.equips[id].attr){
 			if(j == num){
 				//升级附加属性
-				switch(this.equips[eqpid].attr[i].charAt(0)){
+				switch(this.equips[id].attr[i].charAt(0)){
 					case "a":
-						this.equips[eqpid].attr[i] += dm.conf.FP[i].inc;
+						this.equips[id].attr[i] += dm.conf.FP[i].inc;
 						break;
 					case "b":
-						this.equips[eqpid].attr[i] += dm.conf.SP[i].inc;
+						this.equips[id].attr[i] += dm.conf.SP[i].inc;
 						break;
 				}
 				break;
@@ -312,6 +293,7 @@ dm.User.prototype.lvlUp=function(){
 	}
 	this.popuFP();
 	this.lvl += 1;
+	//this.game.data['exp'] -= 3;
 	
 }
 
@@ -328,4 +310,15 @@ dm.User.prototype.findKey=function(array){
 		index.push(i);
 	}
 	return index;
+}
+
+
+dm.User.prototype.randSel = function(arr, num){
+	var i,r,sel=[];
+	for(i=0;i<num;i++){
+		r = Math.round(Math.random()*(arr.length-1));
+		sel.push(arr[r]);
+		arr.splice(r,1);
+	}
+	return sel;
 }
