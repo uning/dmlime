@@ -152,15 +152,12 @@ dm.User.prototype.enterShop=function(){
 }
 
 
-//升级属性：选择升级主属性或者附加属性
-//eqpid:
-//      0 head, 1 body, 2 cape, 3 jew, 4 arm
+//购买武器(换个名字)
 dm.User.prototype.upgrade=function(eqp, type){ //type = 0:主属性,type = 1:附加属性
 	var id = eqp.eqpid;
 	var lvl   = eqp.eqplvl;
 	var icon  = eqp.eqpic;
 	type = type || 0;
-	//equiplvl = parseInt(this.equips[eqpid] && this.equips[eqpid].lvlneed || 0) +1;
 	if(!type){//升级主属性
 		switch(id){
 			case 0:
@@ -169,16 +166,6 @@ dm.User.prototype.upgrade=function(eqp, type){ //type = 0:主属性,type = 1:附
 				case 3:
 				this.equips[id] = dm.conf.EP[id+'_'+lvl] || {};
 			break;
-/*
-			this.equips[1] = dm.conf.EP['head_'+equiplvl] || {};
-			break;
-		case 2:
-			this.equips[2] = dm.conf.EP['cape_'+equiplvl] || {};
-			break;
-		case 3:
-			this.equips[3] = dm.conf.EP['body_'+equiplvl] || {};
-			break;
-*/
 			default:
 				//arm
 				this.equips[4] = dm.conf.EP['4_'+lvl] || {};
@@ -187,79 +174,51 @@ dm.User.prototype.upgrade=function(eqp, type){ //type = 0:主属性,type = 1:附
 			break;
 		}
 		this.equips[id].icon = icon;
-	}else{
-		//type = type -1;
-		var i,j=0,num;
-		num = Math.round(Math.random());
-		for(i in this.equips[id].attr){
-			if(j == num){
-				//升级附加属性
-				switch(this.equips[id].attr[i].charAt(0)){
-					case "a":
-						this.equips[id].attr[i] += dm.conf.FP[i].inc;
-						break;
-					case "b":
-						this.equips[id].attr[i] += dm.conf.SP[i].inc;
-						break;
-				}
-				break;
-			}
-			j++;
-		}
 	}
 	this.popuFP();
 }
 
-/*
- * 刷新装备，随机属性会改变
- * 每次随机产生一个属性，如果装备属性不足2个，则附加该属性；如果装备属性已经达到2个，则随机替换掉其中一个。
- */
-dm.User.prototype.refresh=function(eqpid){
-	var type = parseInt(this.equips[eqpid].type);
-	var i,j,ch,sub,prop,rand_att,
-		ct = 0;
-	var	eqp_add = this.eqp_add[eqpid];
-	var exist = new Array();//已有属性
-	var item;
+
+
+dm.User.prototype.genAttr = function(eqp, num){
+	num = num || 2;
+	var id = eqp.eqpid;
+	var type = parseInt(this.equips[id].type);
+	var i,j = 0;
+	var selected = [];
+	var conf, atts = {};
 	var fp = dm.conf.FP;
 	//var sp = dm.conf.SP;
 
 	switch(type){
 		case 1:
-			item = this.attr_arm;
+			conf = this.attr_arm;
 		break;
 		case 2:
-			item = this.attr_def;
+			conf = this.attr_def;
 		break;
 	}
-	if(eqp_add){
-		for(i in eqp_add){
-			for(j in item){
-				if(item[j] == i){
-					delete item[j];
-					item.sort();
-					item.length = item.length - 1;
-				}
-			}
-			ct++; //已有属性个数
-			exist.push(i);
-		}
-		ch = item[Math.round(Math.random()*(item.length - 1))];//选中属性
-		if(ct > 1){
-			sub = this.findKey(eqp_add);
-			sub = sub[Math.round(Math.random())];
-			delete eqp_add[sub];
-		}else{
-			sub = ch;
-		}
-		eqp_add[ch] = parseInt(fp[ch].inc);
-	}else{
-		this.eqp_add[eqpid] = {};
-		eqp_add = this.eqp_add[eqpid];
-		rand_att = fp[item[Math.round(Math.random()*(item.length-1))]];
-		eqp_add[rand_att['id']] = parseInt(rand_att.inc);
+
+	num = Math.ceil(Math.random()*num) || 1;
+	selected = this.randSel(conf, num);
+	for(i in selected){ //生成num个随机属性
+		atts[selected[i]] = Math.max(fp[selected[i]].min, Math.round(fp[selected[i]].max*Math.random()));	
 	}
-	this.addatt(eqpid);
+	return atts;
+}
+
+/*
+ * 刷新装备，随机属性会改变
+ * 随机生成1~num个属性，每个属性有随机值
+ */
+dm.User.prototype.refresh=function(eqp, atts){
+	var i;
+	var id = eqp.eqpid;
+	this.eqp_add[id] = {};
+	for(i in atts){
+		this.eqp_add[id][i] = atts[i];
+	}
+	this.addatt(id);
 	this.popuFP();
 }
 
@@ -304,6 +263,8 @@ dm.User.prototype.lvlUp=function(){
 //
 dm.User.prototype.findKey=function(array){
 	array = array || {};
+	if(!array)
+		return 0;
 	var i,index;
 	index = new Array();
 	for(i in array){
@@ -314,6 +275,8 @@ dm.User.prototype.findKey=function(array){
 
 
 dm.User.prototype.randSel = function(arr, num){
+	if(!arr)
+		return 0;
 	var i,r,sel=[];
 	for(i=0;i<num;i++){
 		r = Math.round(Math.random()*(arr.length-1));

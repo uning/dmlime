@@ -151,7 +151,8 @@ dm.Game.prototype.createPanel = function(){
 		this.skillslot[i] = slot;
 		panel.appendChild(slot);
 		goog.events.listen(this.skillslot[i], 'click', function() {
-			this.getParent().getParent().skillShow(this);
+			if(this.sk)
+				this.getParent().getParent().skillShow(this);
 		});
 	}
 

@@ -260,10 +260,10 @@ dm.Board.prototype.checkSolutions = function() {
 		if(s.length > 3)
 			data['gold'] += this.randExtra(fp.a13,fp.a14,fp.a15,fp.a16)
 
-		while(data['gold'] >= 5){
+		while(data['gold'] >= 3){
 			this.popWindow('Shop');
 			ispoping = 1;
-			data['gold'] -= 5;
+			data['gold'] -= 3;
 		}
 	}
 
@@ -644,7 +644,7 @@ dm.Board.prototype.getDamage = function(){
 	 equips = user.equips;
 	 goog.events.unlisten(this, ['mousedown', 'touchstart'], this.pressHandler_);
 
-	 var popdialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(500, 500).setPosition(95,95).setRadius(20).setAnchorPoint(0,0);
+	 var popdialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(600, 600).setPosition(45,45).setRadius(20).setAnchorPoint(0,0);
 	 this.appendChild(popdialog);
 
 	 switch(text){
@@ -746,57 +746,126 @@ dm.Board.prototype.getDamage = function(){
 
 
 		 case 'Shop':
-			 btn = new dm.Button().setText('Buy').setSize(200, 50).setPosition(250, 410);
+			 btn = new dm.Button().setText('升级装备').setSize(200, 50).setPosition(250, 570);
 			 popdialog.appendChild(btn);
-			 frame = new lime.RoundedRect().setSize(400, 200).setPosition(50, 140).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
+			 frame = new lime.RoundedRect().setSize(500, 200).setPosition(40, 240).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
 			 popdialog.appendChild(frame);
-			 for(i in equips){
-				 id[ct] = parseInt(i);
-				 ct++;
-			 }
-			 if(ct){
-				 btn2 = new dm.Button().setText('refresh').setSize(200, 50).setPosition(250,470);
-				 popdialog.appendChild(btn2);
-			 }
+			 //newequip = new lime.Sprite().setSize(100, 100).setPosition(10, 10).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
+			 //frame.appendChild(newequip);
 
 			 var eqp_sel = this.game.user.randSel([0,1,2,3,4], 3); //随机选3个部位购买装备
 			 var eqp = this.game.user.equips;
+			 var oldeqpicon, eqpicon, oldeqplvl, eqplvl;
 			 j=0;
 			 for(i in eqp_sel){
 				 icon = new lime.Sprite().setSize(100, 100).setPosition(80 + j*120, 20).setAnchorPoint(0,0);
 				 j++;
-				 var eqplvl = (eqp[eqp_sel[i]] && (parseInt(eqp[eqp_sel[i]].lvlneed) + 1)) || 1;
-				 var eqpicon = dm.IconManager.getFileIcon('assets/icons.png', ((eqplvl-1)%20)*50, parseInt(eqp_sel[i])*4*50, 2, 2, 1);
-				 icon.setFill(eqpicon);
+				 eqplvl = (eqp[eqp_sel[i]] && (parseInt(eqp[eqp_sel[i]].lvlneed) + 1)) || 1;
+				 oldeqplvl = eqplvl -1;
+				 if(oldeqplvl){
+					 oldeqpicon = dm.IconManager.getFileIcon('assets/icons.png', ((oldeqplvl-1)%20)*50, parseInt(eqp_sel[i])*4*50, 2, 2, 1);
+					 icon.setFill(oldeqpicon);
+					 //旧图标
+				 }else{
+					 //没有装备的默认图标
+					 icon.setFill(0,0,0,.7);
+				 }
+				 eqpicon = dm.IconManager.getFileIcon('assets/icons.png', ((eqplvl-1)%20)*50, parseInt(eqp_sel[i])*4*50, 2, 2, 1);
+
+
+				 icon.popdialog = popdialog;
 				 icon.frame = frame;
 				 icon.eqpid = parseInt(eqp_sel[i]);
 				 icon.eqplvl = eqplvl;
-				 icon.eqpic = eqpicon;
+				 icon.eqpic = eqpicon; //传递新图标
 
 				 icon.btn = btn;
-				 if(btn2){
-					 icon.btn2 = btn2;
-				 }
 
 				 popdialog.appendChild(icon);
 
 				 goog.events.listen(icon, lime.Button.Event.CLICK, function() {
+					 this.popdialog.removeChild(this.popdialog.btn2); //先移除刷新按钮，选择了可以刷新的装备才出现
 					 this.frame.removeAllChildren();
 					 var h = 0, fpname, fpval;
 					 var user = this.getParent().getParent().game.user;
-					 for(j in dm.conf.EP[this.eqpid+'_'+this.eqplvl].func){
+					 var newequip = new lime.Sprite().setSize(100, 100).setPosition(10, 10).setFill(0,0,0,.7).setAnchorPoint(0,0); 
+					 newequip.setFill(this.eqpic);
+					 this.frame.appendChild(newequip);
+					 for(j in dm.conf.EP[this.eqpid+'_'+(this.eqplvl-1)].func){
 						 fpname = dm.conf.FP[j].disp;
 						 fpval  = dm.conf.EP[this.eqpid+'_'+this.eqplvl].fp[j];
-						 var wpinfo = new lime.Label().setFontColor('#FFF').setAnchorPoint(0, 0).setFontSize(30).setPosition(0, h);
+						 var wpinfo = new lime.Label().setFontColor('#FFF').setAnchorPoint(0, 0).setFontSize(30).setPosition(110, 10+h);
 						 wpinfo.setText(fpname + ' +' + fpval);
 						 h += wpinfo.getSize().height;
 						 this.frame.appendChild(wpinfo);
 					 }
 					 this.btn.icon ={};
 					 this.btn.icon = this;
-					 if(this.btn2){
-						 this.btn2.icon ={};
-						 this.btn2.icon = this;
+					 if(this.eqplvl > 1){ //当前有装备才可以刷新
+						 var btn2 = new dm.Button().setText('刷新属性').setSize(200, 50).setPosition(250,470);
+						 this.popdialog.appendChild(btn2);
+						 this.popdialog.btn2 = btn2;
+
+						 goog.events.listen(btn2, lime.Button.Event.CLICK, function() {
+							 var popdialog = this.getParent(),
+							 user = popdialog.getParent().game.user,
+							 fpname, fpval, winfo, h=0;
+							 //
+							 popdialog.removeAllChildren();
+							 //要刷新的装备图标
+							 //
+							 var equip_icon = new lime.Sprite().setSize(100, 100).setPosition(200, 20).setAnchorPoint(0,0).setFill(this.icon.eqpic);
+							 var oldinfo = new lime.RoundedRect().setSize(400, 140).setPosition(50, 140).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
+							 var newinfo = new lime.RoundedRect().setSize(400, 140).setPosition(50, 300).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
+							 var confirm = new dm.Button().setText('刷新').setSize(200, 50).setPosition(100,470);
+							 var back = new dm.Button().setText('返回').setSize(200, 50).setPosition(300,470);
+							 popdialog.appendChild(equip_icon);
+							 popdialog.appendChild(oldinfo);
+							 popdialog.appendChild(newinfo);
+							 popdialog.appendChild(confirm);
+							 popdialog.appendChild(back);
+							 
+							 //旧的附加属性
+							 for(j in user.eqp_add[this.icon.eqpid]){
+								 fpname = dm.conf.FP[j].disp;
+								 fpval = user.eqp_add[this.icon.eqpid][j];
+								 wpinfo = new lime.Label().setFontColor('#FFF').setAnchorPoint(0, 0).setFontSize(30).setPosition(0, h);
+								 wpinfo.setText(fpname + ' +' + fpval);
+								 h += wpinfo.getSize().height;
+								 oldinfo.appendChild(wpinfo);
+							 }
+
+							 //新的附加属性
+							 var atts = user.genAttr(this.icon);
+							 confirm.atts = atts;
+							 confirm.icon = this.icon;
+							 h = 0;
+							 for(j in atts){
+								 fpname = dm.conf.FP[j].disp;
+								 fpval  = atts[j];
+								 wpinfo = new lime.Label().setFontColor('#FFF').setAnchorPoint(0, 0).setFontSize(30).setPosition(0, h);
+								 wpinfo.setText(fpname + ' +' + fpval);
+								 h += wpinfo.getSize().height;
+								 newinfo.appendChild(wpinfo);
+							 }
+
+							 goog.events.listen(confirm, lime.Button.Event.CLICK, function() {
+								 var board = this.getParent().getParent();
+								 board.game.user.refresh(this.icon, atts);
+								 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+								 this.getParent().getParent().removeChild(this.getParent());
+								 delete this.getParent();  
+							 });
+							 goog.events.listen(back, lime.Button.Event.CLICK, function() {
+								 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+								 this.getParent().getParent().removeChild(this.getParent());
+								 delete this.getParent();  
+							 });
+						 });
+					 }
+					 if(btn2){
+						 btn2.icon ={};
+						 btn2.icon = this;
 					 }
 				 });
 			 }
@@ -818,20 +887,6 @@ dm.Board.prototype.getDamage = function(){
 					 alert('choose one');
 				 }
 			 });
-			 /*
-			 if(ct){
-			 //rand = Math.round(Math.random()*(ct-1));
-			 btn2 = new dm.Button().setText('refresh').setSize(200, 100).setPosition(250,350);
-			 popdialog.appendChild(btn2);
-			 goog.events.listen(btn2, lime.Button.Event.CLICK, function() {
-				 board = this.getParent().getParent();
-				 board.game.user.refresh(id[rand]);
-				 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
-				 board.removeChild(this.getParent());
-				 delete this.getParent();  
-			 });
-			 }
-			 */
 		 break;
 	 }
  }

@@ -4,6 +4,7 @@ goog.provide('dm.conf.FP');
         "id": "a1",
         "def": "3",
         "inc": "0",
+        "min": "0",
         "max": "-1",
         "name": "基础攻击力",
         "desc": "连骷髅图标时的初始攻击力",
@@ -13,6 +14,7 @@ goog.provide('dm.conf.FP');
         "id": "a2",
         "def": "1",
         "inc": "0",
+        "min": "0",
         "max": "-1",
         "name": "武器攻击力",
         "desc": "每连1个武器图标的攻击力？每个图标对基础攻击力加成？",
@@ -22,6 +24,7 @@ goog.provide('dm.conf.FP');
         "id": "a3",
         "def": "0",
         "inc": "0",
+        "min": "0",
         "max": "-1",
         "name": "基础防御力",
         "disp": "防御力"
@@ -30,6 +33,7 @@ goog.provide('dm.conf.FP');
         "id": "a4",
         "def": "1",
         "inc": "0",
+        "min": "0",
         "max": "-1",
         "name": "每点防御减少伤害",
         "desc": "防御值可以抵挡伤害值",
@@ -39,6 +43,7 @@ goog.provide('dm.conf.FP');
         "id": "a5",
         "def": "10",
         "inc": "1",
+        "min": "0",
         "max": "-1",
         "name": "法力值上限",
         "disp": "法力上限"
@@ -47,6 +52,7 @@ goog.provide('dm.conf.FP');
         "id": "a6",
         "def": "100",
         "inc": "5",
+        "min": "0",
         "max": "-1",
         "name": "生命值上限",
         "disp": "生命上限"
@@ -55,6 +61,7 @@ goog.provide('dm.conf.FP');
         "id": "a7",
         "def": "100",
         "inc": "0",
+        "min": "0",
         "max": "100",
         "name": "强化升级上限",
         "desc": "当前值大于等于上限时,可以进行1次强化"
@@ -63,6 +70,7 @@ goog.provide('dm.conf.FP');
         "id": "a8",
         "def": "100",
         "inc": "0",
+        "min": "0",
         "max": "100",
         "name": "金钱升级上限",
         "desc": "当前值大于等于上限时,可以购买1次新装备(旧装备提升属性)"
@@ -71,7 +79,8 @@ goog.provide('dm.conf.FP');
         "id": "a9",
         "def": "1",
         "inc": "0",
-        "max": "1",
+        "min": "1",
+        "max": "3",
         "name": "每连1个血瓶图标获得当前生命值",
         "desc": "if(暴击几率)->基础*（1+加成比例\/100)+加成",
         "disp": "血瓶作用(HP\/瓶)"
@@ -80,6 +89,7 @@ goog.provide('dm.conf.FP');
         "id": "a10",
         "def": "0",
         "inc": "5",
+        "min": "10",
         "max": "100",
         "name": "blood暴击几率",
         "disp": "血瓶奖励几率(%)"
@@ -88,6 +98,7 @@ goog.provide('dm.conf.FP');
         "id": "a11",
         "def": "1",
         "inc": "1",
+        "min": "1",
         "max": "8",
         "name": "blood暴击加成值"
     },
@@ -95,6 +106,7 @@ goog.provide('dm.conf.FP');
         "id": "a12",
         "def": "0",
         "inc": "10",
+        "min": "10",
         "max": "100",
         "name": "blood暴击值增加比例"
     },
@@ -102,7 +114,8 @@ goog.provide('dm.conf.FP');
         "id": "a13",
         "def": "1",
         "inc": "1",
-        "max": "5",
+        "min": "1",
+        "max": "3",
         "name": "每连1个金钱图标获得金钱值",
         "desc": "消除1个金钱图标后获得的当前金钱值",
         "disp": "金币作用(个\/图标)"
@@ -111,6 +124,7 @@ goog.provide('dm.conf.FP');
         "id": "a14",
         "def": "5",
         "inc": "5",
+        "min": "10",
         "max": "100",
         "name": "金钱暴击几率",
         "disp": "金钱奖励几率(%)"
@@ -119,6 +133,7 @@ goog.provide('dm.conf.FP');
         "id": "a15",
         "def": "1",
         "inc": "1",
+        "min": "1",
         "max": "5",
         "name": "金钱暴击加成值"
     },
@@ -126,6 +141,7 @@ goog.provide('dm.conf.FP');
         "id": "a16",
         "def": "10",
         "inc": "10",
+        "min": "10",
         "max": "100",
         "name": "金钱暴击值增加比例"
     },
@@ -133,6 +149,7 @@ goog.provide('dm.conf.FP');
         "id": "a17",
         "def": "1",
         "inc": "1",
+        "min": "1",
         "max": "5",
         "name": "每连1个经验图标获得经验值",
         "desc": "消除1个骷髅图标后获得的当前经验值",
@@ -142,6 +159,7 @@ goog.provide('dm.conf.FP');
         "id": "a18",
         "def": "5",
         "inc": "5",
+        "min": "10",
         "max": "100",
         "name": "经验暴击几率",
         "disp": "经验奖励几率(%)"
@@ -150,6 +168,7 @@ goog.provide('dm.conf.FP');
         "id": "a19",
         "def": "1",
         "inc": "1",
+        "min": "1",
         "max": "5",
         "name": "经验暴击加成值"
     },
@@ -157,6 +176,7 @@ goog.provide('dm.conf.FP');
         "id": "a20",
         "def": "10",
         "inc": "10",
+        "min": "10",
         "max": "100",
         "name": "经验暴击值增加比例"
     },
@@ -164,6 +184,7 @@ goog.provide('dm.conf.FP');
         "id": "a21",
         "def": "1",
         "inc": "1",
+        "min": "1",
         "max": "5",
         "name": "每连1个魔法图标获得魔法值",
         "desc": "消除1个魔法图标后获得的当前魔法值",
@@ -173,6 +194,7 @@ goog.provide('dm.conf.FP');
         "id": "a22",
         "def": "5",
         "inc": "5",
+        "min": "10",
         "max": "100",
         "name": "魔法暴击几率",
         "disp": "法力奖励几率(%)"
@@ -181,6 +203,7 @@ goog.provide('dm.conf.FP');
         "id": "a23",
         "def": "1",
         "inc": "1",
+        "min": "1",
         "max": "5",
         "name": "魔法暴击加成值"
     },
@@ -188,6 +211,7 @@ goog.provide('dm.conf.FP');
         "id": "a24",
         "def": "10",
         "inc": "10",
+        "min": "10",
         "max": "100",
         "name": "魔法暴击值增加比例"
     },
@@ -195,6 +219,7 @@ goog.provide('dm.conf.FP');
         "id": "a25",
         "def": "0",
         "inc": "1",
+        "min": "1",
         "max": "5",
         "name": "快速冷却",
         "desc": "技能cd时间减1",
@@ -204,7 +229,8 @@ goog.provide('dm.conf.FP');
         "id": "a26",
         "def": "0",
         "inc": "1",
-        "max": "-1",
+        "min": "1",
+        "max": "10",
         "name": "生命恢复",
         "desc": "每回合生命恢复点数",
         "disp": "生命自动回复"
@@ -213,7 +239,8 @@ goog.provide('dm.conf.FP');
         "id": "a27",
         "def": "0",
         "inc": "1",
-        "max": "-1",
+        "min": "1",
+        "max": "10",
         "name": "魔法恢复",
         "desc": "每回合魔法恢复点数",
         "disp": "法力自动回复"
@@ -222,6 +249,7 @@ goog.provide('dm.conf.FP');
         "id": "a28",
         "def": "0",
         "inc": "5",
+        "min": "5",
         "max": "20",
         "name": "伤害转换为法力",
         "desc": "受到的伤害按比例转换为法力的提高",
@@ -231,7 +259,8 @@ goog.provide('dm.conf.FP');
         "id": "a29",
         "def": "0",
         "inc": "2",
-        "max": "20",
+        "min": "5",
+        "max": "30",
         "name": "伤害减免",
         "desc": "降低最终受到的伤害值(按百分比)",
         "disp": "伤害减少(%)"
@@ -240,7 +269,8 @@ goog.provide('dm.conf.FP');
         "id": "a30",
         "def": "0",
         "inc": "2",
-        "max": "10",
+        "min": "5",
+        "max": "15",
         "name": "属性加强",
         "desc": "基础属性按百分比加强"
     },
@@ -248,7 +278,8 @@ goog.provide('dm.conf.FP');
         "id": "a31",
         "def": "0",
         "inc": "2",
-        "max": "20",
+        "min": "5",
+        "max": "30",
         "name": "无视对方防御百分比",
         "desc": "攻击时无视对方的防御值",
         "disp": "无视防御(%)"
@@ -257,6 +288,7 @@ goog.provide('dm.conf.FP');
         "id": "a32",
         "def": "0",
         "inc": "5",
+        "min": "10",
         "max": "30",
         "name": "毒伤害几率",
         "disp": "毒性攻击几率(%)"
@@ -265,6 +297,7 @@ goog.provide('dm.conf.FP');
         "id": "a33",
         "def": "0",
         "inc": "10",
+        "min": "5",
         "max": "10",
         "name": "毒药buff伤害(无视防御)",
         "desc": "中毒的骷髅每回合受到多少毒药伤害",
@@ -274,6 +307,7 @@ goog.provide('dm.conf.FP');
         "id": "a34",
         "def": "0",
         "inc": "5",
+        "min": "10",
         "max": "50",
         "name": "反弹伤害百分比",
         "desc": "每回合每个骷髅发生过攻击的骷髅必然损失的HP值",
@@ -283,7 +317,8 @@ goog.provide('dm.conf.FP');
         "id": "a35",
         "def": "0",
         "inc": "2",
-        "max": "20",
+        "min": "5",
+        "max": "30",
         "name": "石化buff几率",
         "disp": "石化敌人几率(%)"
     },
@@ -291,6 +326,7 @@ goog.provide('dm.conf.FP');
         "id": "a36",
         "def": "0",
         "inc": "5",
+        "min": "5",
         "max": "20",
         "name": "吸血比例",
         "disp": "吸血(%)"
@@ -299,6 +335,7 @@ goog.provide('dm.conf.FP');
         "id": "a37",
         "def": "0",
         "inc": "2",
+        "min": "5",
         "max": "20",
         "name": "双倍伤害几率",
         "desc": "伤害值*2",
@@ -308,6 +345,7 @@ goog.provide('dm.conf.FP');
         "id": "a38",
         "def": "0",
         "inc": "2",
+        "min": "5",
         "max": "20",
         "name": "回避伤害几率",
         "desc": "完全不受伤害的概率",
