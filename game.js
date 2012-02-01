@@ -20,9 +20,13 @@ dm.Game = function(size,user){
 	this.initData(size, user);
 	this.createBoard();
 	this.createPanel();
+
+	//this.skill = new dm.Skill(this);
 	
     // update score when points have changed
     lime.scheduleManager.scheduleWithDelay(this.updateScore, this, 100);
+
+    lime.scheduleManager.scheduleWithDelay(this.changeData, this, 500);
 
      // show lime logo
     dm.builtWithLime(this);
@@ -36,6 +40,28 @@ dm.Game = function(size,user){
 };
 goog.inherits(dm.Game, lime.Scene);
 
+/**
+ * 每隔一定帧来检测是否达到升级等条件，然后弹出窗口
+ */
+dm.Game.prototype.changeData = function() {
+	if(this.ispoping)
+		return;
+	if(this.pop.shop > 0 ){
+		this.pop.shop--;
+		this.board.popWindow('Shop');
+		return;
+	} 
+	if(this.pop.lvl > 0 ){
+		this.pop.lvl--;
+		this.board.popWindow('lvl Up');
+		return;
+	} 
+	if(this.pop.skill > 0 ){
+		this.pop.skill--;
+		this.board.popWindow('Skill');
+		return;
+	} 
+};
 
 /**
  * Increase value of score label when points have changed
@@ -143,6 +169,7 @@ dm.Game.prototype.createPanel = function(){
 	var panel  = this.panel;
 	var i,slot,taile,show_board; //slot 技能槽
 	tailer = dm.Display.boardtailer;//尾部
+	//顶部技能槽
 	show_board = new lime.Sprite().setSize(690, 140).setAnchorPoint(0,0).setPosition(tailer.location.x, tailer.location.y).setFill(dm.IconManager.getFileIcon('assets/tiles.png', tailer.img.x, tailer.img.y, 690/320, 140/76, 1));
 	panel.appendChild(show_board);
 	var icon = dm.IconManager.getFileIcon('assets/menus.png', 248, 0, 110/53, 110/53, 1);
@@ -177,116 +204,8 @@ dm.Game.prototype.createPanel = function(){
     });
 	this.appendChild(panel);
 
-   /**********/
-
-   /*
-    //empty layer for contents
-    var layer = new lime.Layer();
-    //this.appendChild(layer);
-
-
-    // label for score message
-	var fcolor = '#4f96ed' //label颜色
-	,h = 30  //每行高度
-	,lh = 22 //起始
-	,gap = 5 //间隔
-	,lx=30   //lbl 坐标起点
-	,lxx=90  //第二个x坐标起点
-	//exp 
-	fcolor = '#00ff00';
-	plen = 260;
-	this.show_vars = {
-		exp:{color:'#00ff00',txt:'经验',curdata:this.data.exp, max:100}
-		,gold:{color:'#ffff00',txt:'金币',curdata:this.data.gold, max:100}
-		,mana:{color:'#0000ff',txt:'魔法',curdata:this.data.mana, init:1, max:this.user.fp.a5}
-		,hp:{color:'#FF0000',txt:'血量',curdata:this.data.hp,init:1, max:this.user.fp.a6}
-	}
-	
-	var odd = 0;
-	for( i in this.show_vars){
-		p = this.show_vars[i];
-		j =  odd * (plen + lxx - lx +20);
-		p._lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontSize(24).setPosition(lx + j, lh).setText(p.txt).setAnchorPoint(0, 0);
-		
-		layer.appendChild(p._lbl);
-		
-		p.init = p.init || 0.001;
-		p._pg = new dm.Progress(p.init ,p.color,plen,h,10,2,p.bcolor).setPosition(lxx + j, lh);//
-		layer.appendChild(p._pg);
-		
-		p._lct = new lime.Label().setFontFamily('Trebuchet MS').setFontSize(24).setPosition(plen/2 + lxx + j, lh).setAnchorPoint(0.5, 0).setText(p.curdata+'/'+p.max);
-		layer.appendChild(p._lct);
-		
-		if(odd)
-			lh += h + gap;
-		odd = odd ? 0 : 1;
-	}
-
-    var score_lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#4f96ed').setFontSize(24).
-        setText('分数').setAnchorPoint(0, 0);
-    layer.appendChild(score_lbl);
-    //this.appendChild(score_lbl);
-	
-
-
-    // score message label
-    layer.appendChild(this.score);
-    //this.appendChild(this.score);
-
-	
-	lh += gap+h;
-    // graphical lines for visual effect
-    var line = new lime.Sprite().setSize(670, 2).setFill('#295081').setPosition(720 * .5, lh);
-    layer.appendChild(line);
-
-	lh += gap+2;
-	lh += 690+gap;
-    // graphical lines for visual effect
-    line = new lime.Sprite().setSize(670, 2).setFill('#295081').setPosition(720 * .5, lh );
-    layer.appendChild(line);
-	
-	lh += gap +40;
-    // Menu button
-    this.btn_menu = new dm.Button('主菜单').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setPosition(dm.Display.position.btn_menu.x,dm.Display.position.btn_menu.y);
-    goog.events.listen(this.btn_menu, 'click', function() {
-		
-        dm.loadMenu();
-    });
-    //this.appendChild(this.btn_menu);
-
-    // Hint button
-    this.btn_hint = new dm.Button('人物').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setPosition(dm.Display.position.btn_hint.x, dm.Display.position.btn_hint.y);
-    goog.events.listen(this.btn_hint, 'click', function() {
-        //this.changeAnim('Hello');
-		this.board.popWindow();
-    },false, this);
-    //this.appendChild(this.btn_hint);
-
-	//其他显示的数据
-	var monster_lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(24).
-        setPosition(250, lh -25).setText('怪物伤害').setAnchorPoint(0, 0);
-    
-	//this.appendChild(monster_lbl);
-	
-	var att_lbl = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(24).
-        setPosition(250, lh+5).setText('玩家攻击').setAnchorPoint(0, 0);
-
-		*/
-
-
 
     this.score = new lime.Label().setFontColor('#000').setFontSize(24).setText('0').setAnchorPoint(0, 0).setFontWeight(700);
-	/*
-	this.hp_box = new lime.Sprite().setSize(50,20).setFill(0,0,0,.3).setAnchorPoint(0,0);
-	this.mana_box = new lime.Sprite().setSize(50,20).setFill(0,0,0,.3).setAnchorPoint(0,0);
-	this.gold_box = new lime.Sprite().setSize(50,20).setFill(0,0,0,.3).setAnchorPoint(0,0);
-	this.exp_box = new lime.Sprite().setSize(50,20).setFill(0,0,0,.3).setAnchorPoint(0,0);
-	panel.appendChild(this.hp_box.setPosition(600, 890));
-	panel.appendChild(this.mana_box.setPosition(330,900));
-	panel.appendChild(this.exp_box.setPosition(330,940));
-	panel.appendChild(this.gold_box.setPosition(100,900));
-	*/
-
 	this.show_vars = {
 		exp:{curdata:this.data.exp, max:100, loc:{x:370,y:940}}
 		,gold:{curdata:this.data.gold, max:100, loc:{x:100,y:900}}
@@ -333,6 +252,7 @@ dm.Game.prototype.initData = function(size, user){
 	this.data.hp    = this.user.fp.a6;
 	this.data.mana  = this.user.fp.a5;
 	this.data.def   = this.user.fp.a3;
+	this.data.def_extra = 0; //额外护甲,技能增加的额外生命、护甲、魔法盾，都可看做是额外护甲形式
 	this.data.score = 0;
 	this.data.lvl   = 0;
 	this.data.exp   = 0;
@@ -341,8 +261,21 @@ dm.Game.prototype.initData = function(size, user){
     this.points = 0;
 	this.panel;
 	this.skillslot = [];
+	//记录游戏buff
+	this.buff = {};
+	//记录获得经验后，应弹几次升级对话框
+	this.pop = {};
+	this.pop.shop = 0;
+	this.pop.lvl = 0;
+	this.pop.skill = 0;
+	//顶层是否已有弹窗
+	this.ispoping = false;
+
 }
 
+/*
+ * 点击人物状态的图标，可以显示人物相关信息：武器装备，人物二级属性
+ */
 dm.Game.prototype.statShow = function(){
 	var i,j,fp,dialog,eqpslot,sloticon,eqp,eqpicon,pos,eqpdetail,charinfo,charloc;
 	var sp = dm.conf.SP;
@@ -366,7 +299,9 @@ dm.Game.prototype.statShow = function(){
 			//eqpicon = dm.IconManager.getFileIcon('assets/icons.png',eqp[i].icon['x'],eqp[i].icon['y'],2,2,1);
 			eqpicon = this.user.equips[i].icon;
 			eqpslot.setFill(eqpicon); //装备图标
+
 			goog.events.listen(eqpslot, 'click', function() {
+				//装备属性信息
 				this.disp.removeAllChildren();
 				var h = 0;
 				var user = this.getParent().getParent().user;
@@ -382,8 +317,6 @@ dm.Game.prototype.statShow = function(){
 		}
 		dialog.appendChild(eqpslot);
 	}
-	//var textArea = new lime.RoundedRect().setAnchorPoint(0,0).setFill(0,0,0,.7).setPosition(10, 340).setSize(210, 240).setRadius(20);
-	//dialog.appendChild(textArea);
 
 	//人物属性信息
 	charinfo = new lime.RoundedRect().setAnchorPoint(0,0).setFill(0,0,0,.7).setPosition(230, 10).setSize(350, 470).setRadius(20);
@@ -417,6 +350,9 @@ dm.Game.prototype.statShow = function(){
     });
 }
 
+/*
+ * 点击menu按钮，实现弹出主菜单功能，有重新开始等功能
+ */
 dm.Game.prototype.mainShow = function(){
 		var board = this.board;
 		goog.events.unlisten(board, ['mousedown', 'touchstart'], board.pressHandler_);
@@ -477,11 +413,19 @@ dm.Game.prototype.skillShow = function(slot){
 	dialog.appendChild(cost);
 
 	var btn_ok = new dm.Button('使用技能').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setAnchorPoint(0, 0).setPosition(180,300);
+	//传递技能
+	btn_ok.sk_no = sk.no;
+
 	var btn_cancel = new dm.Button('取消').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setAnchorPoint(0, 0).setPosition(350,300);
+
 	dialog.appendChild(btn_ok);
 	dialog.appendChild(btn_cancel);
+
 	goog.events.listen(btn_ok, lime.Button.Event.CLICK, function() {
-		var board = this.getParent().getParent().board;
+		var game = this.getParent().getParent();
+		var board = game.board;
+		var action = new dm.Skill(game);
+		action.use(this.sk_no);
 		this.getParent().getParent().removeChild(this.getParent());
 		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 	});

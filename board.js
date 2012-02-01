@@ -11,6 +11,7 @@ goog.require('lime.animation.Spawn');
 goog.require('dm.Gem');
 goog.require('dm.MultiMove');
 goog.require('dm.Log');
+goog.require('dm.Skill');
 
 
 
@@ -186,7 +187,9 @@ dm.Board.prototype.randExtra = function(basev,randratio,baseadd,ratio) {
  * 计算分数
  */
 dm.Board.prototype.checkSolutions = function() {
+	
 	this.isMoving_ = 1;
+	
     var action = new lime.animation.Spawn(
         new lime.animation.ScaleTo(0).setDuration(.1),
         new lime.animation.FadeTo(0).setDuration(.1)
@@ -196,11 +199,23 @@ dm.Board.prototype.checkSolutions = function() {
 	,fp = this.game.user.fp
 	,sp = this.game.user.sp
 	,data = this.game.data
+	,buff = this.game.buff
+	,sk_action = new dm.Skill(this.game)
 	,keep
 	,attack = fp.a1 
 	,defense = fp.a3
 	,p_type = []
-	,ispoping = 0;
+	,ispoping = this.game.ispoping;
+
+	for(i in buff){
+		if(buff[i] && dm.conf.SK['sk'+i]['delay'] == 1){ //回合中产生作用
+			sk_action.action(i);
+			buff[i]--; 
+			if(buff[i] == 0){
+				delete buff[i];
+			}
+		}
+	}
 	
 	var indexes = 1;
 	//* 分类处理
@@ -226,18 +241,21 @@ dm.Board.prototype.checkSolutions = function() {
 					data['exp'] += this.randExtra(fp.a17,fp.a18,fp.a19,fp.a20);
 					p_type = 'exp';
 					leech = g.hp*fp.a36/100; //生命偷取
+					console.log('leech: '+leech);
 				}else{
 					if(attack_real > def_real){
 						g.hp_left = g.hp_left + def_real - attack_real;
 						leech = attack_real*fp.a36/100;
 					}
 					g.keep = true;
-					if(Math.random()*100 < fp.a32){//毒伤害
+					if(Math.random()*100 < fp.a32){//毒伤害,todo: 加入持续时间
                         g.setSpecial('poison');
 						g.poison = Math.round(attack_real*10/100) || 1;//fp.a33/100);
+						console.log('poison : '+g.poison);
 						g.poison_start = 1;
 					}
 					if(Math.random()*100 < 100){ //fp.a35){//石化
+						console.log('freeze ');
 						g.setSpecial('freeze');
 						g.stone = 1;
 					}
@@ -247,10 +265,11 @@ dm.Board.prototype.checkSolutions = function() {
 			}
 		}
 
-		while(data['exp'] >= 5){
-			this.popWindow('lvl Up');
-			ispoping = 1;
-			data['exp'] -= 5;
+		while(data['exp'] >= 13){
+			//this.popWindow('lvl Up');
+			//ispoping = 1;
+			this.game.pop.lvl += 1;
+			data['exp'] -= 13;
 		}
 	}
 
@@ -260,10 +279,11 @@ dm.Board.prototype.checkSolutions = function() {
 		if(s.length > 3)
 			data['gold'] += this.randExtra(fp.a13,fp.a14,fp.a15,fp.a16)
 
-		while(data['gold'] >= 3){
-			this.popWindow('Shop');
-			ispoping = 1;
-			data['gold'] -= 3;
+		while(data['gold'] >= 13){
+			//this.popWindow('Shop');  //购买装备
+			//ispoping = 1;
+			data['gold'] -= 13;
+			this.game.pop.shop += 1;
 		}
 	}
 
@@ -282,9 +302,10 @@ dm.Board.prototype.checkSolutions = function() {
 			data['mana'] += this.randExtra(fp.a21,fp.a22,fp.a23,fp.a24)
 		data['skillexp'] += Math.min(data['mana'] - fp.a5);
 		data['mana'] = Math.min(fp.a5, data[p_type]);
-		while(data['skillexp'] >= 5){
-			this.popWindow('Skill');
-			data['skillexp'] -= 5;
+		while(data['skillexp'] >= 3){
+			//this.popWindow('Skill');
+			data['skillexp'] -= 3;
+			this.game.pop.skill += 1;
 		}
 	}
 	//回合结束其他动作
@@ -309,11 +330,16 @@ dm.Board.prototype.checkSolutions = function() {
 		this.game.data['hp'] -= total_dmg;
 		dtom = Math.round(total_dmg*fp.a28/100);//伤害转到魔法的增加
 		data['mana'] = Math.min(fp.a5, data['mana']+dtom);
-	}
+	} 
 
 	if(this.game.data['hp'] <= 0){
 		this.game.endGame();
 	}
+	
+	//
+	//回合末技能生效
+	
+
 	//生命魔法恢复
 	if(fp.a26 && fp.a26>0){
 		data['hp'] = Math.min(fp.a6, data['hp']+fp.a26);
@@ -634,11 +660,11 @@ dm.Board.prototype.getDamage = function(){
 
 /*
  *
- * 弹窗口
+ * 弹窗口,购买，升级技能，等级升级等的相关窗口
  *
  */
  dm.Board.prototype.popWindow = function(text){
-	
+	 this.game.ispoping = true;
 	 var i,j,ct=0,id=[],board,game,btn,btn2,rand,
 	 user = this.game.user,
 	 equips = user.equips;
@@ -672,6 +698,7 @@ dm.Board.prototype.getDamage = function(){
 				 game.data['hp'] += parseInt(dm.conf.FP.a6.inc); //每级增加血上限
 				 game.data['mana'] += parseInt(dm.conf.FP.a5.inc);
 				 board.turnEndShow();
+				 game.ispoping = false;
 				 board.removeChild(this.getParent());
 				 delete this.getParent();  
 			 });
@@ -735,7 +762,8 @@ dm.Board.prototype.getDamage = function(){
 					 game.user.skillUp(this.skill);
 					 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 					 board.removeChild(this.getParent());
-					 delete this.getParent();  
+					 game.ispoping = false;
+					 delete this.getParent();
 				 }else{
 					 alert('choose one!');
 				 }
@@ -818,12 +846,12 @@ dm.Board.prototype.getDamage = function(){
 							 var oldinfo = new lime.RoundedRect().setSize(400, 140).setPosition(50, 140).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
 							 var newinfo = new lime.RoundedRect().setSize(400, 140).setPosition(50, 300).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
 							 var confirm = new dm.Button().setText('刷新').setSize(200, 50).setPosition(100,470);
-							 var back = new dm.Button().setText('返回').setSize(200, 50).setPosition(300,470);
+							// var back = new dm.Button().setText('返回').setSize(200, 50).setPosition(300,470);
 							 popdialog.appendChild(equip_icon);
 							 popdialog.appendChild(oldinfo);
 							 popdialog.appendChild(newinfo);
 							 popdialog.appendChild(confirm);
-							 popdialog.appendChild(back);
+							// popdialog.appendChild(back);
 							 
 							 //旧的附加属性
 							 for(j in user.eqp_add[this.icon.eqpid]){
@@ -854,13 +882,16 @@ dm.Board.prototype.getDamage = function(){
 								 board.game.user.refresh(this.icon, atts);
 								 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 								 this.getParent().getParent().removeChild(this.getParent());
+
+								 board.game.ispoping = false;
 								 delete this.getParent();  
 							 });
-							 goog.events.listen(back, lime.Button.Event.CLICK, function() {
+							/* goog.events.listen(back, lime.Button.Event.CLICK, function() {
 								 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 								 this.getParent().getParent().removeChild(this.getParent());
 								 delete this.getParent();  
 							 });
+							 */
 						 });
 					 }
 					 if(btn2){
@@ -881,6 +912,7 @@ dm.Board.prototype.getDamage = function(){
 					 game.att.setText(board.show_att);
 					 game.mon.setText(board.show_dmg);
 					 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+					 game.ispoping = false;
 					 board.removeChild(this.getParent());
 					 delete this.getParent();  
 				 }else{

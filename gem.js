@@ -88,7 +88,7 @@ dm.Gem.prototype.fillImage = function(w,h){
 	 size = this.ICONS['size']
 
 	 scale = w/(size+2) ;
-	 console.log(size,x,y,scale)
+	 //console.log(size,x,y,scale)
 	 this.setFill(dm.IconManager.getFileIcon('assets/tiles.png',x,y,scale));
 	
 }
