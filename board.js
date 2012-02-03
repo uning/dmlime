@@ -105,14 +105,14 @@ goog.inherits(dm.Board, lime.Sprite);
  * Fill the board so that all columns have max amount
  * of bubbles again. Poistion out of screen so they can be animated in
  */
-dm.Board.prototype.fillGems = function() {
+dm.Board.prototype.fillGems = function(type) {
 	var c,r;
     for (c = 0; c < this.cols; c++) {
         if (!this.gems[c]) this.gems[c] = [];
         var i = 0;
         for (r = this.gems[c].length; r < this.rows; r++) {
             i++;
-            var gem = dm.Gem.random(this.GAP, this.GAP);
+            var gem = dm.Gem.random(this.GAP, this.GAP, type);
 			gem.genAttribute(this.game.data.turn);
             gem.r = r;
             gem.c = c;
@@ -122,7 +122,7 @@ dm.Board.prototype.fillGems = function() {
             this.layers[c].appendChild(gem);
         }
     }
-	this.show_att = this.fp.a1;
+	this.show_att = this.fp.a1 + this.game.attack_addtion;
 	this.show_dmg = this.getDamage();
 	if(this.game.show_create == 1){
 		this.game.mon.setText(this.show_dmg);
@@ -189,6 +189,7 @@ dm.Board.prototype.randExtra = function(basev,randratio,baseadd,ratio) {
 dm.Board.prototype.checkSolutions = function() {
 	
 	this.isMoving_ = 1;
+	this.genType = null;
 	
     var action = new lime.animation.Spawn(
         new lime.animation.ScaleTo(0).setDuration(.1),
@@ -202,10 +203,13 @@ dm.Board.prototype.checkSolutions = function() {
 	,buff = this.game.buff
 	,sk_action = new dm.Skill(this.game)
 	,keep
-	,attack = fp.a1 
+	,attack = fp.a1 + this.game.attack_addtion 
 	,defense = fp.a3
 	,p_type = []
-	,ispoping = this.game.ispoping;
+	,ispoping = this.game.ispoping
+	,doublegain = this.game.doublegain
+	,att_ratio = this.game.attack_ratio //伤害递增
+
 
 	for(i in buff){
 		if(buff[i] && dm.conf.SK['sk'+i]['delay'] == 1){ //回合中产生作用
@@ -222,7 +226,9 @@ dm.Board.prototype.checkSolutions = function() {
 	if(s[0].type == 'sword' || s[0].type == 'monster'){
 		for(i = 0; i < s.length; i++){
 			if(s[i].type == 'sword'){
-				attack += fp.a2;
+				attack += fp.a2
+				//
+				attack *= (att_ratio || 1);
 			}
 		}
 		for(i = 0; i < s.length; i++){
@@ -275,7 +281,7 @@ dm.Board.prototype.checkSolutions = function() {
 
 	if(s[0].type == 'gold'){
 		p_type = 'gold';
-		data['gold'] += s.length*fp.a13;
+		data['gold'] += s.length*fp.a13*(doublegain?2:1); //double表示是否有双倍效果;
 		if(s.length > 3)
 			data['gold'] += this.randExtra(fp.a13,fp.a14,fp.a15,fp.a16)
 
@@ -289,7 +295,7 @@ dm.Board.prototype.checkSolutions = function() {
 
 	if(s[0].type == 'blood'){
 		p_type = 'hp';
-		data['hp'] += s.length*fp.a9;
+		data['hp'] += s.length*fp.a9;//*(doublegain?2:1);
 		if(s.length > 3)
 			data['hp'] += this.randExtra(fp.a9,fp.a10,fp.a11,fp.a12)
 		data['hp'] = Math.min(data['hp'], fp.a6);
@@ -297,10 +303,10 @@ dm.Board.prototype.checkSolutions = function() {
 	
 	if(s[0].type == 'mana'){
 		p_type = 'mana';
-		data['mana'] += s.length*fp.a21;
+		data['mana'] += s.length*fp.a21;//*(doublegain?2:1);
 		if(s.length > 3)
 			data['mana'] += this.randExtra(fp.a21,fp.a22,fp.a23,fp.a24)
-		data['skillexp'] += Math.min(data['mana'] - fp.a5);
+		data['skillexp'] += Math.max(0, data['mana'] - fp.a5);
 		data['mana'] = Math.min(fp.a5, data[p_type]);
 		while(data['skillexp'] >= 3){
 			//this.popWindow('Skill');
@@ -338,7 +344,15 @@ dm.Board.prototype.checkSolutions = function() {
 	
 	//
 	//回合末技能生效
-	
+	for(i in buff){
+		if(buff[i] && dm.conf.SK['sk'+i]['delay'] == 2){ //回合末技能生效
+			sk_action.action(i);
+			buff[i]--; 
+			if(buff[i] == 0){
+				delete buff[i];
+			}
+		}
+	}
 
 	//生命魔法恢复
 	if(fp.a26 && fp.a26>0){
@@ -347,7 +361,14 @@ dm.Board.prototype.checkSolutions = function() {
 	if(fp.a27 && fp.a27>0){
 		data['mana'] = Math.min(fp.a5, data['mana']+fp.a27);
 	}
+
 	this.unStone();
+
+
+	//只持续一回合的一些参数
+	this.game.attack_addtion = 0; 
+	this.game.attack_ratio = 1;
+	this.game.doublegain = false;
 
 	if(!ispoping){
 		this.turnEndShow();
@@ -355,7 +376,7 @@ dm.Board.prototype.checkSolutions = function() {
 	this.changeProg(this.game, p_type);
 
 	var me = this;
-	var animationStop = function() {
+	var animationStop = function(gemtype) {
 		dm.log.fine('checkSolutions : animation stop');
         goog.array.forEach(s, function(g) {
             if(g.keep == false){
@@ -363,7 +384,7 @@ dm.Board.prototype.checkSolutions = function() {
 			    delete g;
 			}
         },this);
-		me.fillGems();
+		me.fillGems(gemtype);
 		dm.log.fine('in checkSolutions : moveGems start');
         me.moveGems();
     }
@@ -372,7 +393,7 @@ dm.Board.prototype.checkSolutions = function() {
 	this.game.data.turn += 1;
 	dm.log.fine('in checkSolutions : action start');
     //action.play();
-	animationStop(); //不播动画
+	animationStop(this.genType); //不播动画
 	
 	this.isMoving_ = 0;
 	
@@ -566,8 +587,8 @@ dm.Board.prototype.pressHandler_ = function(e) {
     var c = Math.floor(pos.x / this.GAP),
         r = this.rows - Math.ceil(pos.y / this.GAP);
 
-	var valid_min = this.GAP*0.05,
-		valid_max = this.GAP*0.95,  //落在GEM矩形框内中心部分才有效
+	var valid_min = this.GAP*0.10,
+		valid_max = this.GAP*0.90,  //落在GEM矩形框内中心部分才有效
 		x_valid = pos.x - this.GAP*c;
 		y_valid = pos.y - this.GAP*(this.rows - 1 - r);
 
@@ -1031,3 +1052,153 @@ dm.Board.prototype.getDamage = function(){
 	}
  }
 
+
+/**
+ * 技能：替换所有的图标，全部刷新
+ */
+ dm.Board.prototype.wipeAll = function(){
+	 var s = this.findGem('All');
+	 this.changeGem(s, true);
+ }
+
+ /**
+  * 技能：随机消除图中3*3的格子
+  */
+  dm.Board.prototype.wipeBlock = function(){
+	  var s = this.findGem();
+	  var i;
+	  for(i in s){
+		  this.gainGem(s[i]);
+	  }
+	  this.changeGem(s, false);
+  }
+
+
+/**
+ * 找到要改变的gems,
+ * param: mod -- all 全部选中 
+ */
+  dm.Board.prototype.findGem = function(mod){
+	  var s = [];
+	  if(mod == 'All'){
+		  var c, r;
+		  for (c = 0; c < this.cols; c++) {
+			  for (r = 0; r < this.rows; r++) {
+				  s.push(this.gems[c][r]);
+			  }
+		  }
+	  }else{//取3*3的一个方块内的元素
+		  var anchor = [
+			  Math.round(1 + Math.random()*(this.cols - 2)),
+			  Math.round(1 + Math.random()*(this.rows - 2))
+		  ];
+
+		  for(c = -1; c < 2; c++){
+			  for(r = -1; r < 2; r++){
+				  s.push(this.gems[anchor[0] + c][anchor[1] + r]);
+				  console.log('findGem: ' + 'anch = ' + anchor[0] + ' , c= ' + c + ' ; ' + 'anch = ' + anchor[1] + ', r= ' + r);
+			  }
+		  }
+	  }
+	  return s;
+  }
+
+
+ /*
+  *改变board里面的元素块结构
+  *param:
+  *      s ：要改变的元素的位置数组， keep : 0 --消除 1 -- 重排列
+  */
+ dm.Board.prototype.changeGem= function(s, keep){
+	 //先删除显示层元素
+	 var i, g;
+	 goog.array.forEach(s, function(g) {
+		 if(g.keep == false){
+			 g.parent_.removeChild(g);
+			 delete g;
+		 }
+	 },this);
+	 //删除在gem矩阵中的元素
+	 for(i = 0; i < s.length; i++){
+		 goog.array.remove(this.gems[s[i].c], s[i]);
+	 }
+
+	 if(!keep){
+		 //完全随机生成新的
+		 this.fillGems();
+		 this.moveGems();
+	 }else{
+		 var c, r, copy;
+		 for (c = 0; c < this.cols; c++) {
+			 if ( !this.gems[c] ) 
+				 this.gems[c] = [];
+			 i = 0;
+			 for (r = this.gems[c].length; r < this.rows; r++) {
+				 copy = s.splice(Math.round(Math.random()*(s.length-1)), 1);//随机选择一个gem
+				 i++;
+				 var gem = copy[0];
+				 gem.r = r;
+				 gem.c = c;
+				 gem.setPosition((c + .5) * this.GAP, (-i + .5) * this.GAP);
+				 //gem.setSize(this.GAP, this.GAP);
+				 this.gems[c].push(gem);
+				 this.layers[c].appendChild(gem);
+			 }
+		 }
+		 this.moveGems();
+	 }
+ }
+
+
+ /**
+  * 收集图标产生作用
+  */
+  dm.Board.prototype.gainGem = function(gem){
+	  var fp = this.game.user.fp
+	  ,sp = this.game.user.sp
+	  ,data = this.game.data
+	  ,p_type
+	  switch(gem.type){
+		  case 'sword':{
+			  this.game.attack_addtion += fp.a2;
+		  }
+		  break;
+		  case 'monster':{
+			  data['exp'] += fp.a17;
+			  while(data['exp'] >= 13){
+				  data['exp'] -= 13;
+				  this.game.pop.lvl += 1;
+			  }
+			  p_type = 'exp';
+		  }
+		  break;
+		  case 'blood':{
+			  data['hp'] += fp.a9;
+			  data['hp'] = Math.min(data['hp'], fp.a6);
+			  p_type = 'hp';
+		  }
+		  break;
+		  case 'gold':{
+			  data['gold'] += fp.a13;
+			  p_type = 'gold';
+			  while(data['gold'] >= 13){
+				  data['gold'] -= 13;
+				  this.game.pop.shop += 1;
+			  }
+		  }
+		  break;
+		  case 'mana':{
+			  data['mana'] += fp.a21;
+			  data['skillexp'] += Math.max(0, data['mana'] - fp.a5);
+			  data['mana'] = Math.min(fp.a5, data['mana']);
+			  while(data['skillexp'] >= 3){
+				  data['skillexp'] -= 3;
+				  this.game.pop.skill += 1;
+			  }
+			  p_type = 'mana';
+		  }
+		  break;
+	  }
+
+	  this.changeProg(this.game, p_type);
+  }

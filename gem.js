@@ -46,6 +46,8 @@ dm.Gem.prototype.ICONS = {
 	,'mana':{x:0,y:512}
 	,'sword':{x:0,y:212}
 };
+
+
 //是否可以连接
 dm.Gem.prototype.canConnect = function(g) {
 	return (Math.abs(g.r - this.r) < 2 && Math.abs(g.c - this.c) < 2 )
@@ -53,18 +55,24 @@ dm.Gem.prototype.canConnect = function(g) {
 		 (g.type == 'monster' && this.type == 'sword')|| (this.type == 'monster' && g.type == 'sword'))
 }
 
+
 /**
  * Generate bubble with random color
  * @return {dm.Gem} New bubble.
+ * 如果指定了类型，则随机出某种类型的
  */
-dm.Gem.random = function(w, h) {
-
+dm.Gem.random = function(w, h, type) {
 	//简单随机出
 	//
     var gem = new dm.Gem();
-    var id = Math.floor(Math.random() * dm.GEMTYPES.length);
-    gem.index = id; 
-	gem.type = dm.GEMTYPES[id];
+	if(!type){
+		var id = Math.floor(Math.random() * dm.GEMTYPES.length);
+		gem.index = id; 
+		gem.type = dm.GEMTYPES[id];
+	}else{
+		gem.index = type;
+		gem.type = dm.GEMTYPES[type];
+	}
 	//gem.label.setText(gem.type);
 	gem.setSize(w,h);
 
