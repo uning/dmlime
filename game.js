@@ -120,14 +120,14 @@ dm.Game.prototype.endGame = function() {
 
     var btn = new dm.Button().setText('重来').setSize(200, 90).setPosition(-110, 400);
     dialog.appendChild(btn);
-    goog.events.listen(btn, lime.Button.Event.CLICK, function() {
+    goog.events.listen(btn, ['mousedown', 'touchstart'], function() {
          dm.newgame(this.board.cols);
     },false, this);
 
 
     btn = new dm.Button().setText('主菜单').setSize(200, 90).setPosition(110, 400);
     dialog.appendChild(btn);
-    goog.events.listen(btn, lime.Button.Event.CLICK, function() {
+    goog.events.listen(btn, ['mousedown', 'touchstart'], function() {
         dm.loadMenu();
     });
 };
@@ -177,7 +177,7 @@ dm.Game.prototype.createPanel = function(){
 		slot = new lime.Sprite().setSize(110,110).setAnchorPoint(0,0).setPosition(60 + i*120, 0).setFill(icon);
 		this.skillslot[i] = slot;
 		panel.appendChild(slot);
-		goog.events.listen(this.skillslot[i], 'click', function() {
+		goog.events.listen(this.skillslot[i], ['mousedown', 'touchstart'], function() {
 			if(this.sk)
 				this.getParent().getParent().skillShow(this);
 		});
@@ -189,7 +189,7 @@ dm.Game.prototype.createPanel = function(){
 	var menu = new lime.Sprite().setSize(152, 50).setAnchorPoint(0, 0).setPosition(60 + 4*120, 0).setFill(icon);
     menu.domClassName = goog.getCssName('lime-button');
 	panel.appendChild(menu);
-	goog.events.listen(menu, lime.Button.Event.CLICK, function() {
+	goog.events.listen(menu, ['mousedown', 'touchstart'], function() {
 		this.getParent().getParent().mainShow();
     });
 
@@ -199,7 +199,7 @@ dm.Game.prototype.createPanel = function(){
 	var stat = new lime.Sprite().setSize(152, 50).setAnchorPoint(0, 0).setPosition(60 + 4*120, 60).setFill(icon);
     stat.domClassName = goog.getCssName('lime-button');
 	panel.appendChild(stat);
-    goog.events.listen(stat, lime.Button.Event.CLICK, function() {
+    goog.events.listen(stat, ['mousedown', 'touchstart'], function() {
 		this.getParent().getParent().statShow();
     });
 	this.appendChild(panel);
@@ -271,6 +271,16 @@ dm.Game.prototype.initData = function(size, user){
 	//顶层是否已有弹窗
 	this.ispoping = false;
 
+	//技能相关参数初始化
+	this.data.attack_addtion = 0; 
+	this.data.attack_ratio = 0;
+	this.data.def_extra = 0 
+	this.data.dmgRatio = 1
+	this.data.doublegain = 0;
+	this.data.extAvoid  = 0
+	this.data.reduceDmg = 0
+	this.data.noDmg = 0;
+
 }
 
 /*
@@ -300,7 +310,7 @@ dm.Game.prototype.statShow = function(){
 			eqpicon = this.user.equips[i].icon;
 			eqpslot.setFill(eqpicon); //装备图标
 
-			goog.events.listen(eqpslot, 'click', function() {
+			goog.events.listen(eqpslot, ['mousedown', 'touchstart'], function() {
 				//装备属性信息
 				this.disp.removeAllChildren();
 				var h = 0;
@@ -343,7 +353,7 @@ dm.Game.prototype.statShow = function(){
 
     btn = new dm.Button().setText('return').setSize(200, 70).setPosition(480, 540),
     dialog.appendChild(btn);
-    goog.events.listen(btn, lime.Button.Event.CLICK, function() {
+    goog.events.listen(btn, ['mousedown', 'touchstart'], function() {
 		var game = this.getParent().getParent();
 		game.removeChild(this.getParent());
 		goog.events.listen(game.board, ['mousedown','touchstart'], game.board.pressHandler_);
@@ -364,7 +374,7 @@ dm.Game.prototype.mainShow = function(){
 		var btn_cancel = new dm.Button('返回').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setAnchorPoint(0, 0).setPosition(350,300);
 		dialog.appendChild(btn_ok);
 		dialog.appendChild(btn_cancel);
-		goog.events.listen(btn_ok, lime.Button.Event.CLICK, function() {
+		goog.events.listen(btn_ok, ['mousedown', 'touchstart'], function() {
 
 			var dialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(500, 480).setPosition(120, 260).setAnchorPoint(0, 0).setRadius(20);
 			this.getParent().getParent().appendChild(dialog);
@@ -373,16 +383,16 @@ dm.Game.prototype.mainShow = function(){
 			dialog.appendChild(btn_ok);
 			dialog.appendChild(btn_cancel);
 			this.getParent().getParent().removeChild(this.getParent());
-			goog.events.listen(btn_ok, lime.Button.Event.CLICK, function() {
+			goog.events.listen(btn_ok, ['mousedown', 'touchstart'], function() {
 				dm.loadMenu();
 			});
-			goog.events.listen(btn_cancel, lime.Button.Event.CLICK, function() {
+			goog.events.listen(btn_cancel, ['mousedown', 'touchstart'], function() {
 				var board = this.getParent().getParent().board;
 				this.getParent().getParent().removeChild(this.getParent());
 				goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 			});
 		});
-		goog.events.listen(btn_cancel, lime.Button.Event.CLICK, function() {
+		goog.events.listen(btn_cancel, ['mousedown', 'touchstart'], function() {
 			var board = this.getParent().getParent().board;
 			this.getParent().getParent().removeChild(this.getParent());
 			goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
@@ -421,7 +431,7 @@ dm.Game.prototype.skillShow = function(slot){
 	dialog.appendChild(btn_ok);
 	dialog.appendChild(btn_cancel);
 
-	goog.events.listen(btn_ok, lime.Button.Event.CLICK, function() {
+	goog.events.listen(btn_ok, ['mousedown', 'touchstart'], function() {
 		var game = this.getParent().getParent();
 		var board = game.board;
 		var action = new dm.Skill(game);
@@ -429,7 +439,7 @@ dm.Game.prototype.skillShow = function(slot){
 		this.getParent().getParent().removeChild(this.getParent());
 		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 	});
-	goog.events.listen(btn_cancel, lime.Button.Event.CLICK, function() {
+	goog.events.listen(btn_cancel, ['mousedown', 'touchstart'], function() {
 		var board = this.getParent().getParent().board;
 		this.getParent().getParent().removeChild(this.getParent());
 		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);

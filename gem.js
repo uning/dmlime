@@ -65,7 +65,7 @@ dm.Gem.random = function(w, h, type) {
 	//简单随机出
 	//
     var gem = new dm.Gem();
-	if(!type){
+	if(!type || type == -1){
 		var id = Math.floor(Math.random() * dm.GEMTYPES.length);
 		gem.index = id; 
 		gem.type = dm.GEMTYPES[id];
