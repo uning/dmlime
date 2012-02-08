@@ -351,7 +351,7 @@ dm.Board.prototype.checkSolutions = function() {
 		if(data.revive == 1){
 			data['hp'] = fp.a6;
 			this.changeProg(this.game, 'hp');
-			data['mana'] = fp.a6;
+			data['mana'] = fp.a5;
 			this.changeProg(this.game, 'mana');
 			console.log('revive');
 			
@@ -432,13 +432,13 @@ dm.Board.prototype.checkSolutions = function() {
 				//杀死怪物了
 				line[element].setSpecial('killed!');
 				killed += line[element].attack //死亡怪物不再造成伤害，从总显示数值中去掉。
+				this.game.mon.setText(Math.max(0,this.getDamage() - killed));
 			}else{
 				line[element].unsetSpecial();
 			}
 		}
 	}
-	this.game.att.setText(this.show_att);
-	this.game.mon.setText(Math.max(0,this.getDamage() - killed));
+	//this.game.att.setText(this.show_att);
 	//
  }
 
@@ -522,7 +522,7 @@ dm.Board.prototype.cancelSelGem = function(selid){
 		}
 		if(g.type == 'monster'){
 			g.unsetSpecial();
-			this.show_dmg += g.attack;
+			this.show_dmg = this.getDamage();
 			this.game.mon.setText(this.show_dmg);
 		}
 		this.lineLayer.removeChildAt(lc.length-1); //圆角
@@ -1081,6 +1081,7 @@ dm.Board.prototype.getDamage = function(){
 /**
  * 技能：替换所有的图标，全部刷新
  */
+ /*
  dm.Board.prototype.wipeAll = function(){
 	 var s = this.findGem('All');
 	 this.changeGem(s, true);
@@ -1089,6 +1090,7 @@ dm.Board.prototype.getDamage = function(){
  /**
   * 技能：随机消除图中3*3的格子
   */
+  /*
   dm.Board.prototype.wipeBlock = function(){
 	  var s = this.findGem();
 	  var i;
@@ -1099,22 +1101,23 @@ dm.Board.prototype.getDamage = function(){
   }
 
   /**
-   * 技能：搜集某类图标
+   * 技能：将当前的血瓶转换为经验
    * param@ type:搜集图标的类型， value：搜集图标增加的值的类型
    */
+   /*
    dm.Board.prototype.collect = function(type, value){
 	   context = this;
 	   this.findType(type,function(g, value, context){
 		   g.keep = false;
 		   context.game.data[value] += 1;
 		   //
-		   if(context.game.data[value] > 13){
+		   if(context.game.data[value] >= 13){
 			   if(value == 'exp'){
 				   context.game.pop['lvl'] += 1;
+				   context.game.data[value] -= 13;
 			   }
-		   }else{
-			   //context.game.
 		   }
+		   context.changeProg(context.game, 'exp')
 		   //
 		   g.parent_.removeChild(g);
 		   return g;
@@ -1124,6 +1127,7 @@ dm.Board.prototype.getDamage = function(){
    /**
 	* 找到某类gems，对每个对象调用回调函数
 	*/
+	/*
    dm.Board.prototype.findType = function(type, func, param){
 	   var c, i, r, g, arr = [];
 	   for (c = 0; c < this.cols; c++) {
@@ -1146,6 +1150,7 @@ dm.Board.prototype.getDamage = function(){
    * 找到要改变的gems,
    * param: mod -- all 全部选中 
    */
+   /*
    dm.Board.prototype.findGem = function(mod){
 	   var s = [];
 	   if(mod == 'All'){
@@ -1178,6 +1183,7 @@ dm.Board.prototype.getDamage = function(){
   * param:
   *      s ：要改变的元素的位置数组， keep : 0 --消除 1 -- 重排列
   */
+  /*
    dm.Board.prototype.changeGem = function(s, keep){
 	   //先删除显示层元素
 	   var i, g;
@@ -1217,11 +1223,13 @@ dm.Board.prototype.getDamage = function(){
 		   this.moveGems();
 	   }
    }
+   
 
 
  /**
   * 收集图标产生作用
 */
+/*
    dm.Board.prototype.gainGem = function(gem){
 	   var fp = this.game.user.fp
 	   ,sp = this.game.user.sp
@@ -1270,23 +1278,6 @@ dm.Board.prototype.getDamage = function(){
 		   default:
 			   break;
 	   }
-
 	   this.changeProg(this.game, p_type);
    }
-
-
-  /**
-   * 魔法攻击，造成剩余魔法值等量的伤害
    */
-  dm.Board.prototype.magicAttack = function(monster, game){
-	  var i;
-	  var dmg = game.data.attack_magic;
-	  monster.hp_left = monster.def_left + monster.hp_left - dmg;
-	  if(monster.hp_left <= 0){
-		  monster.keep = false;
-		  monster.getParent().removeChild(monster);
-	  }else{
-		  monster.hplabel.setText(monster.hp_left);
-		  monster.keep = true;
-	  }
-  } 
