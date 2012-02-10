@@ -260,6 +260,9 @@ dm.Board.prototype.checkSolutions = function() {
 
 					g.monster.hp_left = 0;
 					g.keep = false;
+					//
+					g.monster.onDeath(true);
+					//
 
 					this.game.updateData('exp', this.randExtra(fp.a17,fp.a18,fp.a19,fp.a20), 'add');
 					//
@@ -290,13 +293,6 @@ dm.Board.prototype.checkSolutions = function() {
 				g.monster.hplabel.setText(g.monster.hp_left);
 			}
 		}
-
-		/*
-		while(data['exp'] >= 13){
-			this.game.pop.lvl += 1;
-			data['exp'] -= 13;
-		}
-		*/
 	}
 
 	if(s[0].type == 'gold'){
@@ -328,15 +324,6 @@ dm.Board.prototype.checkSolutions = function() {
 	//反弹伤害
 	//
 	//
-	/*
-    for(i = 0; i < s.length; i++){
-		if(s[i].keep == false){
-			goog.array.remove(this.gems[s[i].c], s[i]);
-		}
-    }
-	*/
-	
-	 
 
 	this.game.setScore(s.length * (s.length - 2));
 
@@ -348,15 +335,12 @@ dm.Board.prototype.checkSolutions = function() {
 			var def_extra = data['def_extra'];
 
 			total_dmg = Math.ceil(total_dmg*(100-fp.a29)/100);//被动属性减少伤害
-			//data['hp'] -= Math.max(0, total_dmg - def_extra); //伤害减去额外防御
 			this.game.updateData('hp', -Math.max(0, total_dmg - def_extra), 'add');
-			//data['def_extra'] = Math.max(0, def_extra - total_dmg);
 			this.game.updateData('def_extra', Math.max(0, def_extra - total_dmg));
 
 			total_dmg = Math.max(0, total_dmg - def_extra);
 
 			dtom = Math.round(total_dmg*fp.a28/100);//实际伤害转到魔法的增加
-			//data['mana'] = Math.min(fp.a5, data['mana']+dtom);
 			this.game.updateData('mana', Math.min(fp.a5, data['mana']+dtom));
 		}else{
 			alert('不受伤害');//
@@ -367,12 +351,6 @@ dm.Board.prototype.checkSolutions = function() {
 
 	if(data['hp'] <= 0){
 		if(data.revive == 1){
-			/*
-			data['hp'] = fp.a6;
-			this.changeProg(this.game, 'hp');
-			data['mana'] = fp.a5;
-			this.changeProg(this.game, 'mana');
-			*/
 			this.game.updateData('hp', fp.a6);
 			this.game.updateData('mana', fp.a5);
 			console.log('revive');
@@ -394,11 +372,9 @@ dm.Board.prototype.checkSolutions = function() {
 
 	//生命魔法恢复
 	if(fp.a26 && fp.a26>0){
-		//data['hp'] = Math.min(fp.a6, data['hp']+fp.a26);
 		this.game.updateData('hp', fp.a26, 'add');
 	}
 	if(fp.a27 && fp.a27>0){
-		//data['mana'] = Math.min(fp.a5, data['mana']+fp.a27);
 		this.game.updateData('mana', fp.a27, 'add');
 	}
 
@@ -409,32 +385,27 @@ dm.Board.prototype.checkSolutions = function() {
 	}
 	this.changeProg(this.game, p_type);
 
-	/*
-	var me = this;
-	var animationStop = function(gemtype) {
-		dm.log.fine('checkSolutions : animation stop');
-        goog.array.forEach(s, function(g) {
-            if(g.keep == false){
-				g.parent_.removeChild(g);
-			    delete g;
-			}
-        },this);
-		me.fillGems(gemtype);
-		dm.log.fine('in checkSolutions : moveGems start');
-        me.moveGems();
-    }
-	goog.events.listen(action, lime.animation.Event.STOP,animationStop ,false, this);
-*/
-
 	this.game.updateData('turn', 1, 'add');
+	//
+	//回合末怪物作用
+	var mon_arr = this.findMonster();
+	for(i in mon_arr){
+		mon_arr[i].monster.endTurn();
+	}
 
 	//
-	//dm.log.fine('in checkSolutions : action start');
-    //action.play();
-//	animationStop(this.genType); //不播动画
+	//冷却时间减少
+	if(data['canCD']){
+		for(i in this.game.skillCD){
+			if(this.game.skillCD[i] > 0){
+				this.game.skillCD[i]--; 
+			}
+		}
+	}
+	//
+	//
+	//data['canCD'] = 1;
 	this.clearGem();
-
-	//只持续一回合的一些参数
 	//回合末的结尾工作
 	for(i in buff){
 		if(buff[i]){ //技能持续时间到期时候的游戏参数设置。
@@ -445,17 +416,7 @@ dm.Board.prototype.checkSolutions = function() {
 			}
 		}
 	}
-	//
-	//冷却时间减少
-	if(data['canCD']){
-		for(i in this.game.skillCD){
-			if(this.game.skillCD[i] > 0){
-				this.game.skillCD[i]--; 
-			}
-		}
-	}
 
-	data['canCD'] = 1;
 	this.isMoving_ = 0;
 	
 	return true;
@@ -776,7 +737,7 @@ dm.Board.prototype.getDamage = function(){
 				 game.user.lvlUp();
 
 				 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
-				 board.show_att = board.getBaseAttack();
+				 board.show_att = board.getBaseAttack() + game.data['attack_addtion'];
 				 board.show_dmg = board.getDamage();
 				 game.att.setText(board.show_att);
 				 game.mon.setText(board.show_dmg);
@@ -1041,32 +1002,22 @@ dm.Board.prototype.getDamage = function(){
   * param: mod -- all 所有怪物 --‘type’ 某一特殊状态的怪物
   * func -- 作用于monster上的回调函数, params ---其他参数、/
   */
-  dm.Board.prototype.findMonster = function(mod, func, context, param){
-	  var c, i, r, remove_arr=[];
+  dm.Board.prototype.findMonster = function(func, context, param){
+	  var c, i, r, mon_arr=[];
 	  for (c = 0; c < this.cols; c++) {
 		  for (r = 0; r < this.gems[c].length; r++) {
 			  if(this.gems[c][r].type == "monster"){
-				  console.log('c = '+c, '; r = '+r);
-				  if(mod == 'all'){
+				  if(func){
 					  func(this.gems[c][r], context, param);
-					  /*
-					  if(this.gems[c][r].keep == false){
-						  remove_arr.push(this.gems[c][r]);
-					  }
-					  */
+				  }else{
+					  mon_arr.push(this.gems[c][r]);
 				  }
 			  }
 		  }
 	  }
-	  /*
-	  for(i = 0; i < remove_arr.length; i++){ 
-		  if(remove_arr[i].keep == false){
-			  goog.array.remove(this.gems[remove_arr[i].c], remove_arr[i]);
-		  }
+	  if(!func){
+		  return mon_arr;
 	  }
-	  this.fillGems(this.genType);
-	  this.moveGems();
-	  */
 	  this.clearGem();
   }
 
