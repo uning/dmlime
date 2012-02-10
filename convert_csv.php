@@ -11,7 +11,9 @@
  *
  */
 
-$files= array('first_property.csv'=> 'FP', 'second_property.csv'=>'SP', 'equips.csv'=>'EP', 'skill.csv'=>'SK');
+$files= array('first_property.csv'=>'FP', 'second_property.csv'=>'SP', 'equips.csv'=>'EP', 'skill.csv'=>'SK', 'monster.csv'=>'MS');
+
+//
 $conf_dir = __DIR__.'/dmdata/';
 $conf_js_dir = __DIR__.'/conf/';
 
@@ -32,6 +34,8 @@ foreach( $files  as $f=>$v){
 	$out .= json_encode($rows,JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 	//$out .= json_encode($rows);
 	file_put_contents($outf,$out);
+	unset($columns); 
+	unset($rows);
 }
 
 
@@ -86,7 +90,6 @@ function read_csv($csv_path,&$columns,&$rows,$with_pos_info=false){
 			$rows[$item[$unique_key]] = $item;
 		}else{
 		}
-		$row++;
 	}
 	// 处理列描述里面出现 (array, ... ) 信息的列,将数据转换为array
 	foreach($columns as $c){
@@ -113,6 +116,7 @@ function read_cell($description,$origin_cell_value){
 		return '';
 	}
 	//*by tingkun
+	//
 	if(strpos($description,'(arrayMap')!==false){
 		$cell_value = array();
 		$origin_cell_value = str_replace(array('，','；'),array(',',';'),$origin_cell_value);

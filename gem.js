@@ -1,5 +1,7 @@
 goog.provide('dm.Gem');
 
+goog.require('dm.Monster');
+
 
 /**
  * Single bubble object
@@ -29,7 +31,10 @@ dm.Gem = function() {
     this.selected_ = false;
 
     this.index = -1;
-	this.keep = false;
+	this.keep = true;
+
+	this.canselect = 1;
+
 	this.r = 0 ;
 	this.c = 0 ;
 
@@ -40,7 +45,7 @@ goog.inherits(dm.Gem, lime.Sprite);
  
 dm.Gem.prototype.ICONS = {
 	'size':52
-	,'blood':{x:0,y:0}
+	,'hp':{x:0,y:0}
 	,'monster':{x:0,y:53}
 	,'gold':{x:0,y:105}
 	,'mana':{x:0,y:512}
@@ -52,7 +57,7 @@ dm.Gem.prototype.ICONS = {
 dm.Gem.prototype.canConnect = function(g) {
 	return (Math.abs(g.r - this.r) < 2 && Math.abs(g.c - this.c) < 2 )
 	&& (g.index == this.index || 
-		 (g.type == 'monster' && this.type == 'sword')|| (this.type == 'monster' && g.type == 'sword'))
+		 (g.type == 'monster' && this.type == 'sword')|| (this.type == 'monster' && g.type == 'sword')) && g.canselect
 }
 
 
@@ -103,6 +108,7 @@ dm.Gem.prototype.fillImage = function(w,h){
 /**
  * 产生特殊属性，如怪物技能等
  */
+ /*
 dm.Gem.prototype.genAttribute= function(turn){
 	if (this.type == 'monster'){
 		//属性
@@ -126,6 +132,7 @@ dm.Gem.prototype.genAttribute= function(turn){
 	}
 
 }
+*/
 
 /**
  * Select bubble. Show highlight

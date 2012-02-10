@@ -132,6 +132,7 @@ dm.Game.prototype.endGame = function() {
     });
 };
 
+
 /**
  * 改变数值等动画效果
  */
@@ -160,6 +161,7 @@ dm.Game.prototype.changeAnim = function(str){
 	this.notify.runAction(step);
 
 };
+
 
 /*
  * 面板的UI生成
@@ -280,6 +282,16 @@ dm.Game.prototype.initData = function(size, user){
 	this.data.extAvoid  = 0
 	this.data.reduceDmg = 0
 	this.data.noDmg = 0;
+	this.data.canCD = 1;
+	//
+	//已经存在的特殊怪物
+	this.data.specialMon = [];
+	for(var i=0;i<20;i++){
+		//将特殊怪物存入一个数组，同一个特殊怪物，只能出现一次
+		this.data.specialMon[i] = i+1;
+	}
+	//技能CD
+	this.skillCD = {};
 
 }
 
@@ -316,7 +328,7 @@ dm.Game.prototype.statShow = function(){
 				var h = 0;
 				var user = this.getParent().getParent().user;
 				for(j in user.equips[this.no].fp){
-					fpname = dm.conf.FP[j].disp;
+					fpname = dm.conf.FP[j].tips;
 					fpval  = user.equips[this.no].fp[j];
 					var wpinfo = new lime.Label().setFontColor('#FFF').setAnchorPoint(0,0).setFontSize(30).setPosition(10, h);
 					wpinfo.setText(fpname + ' +' + fpval);
@@ -339,8 +351,8 @@ dm.Game.prototype.statShow = function(){
 		charinfo.appendChild(splabel);//二级属性条目显示
 		loc += splabel.getSize().height + 4;
 
-		for(j in sp[i].disp){//二级属性点对应的一级属性
-			fpname = sp[i].disp[j];
+		for(j in sp[i].showfps){//二级属性点对应的一级属性
+			fpname = sp[i].showfps[j];
 			fpval = this.user.fp[j];
 			var fplabel = new lime.Label().setAnchorPoint(0,0).setFontColor('#FFF').setFontSize(20);
 			fplabel.setText(fpname + ' +'+fpval).setPosition(30,loc );
@@ -411,7 +423,7 @@ dm.Game.prototype.skillShow = function(slot){
 	dialog.appendChild(nm);
 
 	var disc = new lime.Label().setFontColor('#FFF').setFontSize(30).setAnchorPoint(0, 0).setPosition(50, 40);
-	disc.setText(' 描述：'+sk['disc']);
+	disc.setText(' 描述：'+sk['tips']);
 	dialog.appendChild(disc);
 
 	var cd = new lime.Label().setFontColor('#FFF').setFontSize(30).setAnchorPoint(0, 0).setPosition(50, 70);
@@ -445,3 +457,48 @@ dm.Game.prototype.skillShow = function(slot){
 		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 	});
 }
+
+
+/**
+ * 加相应的数值
+ */
+ dm.Game.prototype.updateData = function(key, value, method){
+	 var fp = this.user.fp;
+	 var data = this.data;
+
+	 if(method == 'add'){
+		 data[key] += value;
+	 }else{
+		 data[key] = value;
+	 }
+	 switch(key){
+		 case 'exp':{
+			 while(data['exp'] >= 13){
+				 data['exp'] -= 13;
+				 this.pop.lvl++;
+			 }
+			 break;
+		 }
+		 case 'mana':{
+			 data['skillexp'] += Math.max(0, data['mana'] - fp.a5);
+			 data['mana'] = Math.min(fp.a5, data['mana']);
+			 while(data['skillexp'] >= 3){
+				 data['skillexp'] -= 3;
+				 this.pop.skill += 1;
+			 }
+			 break;
+		}
+		case 'gold':{
+			while(data['gold'] >= 13){
+				data['gold'] -= 13;
+				this.pop.shop += 1;
+			}
+			break;
+		}
+		case 'hp':{
+			data['hp'] = Math.min(data['hp'], fp.a6);
+			break;
+		}
+	 }
+	 this.board.changeProg(this, key);
+ }

@@ -49,7 +49,7 @@ dm.HEIGHT = 1004;
 
 dm.BOARDSIZE = 690;
 
-dm.GEMTYPES = ['monster', 'blood', 'mana', 'sword', 'gold'];
+dm.GEMTYPES = ['monster', 'hp', 'mana', 'sword', 'gold'];
 
 dm.LVLCONF = [
   {
