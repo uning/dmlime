@@ -27,7 +27,7 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 			//this.id = this.game.data.specialMon.splice(index, 1);
 
 			//test
-			this.id = 2;
+			this.id = 3;
 		}else{
 			this.id = 0;
 		}
@@ -143,6 +143,14 @@ dm.Monster.prototype.endTurn = function(monster){
 	}
 }
 
+
+dm.Monster.prototype.disableConn = function(number){
+	if(!nmuber){
+		number = 2;
+	}
+	//this.board. 
+}
+ 
 /**
  * 怪物使用相应的技能
  */
@@ -157,9 +165,13 @@ dm.Monster.prototype.useSkill = function(){
 			break;
 		}
 		case '3':{
+			this.game.updateData('gold', -2, 'add');
 			break;
 		}
 		case '4':{
+			//1回合开始随机2个gem，设置不可连接
+			//2下一回合，换成另外两个 -- 回合末这两个自动可连
+			//3死亡时候复原
 			break;
 		}
 		case '5':{
@@ -221,9 +233,6 @@ dm.Monster.prototype.endSkill = function(){
 	switch(this.skill){
 		case '2':{
 			this.game.updateData('canCD', 1);
-			break;
-		}
-		case '3':{
 			break;
 		}
 		case '4':{

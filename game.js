@@ -468,6 +468,9 @@ dm.Game.prototype.skillShow = function(slot){
 
 	 if(method == 'add'){
 		 data[key] += value;
+		 if(data[key] <= 0){
+			 data[key] = 0;
+		 }
 	 }else{
 		 data[key] = value;
 	 }

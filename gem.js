@@ -105,34 +105,6 @@ dm.Gem.prototype.fillImage = function(w,h){
 	 this.setFill(dm.IconManager.getFileIcon('assets/tiles.png',x,y,scale));
 	
 }
-/**
- * 产生特殊属性，如怪物技能等
- */
- /*
-dm.Gem.prototype.genAttribute= function(turn){
-	if (this.type == 'monster'){
-		//属性
-		
-		this.attack = Math.floor(turn/50)+1;
-		this.hp = Math.floor(turn/40)+4;
-		this.def = Math.floor(turn/50)+1;
-		this.def_left = this.def;
-		this.hp_left = this.hp;
-		this.poison = 0; //受毒伤害
-		this.poison_start = 1; //受毒伤害
-		this.stone = 0; //石化伤害
-		//标签
-		var size = this.getSize(), h=size.height, w=size.width;
-		this.attlabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.attack);
-		this.hplabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#f00').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.hp_left);
-		this.deflabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#00f').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.def);
-		this.appendChild(this.attlabel.setPosition(w*0.4, -h/4));
-		this.appendChild(this.hplabel.setPosition(w*0.4, 0));
-		this.appendChild(this.deflabel.setPosition(w*0.4, h/4));
-	}
-
-}
-*/
 
 /**
  * Select bubble. Show highlight

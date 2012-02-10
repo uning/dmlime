@@ -224,6 +224,10 @@ dm.Board.prototype.checkSolutions = function() {
 		s[i].keep = false;
 	}
 	
+	var mon_arr = this.findMonster();
+	for(i in mon_arr){
+		mon_arr[i].monster.startTurn();
+	}
 
 	//怪物技能影响 
 	//
@@ -388,7 +392,7 @@ dm.Board.prototype.checkSolutions = function() {
 	this.game.updateData('turn', 1, 'add');
 	//
 	//回合末怪物作用
-	var mon_arr = this.findMonster();
+	mon_arr = this.findMonster();
 	for(i in mon_arr){
 		mon_arr[i].monster.endTurn();
 	}
@@ -1006,7 +1010,7 @@ dm.Board.prototype.getDamage = function(){
 	  var c, i, r, mon_arr=[];
 	  for (c = 0; c < this.cols; c++) {
 		  for (r = 0; r < this.gems[c].length; r++) {
-			  if(this.gems[c][r].type == "monster"){
+			  if(this.gems[c][r].type == "monster" && this.gems[c][r].keep == true){
 				  if(func){
 					  func(this.gems[c][r], context, param);
 				  }else{
