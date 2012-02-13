@@ -3,7 +3,6 @@ goog.require('dm.conf.MS');
 
 dm.Monster = function(turn, p, game, mon_id){
 	this.game = game;
-	this.board = game.board;
 	this.conf = dm.conf.MS;
 	this.genAttribute(turn, p, mon_id);
 }
@@ -21,13 +20,13 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	this.id = mon_id;
 	if(!this.id){
 		//if(this.game.user.lvl > 4 && Math.random()*100 > 95){
-		if(Math.random()*100 > 70){
+		if(Math.random()*100 > 90){
 			//
 			//var index = Math.round(Math.random()*(mon_arr.length-1));
 			//this.id = this.game.data.specialMon.splice(index, 1);
 
 			//test
-			this.id = 3;
+			this.id = 6;
 		}else{
 			this.id = 0;
 		}
@@ -88,6 +87,7 @@ dm.Monster.prototype.incAliveTurn= function(){
  * 设定怪物存在的轮数
 */
 dm.Monster.prototype.suicide = function(turn){
+	this.incAliveTurn();
 	if(this.aliveturn >= turn){
 		this.p.keep = false;
 		var nobounce = false;
@@ -115,15 +115,8 @@ dm.Monster.prototype.onDeath = function(bounce){
 /** 
  * 回合开始的动作
  */
- dm.Monster.prototype.startTurn = function(monster){
-	if(monster){
-		if(monster.delay == 0)
-			monster.useSkill();
-	}else{
-		if(this.delay == 0)
-			this.useSkill();
-	}
-
+ dm.Monster.prototype.startSkill = function(){
+	this.useSkill();
  }
 
 /**
@@ -144,15 +137,84 @@ dm.Monster.prototype.endTurn = function(monster){
 }
 
 
+/**
+ * 1回合开始随机2个gem，设置不可连接
+ * 2下一回合，换成另外两个 -- 回合末这两个自动可连
+ * 3死亡时候复原
+ */
 dm.Monster.prototype.disableConn = function(number){
-	if(!nmuber){
+	var data = this.game.data;
+	var type_arr = this.game.board.type_arr;
+	var i, type, random, id;
+	if(data['disconnect']){
+		for(i in data['disconnect']){
+			data['disconnect'][i].canSelect = true;
+			data['disconnect'][i].unsetSpecial();
+		}
+	}
+	data['disconnect'] = [];
+	if(!number){
 		number = 2;
 	}
-	//this.board. 
+	for(i=0; i<number; i++){
+		random = Math.round(Math.random()*(dm.GEMTYPES.length-1));//随机一种类型	
+		type = dm.GEMTYPES[random];//随机一种类型	
+		
+		random = Math.round(Math.random()*(type_arr[type].length-1));//在该类型中随机选一个
+		//设置不可连接
+		type_arr[type][random].canSelect = false;
+		type_arr[type][random].setSpecial('disconnect');
+
+		data['disconnect'].push(type_arr[type][random]);
+	}
+
 }
+
+
+/**
+ * 随机将某一个gem(除了monster以外)变成broken状态，无法发挥作用
+ */
+ dm.Monster.prototype.breakGem = function(){
+	 var c, r, s=[];
+	 for (c = 0; c < this.game.board.cols; c++) {
+		 for (r = 0; r < this.game.board.rows; r++) {
+			 g = this.game.board.gems[c][r];
+			 if(g.type != 'monster' && g.isBroken == false){
+				 s.push(g);
+			 }
+		 }
+	 }
+	 if(s.length > 0){
+		 random = Math.round(Math.random()*(s.length-1));//随机一种类型	
+		 s[random].isBroken = true;
+		 s[random].setSpecial('broken');
+	 }
+ }
  
+
+/**
+ * 随机将一个Gem变成普通怪物
+ */
+dm.Monster.prototype.changeMonster = function(){
+	 var c, r, s=[];
+	 for (c = 0; c < this.game.board.cols; c++) {
+		 for (r = 0; r < this.game.board.rows; r++) {
+			 g = this.game.board.gems[c][r];
+			 if(g.type != 'monster'){
+				 s.push(g);
+			 }
+		 }
+	 }
+	 if(s.length > 0){
+		 random = Math.round(Math.random()*(s.length-1));//随机一种类型	
+		 s[random].type = 'monster';
+		 s[random].monster = new dm.Monster(this.game.data.turn, s[random], this.game);
+	 }
+}
+
 /**
  * 怪物使用相应的技能
+ * 有三个阶段怪物会使用技能：0 生成怪物时候，1 回合开始时(moveGems完成时候)影响玩家动作，2 回合结束（即怪物回合开始时）
  */
 dm.Monster.prototype.useSkill = function(){
 	switch(this.skill){
@@ -169,15 +231,15 @@ dm.Monster.prototype.useSkill = function(){
 			break;
 		}
 		case '4':{
-			//1回合开始随机2个gem，设置不可连接
-			//2下一回合，换成另外两个 -- 回合末这两个自动可连
-			//3死亡时候复原
+			this.disableConn();
 			break;
 		}
 		case '5':{
+			this.breakGem();
 			break;
 		}
 		case '6':{
+			this.changeMonster();
 			break;
 		}
 		case '7':{
@@ -236,6 +298,15 @@ dm.Monster.prototype.endSkill = function(){
 			break;
 		}
 		case '4':{
+			var data = this.game.data;
+			var i;
+			if(data['disconnect']){
+				for(i in data['disconnect']){
+					data['disconnect'][i].canSelect = true;
+					data['disconnect'][i].unsetSpecial();
+				}
+			}
+			data['disconnect'] = [];
 			break;
 		}
 		case '5':{

@@ -40,7 +40,14 @@ dm.Board = function(rows,cols,game) {
     this.rows = rows;
     this.cols = cols;
     this.gems = new Array(cols);
-
+	//
+	//每一轮的各种宝石的数组
+	this.type_arr = new Array(5);
+	this.type_arr['hp']=[];
+	this.type_arr['mana']=[];
+	this.type_arr['gold']=[];
+	this.type_arr['sword']=[];
+	this.type_arr['monster']=[];
 	//
 	this.selectedGems = [];
 	this.drawedLines = [];
@@ -100,7 +107,13 @@ dm.Board = function(rows,cols,game) {
 };
 goog.inherits(dm.Board, lime.Sprite);
 
-
+dm.Board.prototype.startGame = function(){
+	this.moveGems();
+	var mon_arr = this.findMonster();
+	for(var i in mon_arr){
+		mon_arr[i].monster.startSkill();
+	}
+}
 /**
  * Fill the board so that all columns have max amount
  * of bubbles again. Poistion out of screen so they can be animated in
@@ -131,6 +144,7 @@ dm.Board.prototype.fillGems = function(type) {
 		this.game.mon.setText(this.show_dmg);
 		this.game.att.setText(this.show_att);
 	}
+	this.findGems();
 };
 
 /**
@@ -164,6 +178,7 @@ dm.Board.prototype.moveGems = function(opt_static) {
 			this.isMoving_ = 0;
         },false, this);
     }
+
     return action || false;
 };
 
@@ -224,10 +239,12 @@ dm.Board.prototype.checkSolutions = function() {
 		s[i].keep = false;
 	}
 	
+	/*
 	var mon_arr = this.findMonster();
 	for(i in mon_arr){
 		mon_arr[i].monster.startTurn();
 	}
+	*/
 
 	//怪物技能影响 
 	//
@@ -239,7 +256,7 @@ dm.Board.prototype.checkSolutions = function() {
 	if(s[0].type == 'sword' || s[0].type == 'monster'){
 		var weapon_dmg = 0;
 		for(i = 0; i < s.length; i++){
-			if(s[i].type == 'sword'){
+			if(s[i].type == 'sword' && !s[i].isBroken){
 				weapon_dmg += fp.a2*(100 + data['attack_ratio']*i)/100; //每个武器伤害递增
 			}
 		}
@@ -300,7 +317,12 @@ dm.Board.prototype.checkSolutions = function() {
 	}
 
 	if(s[0].type == 'gold'){
-		var gold = s.length*fp.a13*(data['doublegain']?2:1); //double表示是否有双倍效果;
+		var gold = 0;
+		for(i in s){
+			if(!s[i].isBroken){
+				gold += fp.a13*(data['doublegain']?2:1); //double表示是否有双倍效果;
+			}
+		}
 		if(s.length > 3){
 			gold += this.randExtra(fp.a13,fp.a14,fp.a15,fp.a16)
 		}
@@ -308,7 +330,12 @@ dm.Board.prototype.checkSolutions = function() {
 	}
 
 	if(s[0].type == 'hp'){
-		var hp = s.length*fp.a9;//*(doublegain?2:1);
+		var hp = 0;
+		for(i in s){
+			if(!s[i].isBroken){
+				hp += fp.a9;//*(doublegain?2:1);
+			}
+		}
 		if(s.length > 3){
 			hp += this.randExtra(fp.a9,fp.a10,fp.a11,fp.a12)
 		}
@@ -316,7 +343,12 @@ dm.Board.prototype.checkSolutions = function() {
 	}
 	
 	if(s[0].type == 'mana'){
-		var mana = s.length*fp.a21;//*(doublegain?2:1);
+		var mana = 0;
+		for(i in s){
+			if(!s[i].isBroken){
+				mana += fp.a21;//*(doublegain?2:1);
+			}
+		}
 		if(s.length > 3){
 			mana += this.randExtra(fp.a21,fp.a22,fp.a23,fp.a24)
 		}
@@ -392,10 +424,12 @@ dm.Board.prototype.checkSolutions = function() {
 	this.game.updateData('turn', 1, 'add');
 	//
 	//回合末怪物作用
+	/*
 	mon_arr = this.findMonster();
 	for(i in mon_arr){
 		mon_arr[i].monster.endTurn();
 	}
+	*/
 
 	//
 	//冷却时间减少
@@ -419,6 +453,11 @@ dm.Board.prototype.checkSolutions = function() {
 				delete buff[i];
 			}
 		}
+	}
+	//怪物回合开始
+	var mon_arr = this.findMonster();
+	for(i in mon_arr){
+		mon_arr[i].monster.startSkill();
 	}
 
 	this.isMoving_ = 0;
@@ -500,7 +539,7 @@ dm.Board.prototype.addSelGem = function(g,trypos) {
 		g.select();
 		dm.log.fine('addSelGem',g.r,g.c)
 		//实时计算伤害：
-		if(g.type == 'sword'){
+		if(g.type == 'sword' && !g.isBroken){
 			this.show_att += this.fp.a2;
 			//显示
 			this.game.att.setText(this.show_att);
@@ -520,7 +559,7 @@ dm.Board.prototype.cancelSelGem = function(selid){
 		g = this.selectedGems.pop();
 		g.deselect();
 
-		if(g.type == 'sword'){
+		if(g.type == 'sword' && !g.isBroken){
 			this.show_att -= this.fp.a2;
 			this.game.att.setText(this.show_att);
 
@@ -676,7 +715,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 
 	
 	//如果不相邻
-	if(lastg && !lastg.canConnect(g) ){
+	if(lastg && !lastg.canConnect(g) || !g.canSelect){
 	
 		
 	//	this.addSelGem(null,e.position);//记录try pos
@@ -1001,6 +1040,21 @@ dm.Board.prototype.getDamage = function(){
 	 this.changeProg(this.game, 'mana');
  }
 
+ /**
+  * 寻找某个gem
+  */
+  dm.Board.prototype.findGems = function(){
+	  var c, r;
+	  for(var i in this.type_arr){
+		  this.type_arr[i] = [];
+	  }
+	  for (c = 0; c < this.cols; c++) {
+		  for (r = 0; r < this.gems[c].length; r++) {
+			  this.type_arr[this.gems[c][r].type].push(this.gems[c][r]);
+		  }
+	  }
+  }
+
  /*
   * 找出本轮所有的怪物
   * param: mod -- all 所有怪物 --‘type’ 某一特殊状态的怪物
@@ -1079,6 +1133,9 @@ dm.Board.prototype.getDamage = function(){
 	 for (var c = 0; c < this.cols; c++) {
 		 for (var r = 0; r < this.gems[c].length; r++) {
 			 if(this.gems[c][r] && (this.gems[c][r].keep == false)){
+				 if(this.gems[c][r].type == 'monster'){
+					 this.gems[c][r].monster.endSkill();
+				 }
 				 this.gems[c][r].getParent().removeChild(this.gems[c][r]);
 				 goog.array.remove(this.gems[c], this.gems[c][r]);
 				 r--;

@@ -33,7 +33,8 @@ dm.Gem = function() {
     this.index = -1;
 	this.keep = true;
 
-	this.canselect = 1;
+	this.canSelect = true; //可不可以连接
+	this.isBroken = false; //可不可以起作用
 
 	this.r = 0 ;
 	this.c = 0 ;
@@ -57,7 +58,7 @@ dm.Gem.prototype.ICONS = {
 dm.Gem.prototype.canConnect = function(g) {
 	return (Math.abs(g.r - this.r) < 2 && Math.abs(g.c - this.c) < 2 )
 	&& (g.index == this.index || 
-		 (g.type == 'monster' && this.type == 'sword')|| (this.type == 'monster' && g.type == 'sword')) && g.canselect
+		 (g.type == 'monster' && this.type == 'sword')|| (this.type == 'monster' && g.type == 'sword')) && g.canSelect
 }
 
 

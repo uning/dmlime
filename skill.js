@@ -202,6 +202,8 @@ dm.Skill.prototype.reduceHp = function(ratio){
 	   ,sp = this.game.user.sp
 	   ,data = this.game.data
 	   ,p_type
+	   if(gem.isBroken)
+		   return;
 	   switch(gem.type){
 		   case 'sword':{
 			   this.game.updateData('attack_addtion', fp.a2, 'add');
@@ -311,7 +313,9 @@ dm.Skill.prototype.reduceHp = function(ratio){
 	   game = this.game;
 	   this.findType(type,function(g, value, game){
 		   g.keep = false;
-		   game.updateData(value, 1, 'add');
+		   if(!g.isBroken){
+			   game.updateData(value, 1, 'add');
+		   }
 	   },value, game)
    }
 
