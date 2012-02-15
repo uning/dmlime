@@ -26,10 +26,13 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 			//this.id = this.game.data.specialMon.splice(index, 1);
 
 			//test
-			this.id = 6;
+			this.id = 14;
 		}else{
 			this.id = 0;
 		}
+	}
+	if(this.id == 15){
+		this.revive_timeout = -1;
 	}
 	//附加属性
 	var id = this.id;
@@ -55,6 +58,8 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	var size = p.getSize(), 
 	h=size.height, 
 	w=size.width;
+	p.index = 0;
+	p.fillImage(w, h);
 	this.attlabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.attack);
 	this.hplabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#f00').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.hp_left);
 	this.deflabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#00f').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.def);
@@ -90,9 +95,9 @@ dm.Monster.prototype.suicide = function(turn){
 	this.incAliveTurn();
 	if(this.aliveturn >= turn){
 		this.p.keep = false;
-		var nobounce = false;
-		this.onDeath(nobounce);
+		return true;
 	}
+	return false;
 }
 
 
@@ -206,20 +211,133 @@ dm.Monster.prototype.changeMonster = function(){
 		 }
 	 }
 	 if(s.length > 0){
-		 random = Math.round(Math.random()*(s.length-1));//随机一种类型	
+		 random = Math.round(Math.random()*(s.length-1));//随机选一个gem
 		 s[random].type = 'monster';
-		 s[random].monster = new dm.Monster(this.game.data.turn, s[random], this.game);
+		 s[random].monster = new dm.Monster(this.game.data.turn, s[random], this.game, 0);
 	 }
 }
 
+
 /**
- * 怪物使用相应的技能
- * 有三个阶段怪物会使用技能：0 生成怪物时候，1 回合开始时(moveGems完成时候)影响玩家动作，2 回合结束（即怪物回合开始时）
+ * 治疗其他怪物
+*/
+dm.Monster.prototype.cure = function(){
+	var type_arr = this.game.board.type_arr;
+	var i, gem;
+	for(i in type_arr['monster']){
+		gem = type_arr['monster'][i];
+		gem.monster.hp_left += Math.ceil(gem.monster.hp_left*0.1); //治疗10%；
+		gem.monster.hp_left = Math.min(gem.monster.hp_left, gem.monster.hp);
+		gem.monster.hplabel.setText(gem.monster.hp_left);
+	}
+}
+
+ /**
+  * 怪物自爆，伤害玩家1半的血量
+*/
+dm.Monster.prototype.explode = function(){
+	var data = this.game.data;
+	this.game.updateData('hp', -Math.ceil(data['hp']/2), 'add');
+	this.p.keep = false;
+	var nobounce = false;
+	this.onDeath(nobounce);
+}
+
+ /**
+  * 怪物攻击带毒
+*/
+dm.Monster.prototype.poisonAttack = function(){
+	//攻击造成20%的持续性毒伤害
+	this.game.updateData('poison', Math.ceil(0.2*this.attack));
+}
+
+  /**
+   * 怪物出现降低玩家1/2防御力
+*/
+dm.Monster.prototype.reduceDefense = function(){
+	this.game.updateData('def_reduce', Math.ceil(0.5*this.game.user.fp.a3));
+}
+
+   /**
+	* 怪物可以获得本轮玩家所受伤害10%的生命恢复,最多能恢复自身20%生命值
+*/
+dm.Monster.prototype.steelHP = function(){
+	this.hp_left += Math.min(Math.round(this.game.data['finalDmg']*0.1), Math.round(this.hp*0.2));
+	this.hp_left = Math.min(this.hp_left, this.hp);
+	this.hplabel.setText(this.hp_left);
+}
+
+/**
+ * 血瓶变成毒药
  */
+dm.Monster.prototype.changePoison = function(){
+	var hp_arr = this.game.board.type_arr['hp'];
+	var hps = [];
+	for(var i in hp_arr){
+		if(!hp_arr[i].ispoison || hp_arr[i].ispoison == false){
+			hps.push(hp_arr[i]);
+		}
+	}
+	if(hps.length > 0){
+		random = Math.round(Math.random()*(hps.length-1));//随机选一个gem
+		hps[random].ispoison = true;
+		hps[random].setSpecial('Poison');
+	}
+}
+
+/**
+ * 对玩家造成一个骷髅生命值的伤害(无视防御)。
+ */
+dm.Monster.prototype.throwMonster = function(){
+	var mon_arr = this.game.board.type_arr['monster'];
+	var i, mon=[], data = this.game.data;
+	var fp = this.game.user.fp;
+	for(i in mon_arr){
+		if(mon_arr[i].monster.id == 0 && mon_arr[i].keep == true){
+			mon.push(mon_arr[i]);
+		}
+	}
+	if(mon.length > 0){
+		random = Math.round(Math.random()*(mon.length-1));//随机选一个gem
+		mon[random].keep = false;
+		this.game.updateData('hp', - mon[random].monster.hp_left, 'add');
+		if(data['hp'] <= 0){
+			if(data.revive == 1){
+				this.game.updateData('hp', fp.a6);
+				this.game.updateData('mana', fp.a5);
+				data[revive] = 0;
+				console.log('revive');
+			}else{
+				this.game.endGame();
+			}
+		}
+	}
+}
+
+
+/**
+ * 宝石怪物，死亡后需要和金币一起消除才能消灭，否则下一回合复活
+ */
+dm.Monster.prototype.revive = function(){
+	if(this.revive_timeout == 0){
+		this.p.unsetSpecial();
+		this.hp_left = this.hp;
+		this.hplabel.setText(this.hp_left);
+	}else{
+		this.revive_timeout--;
+	}
+}
+
+/**
+* 怪物使用相应的技能
+*/
 dm.Monster.prototype.useSkill = function(){
 	switch(this.skill){
 		case '1':{
-			this.suicide(5);
+			if(this.suicide(5)){
+				var nobounce = false;
+				this.onDeath(nobounce);
+			}
 			break;
 		}
 		case '2':{
@@ -243,30 +361,44 @@ dm.Monster.prototype.useSkill = function(){
 			break;
 		}
 		case '7':{
+			this.cure();
 			break;
 		}
 		case '8':{
+			if(this.suicide(5)){
+				this.explode();
+			}
 			break;
 		}
 		case '9':{
+			this.poisonAttack();
 			break;
 		}
 		case '10':{
+			this.reduceDefense();
 			break;
 		}
 		case '11':{
+			this.steelHP();
 			break;
 		}
 		case '12':{
+			this.changePoison();
 			break;
 		}
 		case '13':{
+			this.throwMonster();
 			break;
 		}
 		case '14':{
+			if(this.suicide(5)){
+				//损失当前经验的一半
+				this.game.updateData('exp', Math.round(this.game.data['exp']/2));
+			}
 			break;
 		}
 		case '15':{
+				//this.revive();
 			break;
 		}
 		case '16':{
@@ -290,7 +422,7 @@ dm.Monster.prototype.useSkill = function(){
 
 /**
  * 怪物死亡后复原技能影响
- */
+*/
 dm.Monster.prototype.endSkill = function(){
 	switch(this.skill){
 		case '2':{
@@ -325,6 +457,7 @@ dm.Monster.prototype.endSkill = function(){
 			break;
 		}
 		case '10':{
+			this.game.updateData('def_reduce', 0);
 			break;
 		}
 		case '11':{

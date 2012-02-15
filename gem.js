@@ -58,7 +58,17 @@ dm.Gem.prototype.ICONS = {
 dm.Gem.prototype.canConnect = function(g) {
 	return (Math.abs(g.r - this.r) < 2 && Math.abs(g.c - this.c) < 2 )
 	&& (g.index == this.index || 
-		 (g.type == 'monster' && this.type == 'sword')|| (this.type == 'monster' && g.type == 'sword')) && g.canSelect
+		//宝石怪如果进入倒计时状态，不可以和剑或者怪物连接，只能跟金币连接才可以杀死
+		 (g.type == 'monster' && (g.monster.id != 15 || (g.monster.id == 15 && g.monster.revive_timeout == -1)) && this.type == 'sword') ||
+
+		 (this.type == 'monster' && (this.monster.id != 15 || (this.monster.id == 15 && this.monster.revive_timeout == -1)) 
+		  && this.monster.id != 15 && g.type == 'sword') ||
+		 //
+		 //宝石怪物，死亡后需要和金币一起消除才能消灭
+		 (this.monster.id == 15 && this.monster.killed == true && g.type == 'gold') ||
+		 (this.type == 'gold' && g.type == 'monster' && g.monster.killed == true)
+	   ) 
+	&& g.canSelect
 }
 
 

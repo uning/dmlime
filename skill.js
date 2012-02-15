@@ -187,6 +187,7 @@ dm.Skill.prototype.reduceHp = function(ratio){
 	  if(g.monster.hp_left <= 0){
 		  g.keep = false;
 		  game.updateData('exp', 1, 'add');
+		  g.monster.onDeath(true);
 	  }else{
 		  g.monster.hplabel.setText(g.monster.hp_left);
 		  g.keep = true;
@@ -214,7 +215,9 @@ dm.Skill.prototype.reduceHp = function(ratio){
 		   }
 		   break;
 		   case 'hp':{
-			   this.game.updateData('hp', fp.a9, 'add');
+			   if(!(gem.ispoison == true)){
+				   this.game.updateData('hp', fp.a9, 'add');
+			   }
 		   }
 		   break;
 		   case 'gold':{
@@ -259,7 +262,7 @@ dm.Skill.prototype.reduceHp = function(ratio){
    * 找到要改变的gems,
    * param: mod -- all 全部选中 ; block，选3X3的块，并且消除
    */
-   dm.Skill.prototype.findGem = function(mod){//, keep){
+   dm.Skill.prototype.findGem = function(mod, keep){
 	   var s = [];
 	   var g;
 	   if(mod == 'All'){
@@ -281,7 +284,7 @@ dm.Skill.prototype.reduceHp = function(ratio){
 		   for(c = -1; c < 2; c++){
 			   for(r = -1; r < 2; r++){
 				   g = this.board.gems[anchor[0] + c][anchor[1] + r];
-				   g.keep = false;
+				   g.keep = keep;
 				   s.push(g);
 			   }
 		   }
@@ -313,7 +316,7 @@ dm.Skill.prototype.reduceHp = function(ratio){
 	   game = this.game;
 	   this.findType(type,function(g, value, game){
 		   g.keep = false;
-		   if(!g.isBroken){
+		   if(!g.isBroken && !(g.ispoison == true)){
 			   game.updateData(value, 1, 'add');
 		   }
 	   },value, game)

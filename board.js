@@ -279,13 +279,14 @@ dm.Board.prototype.checkSolutions = function() {
 					leech = g.monster.hp*fp.a36/100; //生命偷取
 					console.log('leech: '+leech);
 
-					g.monster.hp_left = 0;
-					g.keep = false;
-					//
-					g.monster.onDeath(true);
-					//
-
-					this.game.updateData('exp', this.randExtra(fp.a17,fp.a18,fp.a19,fp.a20), 'add');
+					if(g.monster.id != 15){ //不是宝石骷髅
+						g.monster.hp_left = 0;
+						g.keep = false;
+						g.monster.onDeath(true);
+						this.game.updateData('exp', this.randExtra(fp.a17,fp.a18,fp.a19,fp.a20), 'add');
+					}else{
+						g.monster.revive_timeout = 1;
+					}
 					//
 				}else{
 					if(attack_real > def_real){
@@ -316,7 +317,7 @@ dm.Board.prototype.checkSolutions = function() {
 		}
 	}
 
-	if(s[0].type == 'gold'){
+	if(s[0].type == 'gold'){ // || s[0].monster.id == 15){
 		var gold = 0;
 		for(i in s){
 			if(!s[i].isBroken){
@@ -333,13 +334,21 @@ dm.Board.prototype.checkSolutions = function() {
 		var hp = 0;
 		for(i in s){
 			if(!s[i].isBroken){
-				hp += fp.a9;//*(doublegain?2:1);
+				if(s[0].ispoison && s[0].ispoison == true){
+					//吃到的是毒药
+					hp -= fp.a9;
+				}else{
+					hp += fp.a9;//*(doublegain?2:1);
+				}
 			}
 		}
 		if(s.length > 3){
 			hp += this.randExtra(fp.a9,fp.a10,fp.a11,fp.a12)
 		}
 		this.game.updateData('hp', hp, 'add');
+		//
+		//吃到血瓶则解毒
+		this.game.updateData('poison', 0);
 	}
 	
 	if(s[0].type == 'mana'){
@@ -369,12 +378,19 @@ dm.Board.prototype.checkSolutions = function() {
 		if(!data['noDmg']){ 
 		//伤害减少
 			var def_extra = data['def_extra'];
+			//
+			//怪物减少玩家防御
+			var def_reduce = data['def_reduce'];
 
 			total_dmg = Math.ceil(total_dmg*(100-fp.a29)/100);//被动属性减少伤害
 			this.game.updateData('hp', -Math.max(0, total_dmg - def_extra), 'add');
 			this.game.updateData('def_extra', Math.max(0, def_extra - total_dmg));
 
 			total_dmg = Math.max(0, total_dmg - def_extra);
+			//
+			//记录玩家最终所承受的伤害
+			data['finalDmg'] = total_dmg;
+			//
 
 			dtom = Math.round(total_dmg*fp.a28/100);//实际伤害转到魔法的增加
 			this.game.updateData('mana', Math.min(fp.a5, data['mana']+dtom));
@@ -414,6 +430,11 @@ dm.Board.prototype.checkSolutions = function() {
 		this.game.updateData('mana', fp.a27, 'add');
 	}
 
+	//毒伤害
+	if(data['poison'] > 0){
+		this.game.updateData('hp', -data['poison'], 'add');
+	}
+
 	this.unStone();
 
 	if(!ispoping){
@@ -443,6 +464,12 @@ dm.Board.prototype.checkSolutions = function() {
 	//
 	//
 	//data['canCD'] = 1;
+	//怪物回合开始
+	var mon_arr = this.findMonster();
+	for(i in mon_arr){
+		mon_arr[i].monster.startSkill();
+	}
+
 	this.clearGem();
 	//回合末的结尾工作
 	for(i in buff){
@@ -454,12 +481,6 @@ dm.Board.prototype.checkSolutions = function() {
 			}
 		}
 	}
-	//怪物回合开始
-	var mon_arr = this.findMonster();
-	for(i in mon_arr){
-		mon_arr[i].monster.startSkill();
-	}
-
 	this.isMoving_ = 0;
 	
 	return true;
@@ -743,7 +764,8 @@ dm.Board.prototype.getDamage = function(){
 	}
 	var reduceDmg = this.game.data.reduceDmg || 0;
 	damage = Math.ceil(damage*(100 - reduceDmg)/100);//技能减少伤害
-	return Math.max(0, damage - this.game.user.fp.a3*this.game.user.fp.a4);
+	defense = Math.max(this.game.user.fp.a3 - this.game.data['def_reduce'], 0)*this.game.user.fp.a4;
+	return Math.max(0, damage - defense);
 
 };
 

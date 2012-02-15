@@ -265,6 +265,15 @@ dm.Game.prototype.initData = function(size, user){
 	this.skillslot = [];
 	//记录游戏buff
 	this.buff = {};
+
+	//怪物存在时产生作用的属性
+	//玩家受持续伤害
+	this.data.poison = 0;
+	//基础防御力减少
+	this.data.def_reduce = 0;
+	//玩家每轮受到的伤害
+	this.data.finalDmg = 0;
+
 	//记录获得经验后，应弹几次升级对话框
 	this.pop = {};
 	this.pop.shop = 0;
