@@ -267,7 +267,7 @@ dm.Board.prototype.checkSolutions = function() {
 		for(i = 0; i < s.length; i++){
 			g = s[i];
 			type = g.type;
-			if(type == 'monster'){
+			if(type == 'monster' && (data['canDamageMon'] || g.monster.id == 16)){//可以对怪物造成伤害
 				var def_real = Math.round(g.monster.def_left*(100-fp.a31)/100); //实际防御值 = 防御数值 - 忽略掉的防御值
 				if(Math.random()*100 < fp.a37){//双倍伤害
 					attack_real = attack * 2;
@@ -285,7 +285,10 @@ dm.Board.prototype.checkSolutions = function() {
 						g.monster.onDeath(true);
 						this.game.updateData('exp', this.randExtra(fp.a17,fp.a18,fp.a19,fp.a20), 'add');
 					}else{
-						g.monster.revive_timeout = 1;
+						g.monster.canAttack = false; //不会攻击
+						g.monster.revive_timeout = 1; //开始复活倒计时
+						g.type = 'gold';
+						g.keep = true;
 					}
 					//
 				}else{
@@ -313,15 +316,22 @@ dm.Board.prototype.checkSolutions = function() {
 					p_type = 0;
 				}
 				g.monster.hplabel.setText(g.monster.hp_left);
+			}else if(g.type == 'monster'){
+				g.setSpecial('noDmg');
+				g.keep = true;
 			}
 		}
 	}
 
-	if(s[0].type == 'gold'){ // || s[0].monster.id == 15){
+	if(s[0].type == 'gold'){// || s[0].monster.id == 15){
 		var gold = 0;
 		for(i in s){
 			if(!s[i].isBroken){
 				gold += fp.a13*(data['doublegain']?2:1); //double表示是否有双倍效果;
+			}
+			if(s[i].monster && s[i].monster.id == 15){
+				s[i].keep = false;
+				s[i].monster.onDeath(true);
 			}
 		}
 		if(s.length > 3){
@@ -465,12 +475,13 @@ dm.Board.prototype.checkSolutions = function() {
 	//
 	//data['canCD'] = 1;
 	//怪物回合开始
+	
+	this.clearGem();
 	var mon_arr = this.findMonster();
 	for(i in mon_arr){
 		mon_arr[i].monster.startSkill();
 	}
 
-	this.clearGem();
 	//回合末的结尾工作
 	for(i in buff){
 		if(buff[i]){ //技能持续时间到期时候的游戏参数设置。
@@ -755,8 +766,8 @@ dm.Board.prototype.getDamage = function(){
 	var c, r, damage = 0;
 	for (c = 0; c < this.cols; c++) {
 		for (r = 0; r < this.gems[c].length; r++) {
-			if(this.gems[c][r].type == "monster"){
-				if(this.gems[c][r].monster.stone == 0){
+			if(this.gems[c][r].monster){
+				if(this.gems[c][r].monster.stone == 0 && this.gems[c][r].monster.canAttack){
 					damage += this.gems[c][r].monster.attack;
 				}
 			}
@@ -1086,7 +1097,7 @@ dm.Board.prototype.getDamage = function(){
 	  var c, i, r, mon_arr=[];
 	  for (c = 0; c < this.cols; c++) {
 		  for (r = 0; r < this.gems[c].length; r++) {
-			  if(this.gems[c][r].type == "monster" && this.gems[c][r].keep == true){
+			  if(this.gems[c][r].monster && this.gems[c][r].keep == true){
 				  if(func){
 					  func(this.gems[c][r], context, param);
 				  }else{

@@ -26,14 +26,16 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 			//this.id = this.game.data.specialMon.splice(index, 1);
 
 			//test
-			this.id = 14;
+			this.id = 10;
 		}else{
 			this.id = 0;
 		}
 	}
-	if(this.id == 15){
+
+	if(this.id == 15){//会复活的怪物，需要跟金币一起才能消除
 		this.revive_timeout = -1;
 	}
+
 	//附加属性
 	var id = this.id;
 	var config = this.conf[id];
@@ -51,6 +53,8 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	this.poison = 0; //受毒伤害
 	this.poison_start = 1; //受毒伤害
 	this.stone = 0; //石化伤害
+
+	this.canAttack = true; //是否可以攻击
 
 	//显示相关，标签
 	var name = config.name;
@@ -317,14 +321,18 @@ dm.Monster.prototype.throwMonster = function(){
 
 /**
  * 宝石怪物，死亡后需要和金币一起消除才能消灭，否则下一回合复活
+ * 用技能杀死的不会复活
  */
-dm.Monster.prototype.revive = function(){
-	if(this.revive_timeout == 0){
-		this.p.unsetSpecial();
-		this.hp_left = this.hp;
-		this.hplabel.setText(this.hp_left);
-	}else{
-		this.revive_timeout--;
+dm.Monster.prototype.monRevive = function(){
+	if(this.revive_timeout != -1){
+		if(this.revive_timeout == 0){
+			this.p.unsetSpecial();
+			this.hp_left = this.hp;
+			this.hplabel.setText(this.hp_left);
+			this.p.type = 'monster';
+		}else{
+			this.revive_timeout--;
+		}
 	}
 }
 
@@ -398,10 +406,12 @@ dm.Monster.prototype.useSkill = function(){
 			break;
 		}
 		case '15':{
-				//this.revive();
+			this.monRevive();
 			break;
 		}
 		case '16':{
+			this.game.updateData('canDamageMon', false);
+
 			break;
 		}
 		case '17':{
@@ -476,6 +486,7 @@ dm.Monster.prototype.endSkill = function(){
 			break;
 		}
 		case '16':{
+			this.game.updateData('canDamageMon', true);
 			break;
 		}
 		case '17':{

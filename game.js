@@ -273,6 +273,8 @@ dm.Game.prototype.initData = function(size, user){
 	this.data.def_reduce = 0;
 	//玩家每轮受到的伤害
 	this.data.finalDmg = 0;
+	//能不能对怪物造成伤害
+	this.data.canDamageMon = true;
 
 	//记录获得经验后，应弹几次升级对话框
 	this.pop = {};
