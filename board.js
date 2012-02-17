@@ -224,6 +224,8 @@ dm.Board.prototype.checkSolutions = function() {
 	,attack = fp.a1 + this.game.data.attack_addtion 
 	,defense = fp.a3
 	,p_type = []
+	,fireDmg = 0
+	,monThornDmg = 0 //怪物反弹伤害
 	,ispoping = this.game.ispoping;
 	
 	//初始化
@@ -237,6 +239,9 @@ dm.Board.prototype.checkSolutions = function() {
 
 	for(i=0;i<s.length;i++){
 		s[i].keep = false;
+		if(s[i].isOnFire == true){
+			fireDmg += data['fireDmg'];
+		}
 	}
 	
 	/*
@@ -274,7 +279,15 @@ dm.Board.prototype.checkSolutions = function() {
 				}else{
 					attack_real = attack;
 				}
+				//
+				if(data['isWeaken'] == true){//玩家虚弱，伤害减半
+					attack_real = Math.round(attack_real*0.5);
+				}
+				//
 				if(attack_real >= g.monster.hp_left + def_real){
+					if(g.monster.id == 18){//反弹伤害的怪物
+						monThornDmg = g.monster.hp_left;
+					}
 
 					leech = g.monster.hp*fp.a36/100; //生命偷取
 					console.log('leech: '+leech);
@@ -294,6 +307,10 @@ dm.Board.prototype.checkSolutions = function() {
 				}else{
 					if(attack_real > def_real){
 						g.monster.hp_left = g.monster.hp_left + def_real - attack_real;
+						if(g.monster.id == 18){//反弹伤害的怪物
+							monThornDmg = attack_real - def_real;
+						}
+
 						//
 						leech = attack_real*fp.a36/100;
 						console.log('leech: '+leech);
@@ -411,6 +428,11 @@ dm.Board.prototype.checkSolutions = function() {
 		alert('闪避');
 	}
 
+	if(!data['noDmg']){
+		this.game.updateData('hp', -fireDmg, 'add');//火焰伤害
+		this.game.updateData('hp', -monThornDmg, 'add');//反弹的伤害
+	}
+
 	if(data['hp'] <= 0){
 		if(data.revive == 1){
 			this.game.updateData('hp', fp.a6);
@@ -477,9 +499,11 @@ dm.Board.prototype.checkSolutions = function() {
 	//怪物回合开始
 	
 	this.clearGem();
-	var mon_arr = this.findMonster();
-	for(i in mon_arr){
-		mon_arr[i].monster.startSkill();
+	if(!data['disableSkill']){ //怪物可以使用技能
+		var mon_arr = this.findMonster();
+		for(i in mon_arr){
+			mon_arr[i].monster.startSkill();
+		}
 	}
 
 	//回合末的结尾工作
@@ -776,6 +800,9 @@ dm.Board.prototype.getDamage = function(){
 	var reduceDmg = this.game.data.reduceDmg || 0;
 	damage = Math.ceil(damage*(100 - reduceDmg)/100);//技能减少伤害
 	defense = Math.max(this.game.user.fp.a3 - this.game.data['def_reduce'], 0)*this.game.user.fp.a4;
+	if(this.game.data['isWeaken'] == true){//玩家虚弱，防御力减半
+		defense = Math.round(defense/2);
+	}
 	return Math.max(0, damage - defense);
 
 };

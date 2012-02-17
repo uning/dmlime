@@ -275,6 +275,11 @@ dm.Game.prototype.initData = function(size, user){
 	this.data.finalDmg = 0;
 	//能不能对怪物造成伤害
 	this.data.canDamageMon = true;
+	//火焰状态的gems
+	this.data.fireGems = [];
+	this.data.fireDmg = 0;
+	//是否虚弱
+	this.data.isWeanken = false;
 
 	//记录获得经验后，应弹几次升级对话框
 	this.pop = {};
@@ -487,8 +492,8 @@ dm.Game.prototype.skillShow = function(slot){
 	 }
 	 switch(key){
 		 case 'exp':{
-			 while(data['exp'] >= 13){
-				 data['exp'] -= 13;
+			 while(data['exp'] >= 20){
+				 data['exp'] -= 20;
 				 this.pop.lvl++;
 			 }
 			 break;
@@ -496,15 +501,16 @@ dm.Game.prototype.skillShow = function(slot){
 		 case 'mana':{
 			 data['skillexp'] += Math.max(0, data['mana'] - fp.a5);
 			 data['mana'] = Math.min(fp.a5, data['mana']);
-			 while(data['skillexp'] >= 3){
-				 data['skillexp'] -= 3;
+			 while(data['skillexp'] >= 20){
+				 data['skillexp'] -= 20;
 				 this.pop.skill += 1;
 			 }
 			 break;
 		}
 		case 'gold':{
-			while(data['gold'] >= 13){
-				data['gold'] -= 13;
+			while(data['gold'] >= 20){
+				data['gold'] -= 20;
+
 				this.pop.shop += 1;
 			}
 			break;

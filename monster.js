@@ -19,14 +19,16 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	//特殊怪物?
 	this.id = mon_id;
 	if(!this.id){
-		//if(this.game.user.lvl > 4 && Math.random()*100 > 95){
-		if(Math.random()*100 > 90){
-			//
-			//var index = Math.round(Math.random()*(mon_arr.length-1));
-			//this.id = this.game.data.specialMon.splice(index, 1);
+		if(this.game.user.lvl > 3 && Math.random()*100 > 95){
+
+			var index = Math.round(Math.random()*(mon_arr.length-1));
+			this.id = this.game.data.specialMon.splice(index, 1);
 
 			//test
-			this.id = 10;
+			//this.id = 20;
+			if(this.id == 19){//克隆玩家属性
+				this.clonePlayer();
+			}
 		}else{
 			this.id = 0;
 		}
@@ -336,6 +338,49 @@ dm.Monster.prototype.monRevive = function(){
 	}
 }
 
+
+/**
+ * 怪物周围的物品附加火焰。如果连到这些gem，则会对玩家造成火焰伤害，伤害力等于怪物攻击力
+ */
+ dm.Monster.prototype.createFire =function(){
+	 var c = this.p.c;
+	 var r = this.p.r;
+	 var i, j;
+	 var gems = this.game.board.gems;
+	 var data = this.game.data;
+	 for(i in data['fireGems']){
+		data['fireGems'][i].unsetSpecial();
+		data['fireGems'][i].isOnFire = false;
+	 }
+	 data['fireGems'] = [];
+
+	 for(i=-1; i<=1; i++){
+		 for(j=-1; j<=1; j++){
+			 if(c+i > -1 && r+j > -1 && r+j < 6 && c+i < 6){ //不超出边界
+				gems[c+i][r+j].isOnFire = true;
+				gems[c+i][r+j].setSpecial('Fire');
+				data['fireGems'].push(gems[c+i][r+j]);
+			 }
+		 }
+	 }
+	 data['fireDmg'] = this.attack;
+ }
+
+ /**
+  * 克隆玩家属性
+  */
+  dm.Monster.prototype.clonePlayer = function(){
+	  this.attack = this.game.user.fp.a4;
+	  this.def = this.game.user.fp.a3;
+	  this.hp = this.game.user.fp.a6;
+  }
+
+
+ /**
+  * 削弱玩家属性
+  */
+
+
 /**
 * 怪物使用相应的技能
 */
@@ -410,20 +455,27 @@ dm.Monster.prototype.useSkill = function(){
 			break;
 		}
 		case '16':{
+			//当该怪物出现时，其他怪物不受普通物理伤害(会承受技能伤害)
 			this.game.updateData('canDamageMon', false);
-
 			break;
 		}
 		case '17':{
+			this.createFire();
+			//在重排列以后需要使用技能
+			//怪物使用技能的时机需要调整
 			break;
 		}
 		case '18':{
+			//直接在board.js中完成了
 			break;
 		}
 		case '19':{
+			//this.clonePlayer();//克隆玩家属性
 			break;
 		}
 		case '20':{
+			//虚弱玩家
+			this.game.updateData('isWeaken', true);
 			break;
 		}
 	}
@@ -434,14 +486,14 @@ dm.Monster.prototype.useSkill = function(){
  * 怪物死亡后复原技能影响
 */
 dm.Monster.prototype.endSkill = function(){
+	var data = this.game.data;
+	var i;
 	switch(this.skill){
 		case '2':{
 			this.game.updateData('canCD', 1);
 			break;
 		}
 		case '4':{
-			var data = this.game.data;
-			var i;
 			if(data['disconnect']){
 				for(i in data['disconnect']){
 					data['disconnect'][i].canSelect = true;
@@ -490,6 +542,12 @@ dm.Monster.prototype.endSkill = function(){
 			break;
 		}
 		case '17':{
+			for(i in data['fireGems']){
+				data['fireGems'][i].unsetSpecial();
+				data['fireGems'][i].isOnFire = false;
+			}
+			data['fireGems'] = [];
+			data['fireDmg'] = 0;
 			break;
 		}
 		case '18':{
@@ -499,6 +557,7 @@ dm.Monster.prototype.endSkill = function(){
 			break;
 		}
 		case '20':{
+			this.game.updateData('isWeaken', false);
 			break;
 		}
 	}

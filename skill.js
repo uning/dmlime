@@ -179,6 +179,7 @@ dm.Skill.prototype.reduceHp = function(ratio){
 
   /**
    * 魔法攻击，造成剩余魔法值等量的伤害
+   * 不会获得额外奖励
    */
   dm.Skill.prototype.magicAttack = function(g , game){
 	  var i;
@@ -187,7 +188,7 @@ dm.Skill.prototype.reduceHp = function(ratio){
 	  if(g.monster.hp_left <= 0){
 		  g.keep = false;
 		  game.updateData('exp', 1, 'add');
-		  g.monster.onDeath(true);
+		  //g.monster.onDeath(true);
 	  }else{
 		  g.monster.hplabel.setText(g.monster.hp_left);
 		  g.keep = true;
@@ -212,6 +213,7 @@ dm.Skill.prototype.reduceHp = function(ratio){
 		   break;
 		   case 'monster':{
 			   this.game.updateData('exp', fp.a17, 'add');
+			   //gem.monster.onDeath(true);
 		   }
 		   break;
 		   case 'hp':{
@@ -233,11 +235,13 @@ dm.Skill.prototype.reduceHp = function(ratio){
 
  /**
   * 重新排列所有的图标
+  * 怪物不重新生成
+  * 其他类型宝石重新生成
   */
    dm.Skill.prototype.reArrange = function(s){//, keep){
 	   //先删除显示层元素
 	   this.board.clearGem(true);
-	   var c, r, copy;
+	   var c, r, copy, gem;
 	   for (c = 0; c < this.board.cols; c++) {
 		   if ( !this.board.gems[c] ) 
 			   this.board.gems[c] = [];
@@ -245,7 +249,12 @@ dm.Skill.prototype.reduceHp = function(ratio){
 		   for (r = this.board.gems[c].length; r < this.board.rows; r++) {
 			   copy = s.splice(Math.round(Math.random()*(s.length-1)), 1);//随机选择一个gem
 			   i++;
-			   var gem = copy[0];
+			   if(!copy[0].monster){//不是怪物
+				   gem = dm.Gem.random(this.game.board.GAP, this.game.board.GAP, copy[0].index);
+			   }else{
+				   gem = copy[0];
+				   gem.keep = true;
+			   }
 			   gem.r = r;
 			   gem.c = c;
 			   gem.setPosition((c + .5) * this.board.GAP, (-i + .5) * this.board.GAP);
@@ -330,6 +339,10 @@ dm.Skill.prototype.reduceHp = function(ratio){
 	  var s = this.findGem('block', false);
 	  for(var i in s){
 		  this.gainGem(s[i]);
+		  if(s[i].monster){
+			  //获得杀死怪物的额外奖励
+			  s[i].monster.onDeath(true);
+		  }
 	  }
 	  this.game.board.clearGem();
   }

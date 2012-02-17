@@ -35,6 +35,7 @@ dm.Gem = function() {
 
 	this.canSelect = true; //可不可以连接
 	this.isBroken = false; //可不可以起作用
+	this.isOnFire = false;
 
 	this.r = 0 ;
 	this.c = 0 ;
