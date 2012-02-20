@@ -54,7 +54,7 @@ dm.Board = function(rows,cols,game) {
 
 	//用于显示的数值
 	
-	this.fp = this.game.user.fp;
+	this.fp = this.game.user.data.fp;
 	this.show_att = this.fp.a1;
 	this.show_dmg = 0;
 	
@@ -215,8 +215,8 @@ dm.Board.prototype.checkSolutions = function() {
     ).enableOptimizations();
 
     var s = this.selectedGems,g,type,i,leech,attack_real,dtom
-	,fp = this.game.user.fp
-	,sp = this.game.user.sp
+	,fp = this.game.user.data.fp
+	,sp = this.game.user.data.sp
 	,data = this.game.data
 	,buff = this.game.buff
 	,sk_action = new dm.Skill(this.game)
@@ -487,9 +487,9 @@ dm.Board.prototype.checkSolutions = function() {
 	//
 	//冷却时间减少
 	if(data['canCD']){
-		for(i in this.game.skillCD){
-			if(this.game.skillCD[i] > 0){
-				this.game.skillCD[i]--; 
+		for(i in data['skillCD']){
+			if(data['skillCD'][i] > 0){
+				data['skillCD'][i]--; 
 			}
 		}
 	}
@@ -799,7 +799,7 @@ dm.Board.prototype.getDamage = function(){
 	}
 	var reduceDmg = this.game.data.reduceDmg || 0;
 	damage = Math.ceil(damage*(100 - reduceDmg)/100);//技能减少伤害
-	defense = Math.max(this.game.user.fp.a3 - this.game.data['def_reduce'], 0)*this.game.user.fp.a4;
+	defense = Math.max(this.game.user.data.fp.a3 - this.game.data['def_reduce'], 0)*this.game.user.data.fp.a4;
 	if(this.game.data['isWeaken'] == true){//玩家虚弱，防御力减半
 		defense = Math.round(defense/2);
 	}
@@ -816,7 +816,7 @@ dm.Board.prototype.getDamage = function(){
 	 this.game.ispoping = true;
 	 var i,j,ct=0,id=[],board,game,btn,btn2,rand,
 	 user = this.game.user,
-	 equips = user.equips;
+	 equips = user.data.equips;
 	 goog.events.unlisten(this, ['mousedown', 'touchstart'], this.pressHandler_);
 
 	 var popdialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(600, 600).setPosition(45,45).setRadius(20).setAnchorPoint(0,0);
@@ -829,7 +829,7 @@ dm.Board.prototype.getDamage = function(){
 			 var labal, spname, spval, loc=80;
 			 for(i in dm.conf.SP){
 				 spname = dm.conf.SP[i].name;
-				 spval = this.game.user.sp[i];
+				 spval = this.game.user.data.sp[i];
 				 label = new lime.Label().setFontSize(40).setFontColor('#FFF').setText(spname +' '+spval+' + '+dm.conf.SP[i].inc);
 				 popdialog.appendChild(label.setAnchorPoint(0.5,0).setPosition(250, loc));
 				 loc += label.getSize().height;
@@ -858,13 +858,13 @@ dm.Board.prototype.getDamage = function(){
 
 			 //-------------------------------------------------
 			 var sn=0, icon, frame, sk_key;
-		 for(i in this.game.user.skills){
+		 for(i in this.game.user.data.skills){
 			 sn++;
 		 }
 			 if(sn < 4){ //可以随机新技能
 				 sk_key = user.randSel(user.findKey(dm.conf.SK), 2); //随机两个技能，选择学习或者升级
 			 }else if(sn == 4){
-				 sk_key = user.randSel(user.findKey(user.skills), 2);
+				 sk_key = user.randSel(user.findKey(user.data.skills), 2);
 			 }
 			 frame = new lime.RoundedRect().setSize(500, 300).setPosition(0, 130).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
 			 btn = new dm.Button().setText(text).setSize(200, 50).setPosition(250, 470);
@@ -931,7 +931,7 @@ dm.Board.prototype.getDamage = function(){
 			 //frame.appendChild(newequip);
 
 			 var eqp_sel = this.game.user.randSel([0,1,2,3,4], 3); //随机选3个部位购买装备
-			 var eqp = this.game.user.equips;
+			 var eqp = this.game.user.data.equips;
 			 var oldeqpicon, eqpicon, oldeqplvl, eqplvl;
 			 j=0;
 			 for(i in eqp_sel){
@@ -1003,9 +1003,9 @@ dm.Board.prototype.getDamage = function(){
 							// popdialog.appendChild(back);
 							 
 							 //旧的附加属性
-							 for(j in user.eqp_add[this.icon.eqpid]){
+							 for(j in user.data.eqp_add[this.icon.eqpid]){
 								 fpname = dm.conf.FP[j].tips;
-								 fpval = user.eqp_add[this.icon.eqpid][j];
+								 fpval = user.data.eqp_add[this.icon.eqpid][j];
 								 wpinfo = new lime.Label().setFontColor('#FFF').setAnchorPoint(0, 0).setFontSize(30).setPosition(0, h);
 								 wpinfo.setText(fpname + ' +' + fpval);
 								 h += wpinfo.getSize().height;
@@ -1068,7 +1068,7 @@ dm.Board.prototype.getDamage = function(){
 
 
  dm.Board.prototype.getBaseAttack = function(){
-	return this.game.user.fp['a1'] || 0;
+	return this.game.user.data.fp['a1'] || 0;
  }
 
  //传入game对象，要设定的类型
@@ -1082,11 +1082,11 @@ dm.Board.prototype.getDamage = function(){
 			 break;
 		 case 'hp':
 			 //game.show_vars['hp']._pg.setProgress(game.data['hp']/game.user.fp.a6);
-			 game.show_vars['hp']._lct.setText(game.data['hp']+'/'+game.user.fp.a6);
+			 game.show_vars['hp']._lct.setText(game.data['hp']+'/'+game.user.data.fp.a6);
 			 break;
 		 case 'mana':
 			 //game.show_vars['mana']._pg.setProgress(game.data['mana']/game.user.fp.a5);
-			 game.show_vars['mana']._lct.setText(game.data['mana']+'/'+game.user.fp.a5);
+			 game.show_vars['mana']._lct.setText(game.data['mana']+'/'+game.user.data.fp.a5);
 			 break;
 	 }
 

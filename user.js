@@ -12,15 +12,17 @@ goog.require('dm.conf.SK');
  */
 dm.User = function(uid, game){
   //从服务器获取自身信息
-  this.lvl = 0;
-  this.skills = {};
-  this.equips ={};//0:head,1:body,2:cape,3:jewel,4:武器
-  this.eqp_add = {};//存装备的附加属性
-  this.id = uid;
-  this.attr_arm = dm.conf.EP.attack.attr;
-  this.attr_def = dm.conf.EP.defense.attr;
-  this.sp = {};
-  this.fp = {};//计算结果
+
+  this.data = [];
+  this.data.lvl = 0;
+  this.data.skills = {};
+  this.data.equips ={};//0:head,1:body,2:cape,3:jewel,4:武器
+  this.data.eqp_add = {};//存装备的附加属性
+  this.data.id = uid;
+  this.data.attr_arm = dm.conf.EP.attack.attr;
+  this.data.attr_def = dm.conf.EP.defense.attr;
+  this.data.sp = {};
+  this.data.fp = {};//计算结果
   this.popuFP();
   this.popuSP();
 
@@ -41,20 +43,20 @@ dm.User.prototype.getFP = function(name){
 	
 	var sps = {},i,j,v,ret = 0;
 	//处理装备二级属性
-	for ( i in this.equips ){
-		v = this.equips[i] && this.equips[i].sp || {}
+	for ( i in this.data.equips ){
+		v = this.data.equips[i] && this.data.equips[i].sp || {}
 		for(j in v){
 			sps[j] = sps[j] || 0;
 			sps[j] += v[j];
 		}
-		v = parseInt(this.equips[i] && this.equips[i].fp && this.equips[i].fp[name]) || 0;
+		v = parseInt(this.data.equips[i] && this.data.equips[i].fp && this.data.equips[i].fp[name]) || 0;
 		ret += v;
 	}
 
 	//加上自身二级属性
-	for ( i in this.sp){
+	for ( i in this.data.sp){
 		sps[i] = sps[i] || 0;
-		sps[i] += this.sp[i]
+		sps[i] += this.data.sp[i]
 	}
 
 	//二级属性到一级属性转换
@@ -74,8 +76,8 @@ dm.User.prototype.getSP=function(name){
 
 	var sps = {},i,j,v,ret = 0;
 	//处理装备二级属性
-	for ( i in this.equips ){
-		v = this.equips[i] && this.equips[i].sp || {}
+	for ( i in this.data.equips ){
+		v = this.data.equips[i] && this.data.equips[i].sp || {}
 		for(j in v){
 			sps[j] = sps[j] || 0;
 			sps[j] += v[j];
@@ -83,9 +85,9 @@ dm.User.prototype.getSP=function(name){
 	}
 
 	//加上自身二级属性
-	for ( i in this.sp){
+	for ( i in this.data.sp){
 		sps[i] = sps[i] || 0;
-		sps[i] += this.sp[i]
+		sps[i] += this.data.sp[i]
 
 	}
 	ret += sps[name] || 0;
@@ -100,10 +102,10 @@ dm.User.prototype.getSP=function(name){
 dm.User.prototype.popuFP=function(){
 	var i,max;
 	for( i in dm.conf.FP){
-		this.fp[i] = this.getFP(i);
+		this.data.fp[i] = this.getFP(i);
 		max = parseInt(dm.conf.FP[i].max);
 		if(-1 != max){
-			this.fp[i] = Math.min(this.fp[i], max);
+			this.data.fp[i] = Math.min(this.data.fp[i], max);
 		}
 	}
 }
@@ -111,7 +113,7 @@ dm.User.prototype.popuFP=function(){
 dm.User.prototype.popuSP=function(){
 	var i;
 	for(i in dm.conf.SP){
-		this.sp[i] = this.getSP(i);
+		this.data.sp[i] = this.getSP(i);
 	}
 }
 
@@ -121,14 +123,14 @@ dm.User.prototype.popuSP=function(){
  */
 dm.User.prototype.skillUp=function(sk){
 	var i,sn=0;
-	for(i in this.skills){
-		if(this.skills[i] == sk){
+	for(i in this.data.skills){
+		if(this.data.skills[i] == sk){
 			break;
 		}
 		sn++; //统计技能数量
 	};
 	if(sn < 4){
-		this.skills[sk.id] = sk;
+		this.data.skills[sk.id] = sk;
 		var img = dm.IconManager.getFileIcon('assets/tiles.png', 510+((parseInt(sk.no)-1)%10)*50, Math.floor(parseInt(sk.no)/10)*50 , 2, 2.1, 1);
 		this.game.skillslot[sn].setFill(img);
 		this.game.skillslot[sn].no = sk.no;
@@ -164,16 +166,17 @@ dm.User.prototype.upgrade=function(eqp, type){ //type = 0:主属性,type = 1:附
 				case 1:
 				case 2:
 				case 3:
-				this.equips[id] = dm.conf.EP[id+'_'+lvl] || {};
+				this.data.equips[id] = dm.conf.EP[id+'_'+lvl] || {};
 			break;
-			default:
+			default:{
 				//arm
-				this.equips[4] = dm.conf.EP['4_'+lvl] || {};
-			this.game.data.hp += parseInt(this.equips[4].fp.a6 - dm.conf.EP['4_'+(lvl-1)].fp.a6);
-			this.game.data.mana += parseInt(this.equips[4].fp.a5 - dm.conf.EP['4_'+(lvl-1)].fp.a5);
-			break;
+				this.data.equips[4] = dm.conf.EP['4_'+lvl] || {};
+				this.game.data.hp += parseInt(this.data.equips[4].fp.a6 - dm.conf.EP['4_'+(lvl-1)].fp.a6);
+				this.game.data.mana += parseInt(this.data.equips[4].fp.a5 - dm.conf.EP['4_'+(lvl-1)].fp.a5);
+				break;
+			}
 		}
-		this.equips[id].icon = icon;
+		this.data.equips[id].icon = icon;
 	}
 	this.popuFP();
 }
@@ -183,7 +186,7 @@ dm.User.prototype.upgrade=function(eqp, type){ //type = 0:主属性,type = 1:附
 dm.User.prototype.genAttr = function(eqp, num){
 	num = num || 2;
 	var id = eqp.eqpid;
-	var type = parseInt(this.equips[id].type);
+	var type = parseInt(this.data.equips[id].type);
 	var i,j = 0;
 	var selected = [];
 	var conf, atts = {};
@@ -192,10 +195,10 @@ dm.User.prototype.genAttr = function(eqp, num){
 
 	switch(type){
 		case 1:
-			conf = this.attr_arm;
+			conf = this.data.attr_arm;
 		break;
 		case 2:
-			conf = this.attr_def;
+			conf = this.data.attr_def;
 		break;
 	}
 
@@ -214,9 +217,9 @@ dm.User.prototype.genAttr = function(eqp, num){
 dm.User.prototype.refresh=function(eqp, atts){
 	var i;
 	var id = eqp.eqpid;
-	this.eqp_add[id] = {};
+	this.data.eqp_add[id] = {};
 	for(i in atts){
-		this.eqp_add[id][i] = atts[i];
+		this.data.eqp_add[id][i] = atts[i];
 	}
 	this.addatt(id);
 	this.popuFP();
@@ -225,8 +228,8 @@ dm.User.prototype.refresh=function(eqp, atts){
 //生成的随机属性加入到中去，统一处理
 dm.User.prototype.addatt=function(eqpid){
 	var i,eqp,add_att;
-	add_att = this.eqp_add[eqpid];
-	eqp = this.equips[eqpid];
+	add_att = this.data.eqp_add[eqpid];
+	eqp = this.data.equips[eqpid];
 	for(i in add_att){
 		switch(i.charAt(0)){
 			case 'a':
@@ -247,11 +250,11 @@ dm.User.prototype.addatt=function(eqpid){
 dm.User.prototype.lvlUp=function(){
 	
 	var i;
-	for(i in this.sp){
-		this.sp[i] += parseInt(dm.conf.SP[i] && dm.conf.SP[i].inc) || 0;
+	for(i in this.data.sp){
+		this.data.sp[i] += parseInt(dm.conf.SP[i] && dm.conf.SP[i].inc) || 0;
 	}
 	this.popuFP();
-	this.lvl += 1;
+	this.data.lvl += 1;
 	//this.game.data['exp'] -= 3;
 	
 }

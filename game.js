@@ -68,12 +68,12 @@ dm.Game.prototype.changeData = function() {
  */
 dm.Game.prototype.updateScore = function() {
     var curscore = parseInt(this.score.getText(), 10);
-    if (curscore < this.points) {
+    if (curscore < this.data.points) {
 		this.step += 1;
 		if(this.step < 5)
 			this.score.setText(curscore + 1);
 		else{
-			this.score.setText(this.points);
+			this.score.setText(this.data.points);
 		}
 	}else
 		this.step = 0;
@@ -85,7 +85,7 @@ dm.Game.prototype.updateScore = function() {
  * @param {number} p Points to add to current score.
  */
 dm.Game.prototype.setScore = function(p) {
-    this.points += p;
+    this.data.points += p;
     this.curTime += p;
     if (this.curTime > this.maxTime) this.curTime = this.maxTime;
     if (this.time_left)
@@ -114,7 +114,7 @@ dm.Game.prototype.endGame = function() {
     var score_lbl = new lime.Label().setText('Your score:').setFontSize(24).setFontColor('#ccc').setPosition(0, 145);
     dialog.appendChild(score_lbl);
 
-    var score = new lime.Label().setText(this.points).setFontSize(150).setFontColor('#fff').
+    var score = new lime.Label().setText(this.data.points).setFontSize(150).setFontColor('#fff').
         setPosition(0, 240).setFontWeight(700);
     dialog.appendChild(score);
 
@@ -211,8 +211,8 @@ dm.Game.prototype.createPanel = function(){
 	this.show_vars = {
 		exp:{curdata:this.data.exp, max:100, loc:{x:370,y:940}}
 		,gold:{curdata:this.data.gold, max:100, loc:{x:100,y:900}}
-		,mana:{curdata:this.data.mana, max:this.user.fp.a5, loc:{x:370, y:910}}
-		,hp:{curdata:this.data.hp, max:this.user.fp.a6, loc:{x:600, y:890}}
+		,mana:{curdata:this.data.mana, max:this.user.data.fp.a5, loc:{x:370, y:910}}
+		,hp:{curdata:this.data.hp, max:this.user.data.fp.a6, loc:{x:600, y:890}}
 	}
 	
 	for( i in this.show_vars){
@@ -221,7 +221,7 @@ dm.Game.prototype.createPanel = function(){
 		panel.appendChild(p._lct);
 	}
 	this.mon = new lime.Label().setFontColor('#000').setFontSize(34).setText(this.board.getDamage()).setPosition(260, 880);
-	this.att = new lime.Label().setFontColor('#000').setFontSize(34).setText(this.user.fp.a1).setPosition(470, 880);
+	this.att = new lime.Label().setFontColor('#000').setFontSize(34).setText(this.user.data.fp.a1).setPosition(470, 880);
 	panel.appendChild(this.mon);
 	panel.appendChild(this.att);	
 	this.show_create = 1;
@@ -247,24 +247,26 @@ dm.Game.prototype.initData = function(size, user){
 	this.user.game = this;
 	this.data = {};
 	this.data.turn = 0; //回合数
+	/*
 	this.data.appearNum = {};
 	for( i = 0 ; i < dm.GEMTYPES.length ; ++i){
 		this.data.appearNum[i] = 0;
 	}
-	this.data.hp    = this.user.fp.a6;
-	this.data.mana  = this.user.fp.a5;
-	this.data.def   = this.user.fp.a3;
+	*/
+	this.data.hp    = this.user.data.fp.a6;
+	this.data.mana  = this.user.data.fp.a5;
+	this.data.def   = this.user.data.fp.a3;
 	this.data.def_extra = 0; //额外护甲,技能增加的额外生命、护甲、魔法盾，都可看做是额外护甲形式
 	this.data.score = 0;
 	this.data.lvl   = 0;
 	this.data.exp   = 0;
 	this.data.gold  = 0;
 	this.data.skillexp = 0;
-    this.points = 0;
+    this.data.points = 0;
 	this.panel;
 	this.skillslot = [];
 	//记录游戏buff
-	this.buff = {};
+	this.data.buff = {};
 
 	//怪物存在时产生作用的属性
 	//玩家受持续伤害
@@ -307,7 +309,10 @@ dm.Game.prototype.initData = function(size, user){
 		this.data.specialMon[i] = i+1;
 	}
 	//技能CD
-	this.skillCD = {};
+	this.data.skillCD = {};
+
+	var testjson = JSON.stringify(this.data);
+	var testdecode = JSON.parse(testjson);
 
 }
 
@@ -326,7 +331,7 @@ dm.Game.prototype.statShow = function(){
 	dialog.appendChild(frame);
 	//
 	sloticon = dm.IconManager.getFileIcon('assets/menus.png', 50, 0, 1.9, 1.85, 1);
-	eqp = this.user.equips;
+	eqp = this.user.data.equips;
 	fp = dm.conf.FP;
 
 	for(i=0;i<5;i++){
@@ -335,7 +340,7 @@ dm.Game.prototype.statShow = function(){
 		eqpslot.disp = frame;
 		if(eqp[i] && eqp[i].icon){
 			//eqpicon = dm.IconManager.getFileIcon('assets/icons.png',eqp[i].icon['x'],eqp[i].icon['y'],2,2,1);
-			eqpicon = this.user.equips[i].icon;
+			eqpicon = this.user.data.equips[i].icon;
 			eqpslot.setFill(eqpicon); //装备图标
 
 			goog.events.listen(eqpslot, ['mousedown', 'touchstart'], function() {
@@ -343,9 +348,9 @@ dm.Game.prototype.statShow = function(){
 				this.disp.removeAllChildren();
 				var h = 0;
 				var user = this.getParent().getParent().user;
-				for(j in user.equips[this.no].fp){
+				for(j in user.data.equips[this.no].fp){
 					fpname = dm.conf.FP[j].tips;
-					fpval  = user.equips[this.no].fp[j];
+					fpval  = user.data.equips[this.no].fp[j];
 					var wpinfo = new lime.Label().setFontColor('#FFF').setAnchorPoint(0,0).setFontSize(30).setPosition(10, h);
 					wpinfo.setText(fpname + ' +' + fpval);
 					h += wpinfo.getSize().height;
@@ -359,9 +364,9 @@ dm.Game.prototype.statShow = function(){
 	//人物属性信息
 	charinfo = new lime.RoundedRect().setAnchorPoint(0,0).setFill(0,0,0,.7).setPosition(230, 10).setSize(350, 470).setRadius(20);
 	dialog.appendChild(charinfo);
-	for(i in this.user.sp){
+	for(i in this.user.data.sp){
 		spname = sp[i].name; //二级属性名字
-		spval = this.user.sp[i];
+		spval = this.user.data.sp[i];
 		var splabel = new lime.Label().setAnchorPoint(0,0).setFontColor('#FFF').setFontSize(30);
 		splabel.setText(spname + ' +'+spval).setPosition(10, loc);
 		charinfo.appendChild(splabel);//二级属性条目显示
@@ -369,7 +374,7 @@ dm.Game.prototype.statShow = function(){
 
 		for(j in sp[i].showfps){//二级属性点对应的一级属性
 			fpname = sp[i].showfps[j];
-			fpval = this.user.fp[j];
+			fpval = this.user.data.fp[j];
 			var fplabel = new lime.Label().setAnchorPoint(0,0).setFontColor('#FFF').setFontSize(20);
 			fplabel.setText(fpname + ' +'+fpval).setPosition(30,loc );
 			loc += fplabel.getSize().height + 4;
@@ -422,6 +427,7 @@ dm.Game.prototype.mainShow = function(){
 		});
 		goog.events.listen(btn_cancel, ['mousedown', 'touchstart'], function() {
 			var board = this.getParent().getParent().board;
+			var game = this.getParent().getParent();
 			this.getParent().getParent().removeChild(this.getParent());
 			goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 		});
@@ -479,7 +485,7 @@ dm.Game.prototype.skillShow = function(slot){
  * 加相应的数值
  */
  dm.Game.prototype.updateData = function(key, value, method){
-	 var fp = this.user.fp;
+	 var fp = this.user.data.fp;
 	 var data = this.data;
 
 	 if(method == 'add'){

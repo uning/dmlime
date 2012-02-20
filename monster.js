@@ -19,10 +19,12 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	//特殊怪物?
 	this.id = mon_id;
 	if(!this.id){
-		if(this.game.user.lvl > 3 && Math.random()*100 > 95){
+		//if(Math.random()*100 > 80){//
+		if(this.game.user.data.lvl > 3 && Math.random()*100 > 90){
 
 			var index = Math.round(Math.random()*(mon_arr.length-1));
 			this.id = this.game.data.specialMon.splice(index, 1);
+			this.id = this.id[0];
 
 			//test
 			//this.id = 20;
@@ -261,7 +263,7 @@ dm.Monster.prototype.poisonAttack = function(){
    * 怪物出现降低玩家1/2防御力
 */
 dm.Monster.prototype.reduceDefense = function(){
-	this.game.updateData('def_reduce', Math.ceil(0.5*this.game.user.fp.a3));
+	this.game.updateData('def_reduce', Math.ceil(0.5*this.game.user.data.fp.a3));
 }
 
    /**
@@ -297,7 +299,7 @@ dm.Monster.prototype.changePoison = function(){
 dm.Monster.prototype.throwMonster = function(){
 	var mon_arr = this.game.board.type_arr['monster'];
 	var i, mon=[], data = this.game.data;
-	var fp = this.game.user.fp;
+	var fp = this.game.user.data.fp;
 	for(i in mon_arr){
 		if(mon_arr[i].monster.id == 0 && mon_arr[i].keep == true){
 			mon.push(mon_arr[i]);
@@ -370,9 +372,9 @@ dm.Monster.prototype.monRevive = function(){
   * 克隆玩家属性
   */
   dm.Monster.prototype.clonePlayer = function(){
-	  this.attack = this.game.user.fp.a4;
-	  this.def = this.game.user.fp.a3;
-	  this.hp = this.game.user.fp.a6;
+	  this.attack = this.game.user.data.fp.a4;
+	  this.def = this.game.user.data.fp.a3;
+	  this.hp = this.game.user.data.fp.a6;
   }
 
 

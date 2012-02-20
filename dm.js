@@ -51,24 +51,20 @@ dm.BOARDSIZE = 690;
 
 dm.GEMTYPES = ['monster', 'hp', 'mana', 'sword', 'gold'];
 
+/*
 dm.LVLCONF = [
-  {
-    gold: 1000,
-    gold_add: 1,
-    gold_ratio: 1,
-    defense: 1000,
-    hp: 30,
-    attack: 3,
-    wattack: 1,
-    exp: 1000
-  }, {
-    gold: 1000,
-    defense: 10000,
-    hp: 30,
-    attack: 3,
-    wattack: 1
-  }
-];
+	{gold: 1000
+	,gold_add: 1
+	,gold_ratio: 1
+
+	,defense:1000
+	,hp:30
+	,attack:3
+	,wattack:1
+	,exp:1000}
+	,{gold:1000,defense:10000,hp:30,attack:3,wattack:1}
+]
+*/
 
 dm.APIURL = 'api.php';
 
@@ -91,7 +87,7 @@ dm.api = function(m, param, callback) {
 };
 
 dm.loadMenu = function() {
-  var btn, btns, btns2, layer, lbl, move, scene;
+  var btn, btn_help, btns, btns2, layer, lbl, move, scene;
   scene = new lime.Scene;
   layer = new lime.Layer().setPosition(dm.WIDTH / 2, 0);
   btns = new lime.Layer().setPosition(0, 0);
@@ -103,6 +99,11 @@ dm.loadMenu = function() {
     return btns.runAction(move);
   });
   btns.appendChild(btn);
+  btn_help = dm.makeButton('帮助').setPosition(0, 400);
+  goog.events.listen(btn_help, ['click', 'touchstart'], function() {
+    return dm.loadHelpScene();
+  });
+  btns.appendChild(btn_help);
   btns2 = new lime.Layer;
   btns2.setPosition(dm.WIDTH, 0);
   btns.appendChild(btns2);
@@ -186,7 +187,7 @@ dm.start = function() {
   dm.log.fine('init');
   console.log('in dm.start', el);
   dm.director = new lime.Director(el, dm.WIDTH, dm.HEIGHT);
-  dm.director.makeMobileWebAppCapable;
+  dm.director.makeMobileWebAppCapable();
   return dm.loadMenu();
 };
 

@@ -28,8 +28,9 @@ goog.require 'dm.Log'
 dm.WIDTH = 720
 dm.HEIGHT = 1004
 dm.BOARDSIZE = 690
-dm.GEMTYPES = ['monster','blood','defend','sword','gold'];
+dm.GEMTYPES = ['monster','hp','mana','sword','gold'];
 #等级到每个属性定义
+###
 dm.LVLCONF = [
 	{gold: 1000
 	,gold_add: 1
@@ -42,7 +43,7 @@ dm.LVLCONF = [
 	,exp:1000}
 	,{gold:1000,defense:10000,hp:30,attack:3,wattack:1}
 ]
-
+###
 dm.APIURL='api.php'
 
 #返回json数据
@@ -73,8 +74,16 @@ dm.loadMenu =  ->
 		->
 			console.log 'game start' 
 			btns.runAction move
-
 	btns.appendChild btn
+	
+    #help Button
+	btn_help = dm.makeButton('帮助').setPosition(0, 400)
+	goog.events.listen btn_help, ['click', 'touchstart'],
+		->
+			dm.loadHelpScene()
+	btns.appendChild btn_help
+
+	
 	#second area that will slide in
 	
 	btns2 = new lime.Layer 

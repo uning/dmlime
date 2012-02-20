@@ -31,15 +31,15 @@ dm.Skill.prototype.use = function(id){
 dm.Skill.prototype.action = function(id, param){ //各个技能的作用效果
 	switch(id){
 		case '1':{ //加血
-			this.game.updateData('hp', Math.min(Math.round(this.game.data.hp*1.1), this.user.fp.a6));
+			this.game.updateData('hp', Math.min(Math.round(this.game.data.hp*1.1), this.user.data.fp.a6));
 		}
 		break;
 		case '2':{ //
-			this.game.updateData('hp', Math.min(Math.round(this.game.data.hp*1.2), this.user.fp.a6));
+			this.game.updateData('hp', Math.min(Math.round(this.game.data.hp*1.2), this.user.data.fp.a6));
 		}
 		break;
 		case '3':{ //法力转换为生命
-			this.game.updateData('hp', Math.min(this.game.data.hp + this.game.data.mana, this.user.fp.a6));
+			this.game.updateData('hp', Math.min(this.game.data.hp + this.game.data.mana, this.user.data.fp.a6));
 			this.game.updateData('mana', 0);
 		}
 		break;
@@ -188,7 +188,7 @@ dm.Skill.prototype.reduceHp = function(ratio){
 	  if(g.monster.hp_left <= 0){
 		  g.keep = false;
 		  game.updateData('exp', 1, 'add');
-		  //g.monster.onDeath(true);
+		  g.monster.onDeath(false);
 	  }else{
 		  g.monster.hplabel.setText(g.monster.hp_left);
 		  g.keep = true;
@@ -200,8 +200,8 @@ dm.Skill.prototype.reduceHp = function(ratio){
   * 收集某类图标，产生作用获得其相关的奖励
   */
    dm.Skill.prototype.gainGem = function(gem){
-	   var fp = this.game.user.fp
-	   ,sp = this.game.user.sp
+	   var fp = this.game.user.data.fp
+	   ,sp = this.game.user.data.sp
 	   ,data = this.game.data
 	   ,p_type
 	   if(gem.isBroken)
