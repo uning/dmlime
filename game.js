@@ -393,6 +393,7 @@ dm.Game.prototype.statShow = function(){
     });
 }
 
+
 /*
  * 点击menu按钮，实现弹出主菜单功能，有重新开始等功能
  */
@@ -417,7 +418,11 @@ dm.Game.prototype.mainShow = function(){
 			dialog.appendChild(btn_cancel);
 			this.getParent().getParent().removeChild(this.getParent());
 			goog.events.listen(btn_ok, ['mousedown', 'touchstart'], function() {
-				dm.loadMenu();
+				//test save game data
+				var game = this.getParent().getParent();
+				game.parseData(game.saveData());
+				//
+				//dm.loadMenu();
 			});
 			goog.events.listen(btn_cancel, ['mousedown', 'touchstart'], function() {
 				var board = this.getParent().getParent().board;
@@ -528,3 +533,29 @@ dm.Game.prototype.skillShow = function(slot){
 	 }
 	 this.board.changeProg(this, key);
  }
+
+
+
+/**
+ * 存储游戏的数值game.data ; user.data; board里面的gems相关;
+ */
+ dm.Game.prototype.saveData = function(){
+	 var gamedata = JSON.stringify(this.data);
+	 var copydata = this.user.data;
+	 copydata.equips.icon = {};
+	 var userdata = JSON.stringify(this.user.data);
+
+	 var savedata = [];
+	 savedata['gamedata'] = gamedata;
+	 savedata['userdata'] = userdata;
+	 return savedata;
+
+ }
+
+ /**
+  * 解析储存的游戏数据
+  */
+  dm.Game.prototype.parseData = function(savedata){
+	  var gamedata = JSON.parse(savedata['gamedata']);
+	  var userdata = JSON.parse(savedata['userdata']);
+  }

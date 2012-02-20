@@ -51,20 +51,24 @@ dm.BOARDSIZE = 690;
 
 dm.GEMTYPES = ['monster', 'hp', 'mana', 'sword', 'gold'];
 
-/*
 dm.LVLCONF = [
-	{gold: 1000
-	,gold_add: 1
-	,gold_ratio: 1
-
-	,defense:1000
-	,hp:30
-	,attack:3
-	,wattack:1
-	,exp:1000}
-	,{gold:1000,defense:10000,hp:30,attack:3,wattack:1}
-]
-*/
+  {
+    gold: 1000,
+    gold_add: 1,
+    gold_ratio: 1,
+    defense: 1000,
+    hp: 30,
+    attack: 3,
+    wattack: 1,
+    exp: 1000
+  }, {
+    gold: 1000,
+    defense: 10000,
+    hp: 30,
+    attack: 3,
+    wattack: 1
+  }
+];
 
 dm.APIURL = 'api.php';
 

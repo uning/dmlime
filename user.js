@@ -13,7 +13,7 @@ goog.require('dm.conf.SK');
 dm.User = function(uid, game){
   //从服务器获取自身信息
 
-  this.data = [];
+  this.data = {};
   this.data.lvl = 0;
   this.data.skills = {};
   this.data.equips ={};//0:head,1:body,2:cape,3:jewel,4:武器

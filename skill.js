@@ -13,11 +13,11 @@ dm.Skill = function(game){
  */
 dm.Skill.prototype.use = function(id){
 	//使用技能
-	if(this.game.skillCD[id] > 0){
-		alert('技能冷却中, 还有'+this.game.skillCD[id]+'轮');
+	if(this.game.data.skillCD[id] > 0){
+		alert('技能冷却中, 还有'+this.game.data.skillCD[id]+'轮');
 	}else{
-		this.game.skillCD[id] = 3
-		this.game.buff[id] = parseInt(this.sk_conf['sk'+id]['turn']); //持续时间
+		this.game.data.skillCD[id] = 3
+		this.game.data.buff[id] = parseInt(this.sk_conf['sk'+id]['turn']); //持续时间
 		if(parseInt(this.sk_conf['sk'+id]['delay']) == 0){ //立即施展技能
 			this.action(id);
 		}
@@ -63,7 +63,7 @@ dm.Skill.prototype.action = function(id, param){ //各个技能的作用效果
 		case '7':{//防御力提升100%,属于额外护甲，受到伤害减少，或者持续3轮
 			this.game.updateData('enhenceDef', 100);
 			if(this.game.buff[7] == 3){//只在第一次加额外防御，额外防御承受攻击而减少，3回合后清零
-				this.game.updateData('def_extra', this.game.data.enhenceDef/100 * this.game.user.fp.a3);
+				this.game.updateData('def_extra', this.game.data.enhenceDef/100 * this.game.user.data.fp.a3);
 			}
 		}
 		break;
@@ -72,7 +72,7 @@ dm.Skill.prototype.action = function(id, param){ //各个技能的作用效果
 		}
 		break;
 		case '9':{//虚弱无力 降低敌人伤害,每轮效果递减10%
-			this.game.updateData('reduceDmg', 10*this.game.buff[9]);
+			this.game.updateData('reduceDmg', 10*this.game.data.buff[9]);
 		}
 		break;
 		case '10':{//老化，敌人的生命值降低20%
