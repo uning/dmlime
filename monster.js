@@ -28,14 +28,14 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 
 			//test
 			//this.id = 20;
-			if(this.id == 19){//克隆玩家属性
-				this.clonePlayer();
-			}
 		}else{
 			this.id = 0;
 		}
 	}
 
+	if(this.id == 19){//克隆玩家属性
+		this.clonePlayer();
+	}
 	if(this.id == 15){//会复活的怪物，需要跟金币一起才能消除
 		this.revive_timeout = -1;
 	}
@@ -57,7 +57,6 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	this.poison = 0; //受毒伤害
 	this.poison_start = 1; //受毒伤害
 	this.stone = 0; //石化伤害
-
 	this.canAttack = true; //是否可以攻击
 
 	//显示相关，标签

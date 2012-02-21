@@ -182,7 +182,6 @@ dm.User.prototype.upgrade=function(eqp, type){ //type = 0:主属性,type = 1:附
 }
 
 
-
 dm.User.prototype.genAttr = function(eqp, num){
 	num = num || 2;
 	var id = eqp.eqpid;
@@ -227,7 +226,7 @@ dm.User.prototype.refresh=function(eqp, atts){
 
 //生成的随机属性加入到中去，统一处理
 dm.User.prototype.addatt=function(eqpid){
-	var i,eqp,add_att;
+	var i, eqp, add_att;
 	add_att = this.data.eqp_add[eqpid];
 	eqp = this.data.equips[eqpid];
 	for(i in add_att){

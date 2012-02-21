@@ -169,18 +169,23 @@ dm.Game.prototype.changeAnim = function(str){
 dm.Game.prototype.createPanel = function(){
 	this.panel = new lime.Layer();
 	var panel  = this.panel;
-	var i,slot,taile,show_board; //slot 技能槽
+	var i,slot,tailer, show_board; //slot 技能槽
 	tailer = dm.Display.boardtailer;//尾部
 	//顶部技能槽
-	show_board = new lime.Sprite().setSize(690, 140).setAnchorPoint(0,0).setPosition(tailer.location.x, tailer.location.y).setFill(dm.IconManager.getFileIcon('assets/tiles.png', tailer.img.x, tailer.img.y, 690/320, 140/76, 1));
+	show_board = new lime.Sprite().setSize(690, 140).setAnchorPoint(0,0).setPosition(tailer.location.x, tailer.location.y).
+		setFill(dm.IconManager.getFileIcon('assets/tiles.png', tailer.img.x, tailer.img.y, 690/320, 140/76, 1));
+
 	panel.appendChild(show_board);
+
 	var icon = dm.IconManager.getFileIcon('assets/menus.png', 248, 0, 110/53, 110/53, 1);
-	for( i=0;i<4;i++){
+	//
+	//4个技能槽
+	for( i=0; i<4; i++){
 		slot = new lime.Sprite().setSize(110,110).setAnchorPoint(0,0).setPosition(60 + i*120, 0).setFill(icon);
 		this.skillslot[i] = slot;
 		panel.appendChild(slot);
 		goog.events.listen(this.skillslot[i], ['mousedown', 'touchstart'], function() {
-			if(this.sk)
+			if(this.sk) //slot对应的skill存在
 				this.getParent().getParent().skillShow(this);
 		});
 	}
@@ -503,8 +508,8 @@ dm.Game.prototype.skillShow = function(slot){
 	 }
 	 switch(key){
 		 case 'exp':{
-			 while(data['exp'] >= 20){
-				 data['exp'] -= 20;
+			 while(data['exp'] >= 5){
+				 data['exp'] -= 5;
 				 this.pop.lvl++;
 			 }
 			 break;
@@ -512,15 +517,15 @@ dm.Game.prototype.skillShow = function(slot){
 		 case 'mana':{
 			 data['skillexp'] += Math.max(0, data['mana'] - fp.a5);
 			 data['mana'] = Math.min(fp.a5, data['mana']);
-			 while(data['skillexp'] >= 20){
-				 data['skillexp'] -= 20;
+			 while(data['skillexp'] >= 3){
+				 data['skillexp'] -= 3;
 				 this.pop.skill += 1;
 			 }
 			 break;
 		}
 		case 'gold':{
-			while(data['gold'] >= 20){
-				data['gold'] -= 20;
+			while(data['gold'] >= 3){
+				data['gold'] -= 3;
 
 				this.pop.shop += 1;
 			}
@@ -540,22 +545,136 @@ dm.Game.prototype.skillShow = function(slot){
  * 存储游戏的数值game.data ; user.data; board里面的gems相关;
  */
  dm.Game.prototype.saveData = function(){
-	 var gamedata = JSON.stringify(this.data);
-	 var copydata = this.user.data;
-	 copydata.equips.icon = {};
-	 var userdata = JSON.stringify(this.user.data);
+	 var gamedata = this.data;
+	 var i, userdata = {};
+	 for(i in this.user.data){
+		 if(i != "equips" && i != "attr_arm" && i != "attr_def"){
+			 userdata[i] = this.user.data[i];
+		 }
+	 }
+	 //处理装备
+	 if(!userdata["equips"]){
+		 userdata["equips"] = {};
+	 }
+	 for(i in this.user.data.equips){
+		 userdata["equips"][i] = this.user.data.equips[i].lvlneed;
+	 }
 
-	 var savedata = [];
+	 var savedata = {};
 	 savedata['gamedata'] = gamedata;
 	 savedata['userdata'] = userdata;
-	 return savedata;
-
+	 savedata['gems'] = this.findAllGems();
+	 //处理gems
+	 return JSON.stringify(savedata); 
  }
 
  /**
   * 解析储存的游戏数据
+  *
   */
   dm.Game.prototype.parseData = function(savedata){
-	  var gamedata = JSON.parse(savedata['gamedata']);
-	  var userdata = JSON.parse(savedata['userdata']);
+	  var sdata = JSON.parse(savedata);
+	  var gdata = sdata['gamedata'];
+	  var udata = sdata['userdata'];
+	  var gems  = sdata['gems'];
+	  
+
+	  var icon;
+	  var i, c, r;
+	  this.data = gdata;
+	  for(i in this.user.data){
+		  if(i != "equips"){
+			  this.user.data[i] = udata[i];
+		  }
+	  }
+	  //根据装备的id附加装备
+	  this.user.data["equips"] = {};
+
+	  var eqplvl, eqptype;
+	  for(i in udata["equips"]){
+		  eqplvl = parseInt(udata["equips"][i]);
+		  eqptype = i;
+		  this.user.data.equips[i] = dm.conf.EP[i+'_'+udata["equips"][i]] || {};
+
+		  icon = dm.IconManager.getFileIcon('assets/icons.png', ((eqplvl-1)%20)*50, eqptype*4*50, 2, 2, 1);
+		  this.user.data.equips[i].icon = icon;
+	  }
+
+	  //改变技能槽
+	  this.changeSkillSlot();
+
+	  //改变状态属性:gold ,exp, mana, hp;
+	  //
+	  this.updateData('gold', 0, "add");
+	  this.updateData('exp', 0, "add");
+	  this.updateData('mana', 0, "add");
+	  this.updateData('hp', 0, "add");
+	  //重新生成gems
+	  for (c = 0; c < this.board.cols; c++) {
+		  for (r = 0; r < this.board.rows; r++) {
+			 // gems[c][r] =
+		  }
+	  }
   }
+
+/**
+ * 刷新技能槽图标
+ */
+ dm.Game.prototype.changeSkillSlot = function(){
+	 var i, slot=0;
+	 for(i in this.user.data.skills){
+		 var sk = this.user.data.skills[i];
+		 var img = dm.IconManager.getFileIcon('assets/tiles.png', 510+((parseInt(sk.no) - 1)%10)*50, Math.floor(parseInt(sk.no)/10)*50 , 2, 2.1, 1);
+		 this.skillslot[slot].setFill(img);
+		 this.skillslot[slot].no = sk.no;
+		 this.skillslot[slot].sk = sk;
+		 slot++;
+	 }
+ }
+
+/**
+ *保存gem的数据
+ */
+ dm.Game.prototype.saveGem = function(gem){
+	 //id, hp, attack, defense, poison, canConnect, isBroken, isOnFire, stone, canAttack, poison_start
+	 var data = {};
+	 data["keep"] = gem.keep;
+	 data["type"] = gem.type;
+	 data["index"] = gem.index;
+	 data["canSelect"] = gem.canSelect;
+	 data["isBroken"] = gem.isBroken;
+	 data["isOnFire"] = gem.isOnFire;
+
+	 if(gem.monster){
+		 data["monster"] = {};
+		 data["monster"]["id"] = gem.monster.id;
+		 data["monster"]["hp"] = gem.monster.hp;
+		 data["monster"]["hp_left"] = gem.monster.hp_left;
+		 data["monster"]["def"] = gem.monster.def;
+		 data["monster"]["def_left"] = gem.monster.def_left;
+		 data["monster"]["attack"] = gem.monster.attack ;
+		 data["monster"]["aliveturn"] = gem.monster.aliveturn;
+
+		 data["monster"]["poison"] = gem.monster.poison;
+		 data["monster"]["poison_start"] = gem.monster.poison_start;
+		 data["monster"]["stone"] = gem.monster.stone;
+		 data["monster"]["canAttack"] = gem.monster.canAttack;
+	 }
+	 return data;
+ }
+
+ /**
+  * 找出所有的Gem,然后返回存储最小信息的Gems数据
+  */
+ dm.Game.prototype.findAllGems = function(){
+	 var c, r, gems={};
+	  for (c = 0; c < this.board.cols; c++) {
+		  if(!gems[c]){
+			  gems[c] = {};
+		  }
+		  for (r = 0; r < this.board.rows; r++) {
+			  gems[c][r] = this.saveGem(this.board.gems[c][r]);
+		  }
+	  }
+	  return gems;
+ }
