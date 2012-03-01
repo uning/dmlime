@@ -80,9 +80,11 @@ dm.api = function(m, param, callback) {
     xhr = e.target;
     obj = xhr.getResponseJson();
     console.log(m, 'api response', obj);
-    return callback && callback(obj);
+    //return callback && callback(obj);
+	return callback(obj);
   };
   return goog.net.XhrIo.send(dm.APIURL + '?m=' + m, proc, 'POST', goog.json.serialize({
+  //return goog.net.XhrIo.send('testmongo.php' , proc, 'POST', goog.json.serialize({
     m: m,
     p: param
   }), {
@@ -100,6 +102,9 @@ dm.loadMenu = function() {
   btn = dm.makeButton('开始').setPosition(0, 200);
   goog.events.listen(btn, ['click', 'touchstart'], function() {
     console.log('game start');
+	//dm.api('System.test',{"name":"wangkun" ,"email":"wangkun@playcrab.com"}, function(){alert("wow!")});
+	//dm.api('System.save',{"id":"wangkun" ,"data":"wangkun@playcrab.com"}, function(){alert("wow!")});
+	dm.api('System.read',{"id":"wangkun"}, function(){});
     return btns.runAction(move);
   });
   btns.appendChild(btn);

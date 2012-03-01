@@ -14,6 +14,14 @@
 
 
 class System{
+	protected $_conn;
+	protected $_db;
+	protected $_collection;
+	function __construct($host = 'localhost:35050', $db = 'test', $collection = 'dm'){
+		$this->_conn = new Mongo($host);
+		$this->_db = $this->_conn->$db;
+		$this->_collection = $this->_db->$collection;
+	}
 
 
 	/**
@@ -30,7 +38,7 @@ class System{
 		$pass    =   getParam($params,'pass',false);
 		$auto    =   getParam($params,'auto',false,true);
 		if($id){
-			$isnew = false;
+			 $isnew = false;
 			 $uid = model_Genid::getUid($id,$isnew);
 			 $um = new model_User($uid);
 			 if($isnew){
@@ -41,12 +49,52 @@ class System{
 	}
 
 	function test($params){
+		print_r($_REQUEST);
+		$name = getParam($params, 'name');
 		$ret['s'] = 'OK';
-		$ret['p'] = $params;
+		$ret['p'] = $name;
+		return $ret;
+	}
+
+	/**
+	 * @param
+	 *   -- id : 用户id
+	 *   -- data : 用户数据
+	 */
+	public function save($params){
+		$id = getParam($params, 'id', true);
+		$data = getParam($params, 'data', true);
+
+		/*
+		$m = new Mongo('localhost:35050'); 
+		$db = $m->test;
+		$collection = $db->dm;
+		 */
+		$collection = $this->_collection;
+		$cond = array("name"=>$id);
+		$record = array('$set'=>array("data"=>$data));
+		if($collection->update($cond, $record)){
+			$ret['s'] = 'ok';
+			$ret['d'] = array($id => $data);
+		};
 		return $ret;
 	}
 
 
+	public function read($params){
+		$id = getParam($params, 'id', true);
+		$collection = $this->_collection;
+		$cond = array("name"=>$id);
+		$data = $collection->findOne($cond);
+		if($data['name']){
+			$ret['s'] = 'ok';
+			$ret['d'] = $data['data'];
+		};
+		return $ret;
+	}
 
+
+	public function delete($params){
+	}
 }
 

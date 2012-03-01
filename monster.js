@@ -27,7 +27,7 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 			this.id = this.id[0];
 
 			//test
-			//this.id = 20;
+			//this.id = 17;
 		}else{
 			this.id = 0;
 		}
@@ -54,9 +54,10 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	this.hp_left = this.hp;
 	//状态参数
 	this.delay = config.delay;
-	this.poison = 0; //受毒伤害
+	this.poison = false; //受毒伤害
+	this.poison_dmg = 0;
 	this.poison_start = 1; //受毒伤害
-	this.stone = 0; //石化伤害
+	this.stone = false; //石化伤害
 	this.canAttack = true; //是否可以攻击
 
 	//显示相关，标签

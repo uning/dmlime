@@ -80,17 +80,17 @@ dm.Gem.prototype.canConnect = function(g) {
  * @return {dm.Gem} New bubble.
  * 如果指定了类型，则随机出某种类型的
  */
-dm.Gem.random = function(w, h, type) {
+dm.Gem.random = function(w, h, index) {
 	//简单随机出
 	//
     var gem = new dm.Gem();
-	if(!type || type == -1){
+	if(typeof(index) === "undefined" || index == -1){
 		var id = Math.floor(Math.random() * dm.GEMTYPES.length);
 		gem.index = id; 
 		gem.type = dm.GEMTYPES[id];
 	}else{
-		gem.index = type;
-		gem.type = dm.GEMTYPES[type];
+		gem.index = index;
+		gem.type = dm.GEMTYPES[index];
 	}
 	//gem.label.setText(gem.type);
 	gem.setSize(w,h);

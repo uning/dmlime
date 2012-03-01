@@ -425,7 +425,8 @@ dm.Game.prototype.mainShow = function(){
 			goog.events.listen(btn_ok, ['mousedown', 'touchstart'], function() {
 				//test save game data
 				var game = this.getParent().getParent();
-				game.parseData(game.saveData());
+				//game.parseData(game.saveData());
+				game.loadGame(game.saveData());
 				//
 				//dm.loadMenu();
 			});
@@ -545,8 +546,12 @@ dm.Game.prototype.skillShow = function(slot){
  * 存储游戏的数值game.data ; user.data; board里面的gems相关;
  */
  dm.Game.prototype.saveData = function(){
-	 var gamedata = this.data;
-	 var i, userdata = {};
+	 var i, gamedata={}, userdata = {};
+	 for(i in this.data){
+		 if(i != "fireGems"){
+			 gamedata[i] = this.data[i];
+		 }
+	 }
 	 for(i in this.user.data){
 		 if(i != "equips" && i != "attr_arm" && i != "attr_def"){
 			 userdata[i] = this.user.data[i];
@@ -565,15 +570,25 @@ dm.Game.prototype.skillShow = function(slot){
 	 savedata['userdata'] = userdata;
 	 savedata['gems'] = this.findAllGems();
 	 //处理gems
+	 var json_data = JSON.stringify(savedata);
+	 dm.api('System.save',{"id":"wangkun", "data":json_data});
+
 	 return JSON.stringify(savedata); 
  }
 
+ dm.Game.prototype.loadGame = function(){
+	 var game = this;
+	 dm.api('System.read',{"id":"wangkun"}, function(obj){game.parseData(obj.d)});
+ }
  /**
   * 解析储存的游戏数据
   *
   */
   dm.Game.prototype.parseData = function(savedata){
+
 	  var sdata = JSON.parse(savedata);
+	  var json;
+	  //var sdata;
 	  var gdata = sdata['gamedata'];
 	  var udata = sdata['userdata'];
 	  var gems  = sdata['gems'];
@@ -610,11 +625,14 @@ dm.Game.prototype.skillShow = function(slot){
 	  this.updateData('mana', 0, "add");
 	  this.updateData('hp', 0, "add");
 	  //重新生成gems
-	  for (c = 0; c < this.board.cols; c++) {
-		  for (r = 0; r < this.board.rows; r++) {
-			 // gems[c][r] =
-		  }
-	  }
+	  this.board.loadGems(gems);
+	  var action = this.board.moveGems();
+	  goog.events.listen(
+		  action, lime.animation.Event.STOP, function(){
+		  this.board.setAllSpecial();
+	  },false ,this
+	  );
+
   }
 
 /**

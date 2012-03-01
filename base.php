@@ -54,9 +54,11 @@ function url($params = array() ,$rel=true,$urlp=''){
 	return $urlp.'?'.http_build_query($params);
 }
 
+
 function outdebug(){
 	print new PL_View(PL_ROOT.'/PL/View/Debug.php');
 }
+
 /*
 set_error_handler(array('PL_Error', 'handler'));
 register_shutdown_function(array('PL_Error', 'fatal'));

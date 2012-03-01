@@ -114,6 +114,7 @@ dm.Board.prototype.startGame = function(){
 		mon_arr[i].monster.startSkill();
 	}
 }
+
 /**
  * Fill the board so that all columns have max amount
  * of bubbles again. Poistion out of screen so they can be animated in
@@ -1206,4 +1207,79 @@ dm.Board.prototype.getDamage = function(){
 		 this.fillGems(this.genType);
 		 this.moveGems();
 	 }
+ }
+
+ /**
+  * 读取存储的gems信息，重新填充board里面的gems
+  */
+  dm.Board.prototype.loadGems = function(gems){
+	var c, r, i;
+    for (c = 0; c < this.cols; c++) {
+        for (r = 0; r < this.rows; r++) {
+			this.gems[c][r].getParent().removeChild(this.gems[c][r]);
+		}
+		this.gems[c] = [];
+	}
+    for (c = 0; c < this.cols; c++) {
+        if (!this.gems[c]) this.gems[c] = [];
+        i = 0;
+        for (r = 0; r < this.rows; r++) {
+            i++;
+            var gem  = dm.Gem.random(this.GAP, this.GAP, gems[c][r].index);
+			gem.keep = gems[c][r].keep;
+			gem.canSelect = gems[c][r].canSelect;
+			gem.isBroken  = gems[c][r].isBroken;
+			gem.isOnFire  = gems[c][r].isOnFire;
+
+			if(gem.type == 'monster'){
+				gem.monster = new dm.Monster(this.game.data.turn, gem, this.game, gems[c][r].monster.id);
+				gem.monster['hp'] = gems[c][r].monster.hp;
+				gem.monster['hp_left'] = gems[c][r].monster.hp_left;
+				gem.monster['def'] = gems[c][r].monster.def;
+				gem.monster['def_left'] = gems[c][r].monster.def_left;
+				gem.monster['attack'] = gems[c][r].monster.attack;
+				gem.monster['aliveturn'] = gems[c][r].monster.aliveturn;
+				gem.monster['poison'] = gems[c][r].monster.poison;
+				gem.monster['poison_start'] = gems[c][r].monster.poison_start;
+				gem.monster['stone'] = gems[c][r].monster.stone;
+				gem.monster['canAttack'] = gems[c][r].monster.canAttack;
+				gem.monster.attlabel.setText(gem.monster['hp_left']);
+				gem.monster.attlabel.setText(gem.monster['def_left']);
+				gem.monster.attlabel.setText(gem.monster['attack']);
+			}
+			//gem.genAttribute(this.game.data.turn);
+            gem.r = r;
+            gem.c = c;
+            gem.setPosition((c + .5) * this.GAP, (-i + .5) * this.GAP);
+            //gem.setSize(this.GAP, this.GAP);
+            this.gems[c].push(gem);
+            this.layers[c].appendChild(gem);
+        }
+    }
+	this.show_att = this.fp.a1 + (this.game.data.attack_addtion || 0);
+	this.show_dmg = this.getDamage();
+	if(this.game.show_create == 1){
+		this.game.mon.setText(this.show_dmg);
+		this.game.att.setText(this.show_att);
+	}
+	this.findGems();
+  }
+
+/**
+ * 找到有特殊状态的gems，加载状态
+ */
+ dm.Board.prototype.setAllSpecial = function(){
+	var c, r, i, gem;
+	var status = {'isOnFire':true, 'canSelect':false, 'isBroken':true, 'stone':true, 'canAttack':false, 'poison':true};//可能的状态
+	var disp = {'isOnFire':'Fire', 'canSelect':'discon', 'isBroken':'broken', 'stone':'stone', 'canAttack':'freeze', 'poison':'poison'};//可能的状态
+    for (c = 0; c < this.cols; c++) {
+        for (r = 0; r < this.rows; r++) {
+			gem = this.gems[c][r];
+			for(i in status){
+				if(gem[i] == status[i] ||(gem.monster && gem.monster[i] == status[i])){ //处于其中的状态
+					gem.setSpecial(disp[i]);
+				}
+			}
+		}
+	}
  }
