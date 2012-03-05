@@ -80,11 +80,9 @@ dm.api = function(m, param, callback) {
     xhr = e.target;
     obj = xhr.getResponseJson();
     console.log(m, 'api response', obj);
-    //return callback && callback(obj);
-	return callback(obj);
+    return callback && callback(obj);
   };
   return goog.net.XhrIo.send(dm.APIURL + '?m=' + m, proc, 'POST', goog.json.serialize({
-  //return goog.net.XhrIo.send('testmongo.php' , proc, 'POST', goog.json.serialize({
     m: m,
     p: param
   }), {
@@ -93,7 +91,7 @@ dm.api = function(m, param, callback) {
 };
 
 dm.loadMenu = function() {
-  var btn, btn_help, btns, btns2, layer, lbl, move, scene;
+  var btn, btn_help, btn_load, btns, btns2, layer, lbl, move, scene;
   scene = new lime.Scene;
   layer = new lime.Layer().setPosition(dm.WIDTH / 2, 0);
   btns = new lime.Layer().setPosition(0, 0);
@@ -102,9 +100,6 @@ dm.loadMenu = function() {
   btn = dm.makeButton('开始').setPosition(0, 200);
   goog.events.listen(btn, ['click', 'touchstart'], function() {
     console.log('game start');
-	//dm.api('System.test',{"name":"wangkun" ,"email":"wangkun@playcrab.com"}, function(){alert("wow!")});
-	//dm.api('System.save',{"id":"wangkun" ,"data":"wangkun@playcrab.com"}, function(){alert("wow!")});
-	dm.api('System.read',{"id":"wangkun"}, function(){});
     return btns.runAction(move);
   });
   btns.appendChild(btn);
@@ -113,6 +108,12 @@ dm.loadMenu = function() {
     return dm.loadHelpScene();
   });
   btns.appendChild(btn_help);
+  btn_load = dm.makeButton('载入').setPosition(0, 600);
+  goog.events.listen(btn_load, ['click', 'touchstart'], function() {
+    dm.newgame(6);
+    return dm.game.loadGame();
+  });
+  btns.appendChild(btn_load);
   btns2 = new lime.Layer;
   btns2.setPosition(dm.WIDTH, 0);
   btns.appendChild(btns2);

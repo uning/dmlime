@@ -82,6 +82,14 @@ dm.loadMenu =  ->
 			dm.loadHelpScene()
 
 	btns.appendChild btn_help
+
+	btn_load = dm.makeButton('载入').setPosition 0, 600
+	goog.events.listen btn_load, ['click','touchstart'],
+		->
+			dm.newgame(6)
+			dm.game.loadGame()
+
+	btns.appendChild btn_load
 	#second area that will slide in
 	
 	btns2 = new lime.Layer 

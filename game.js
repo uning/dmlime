@@ -553,14 +553,18 @@ dm.Game.prototype.skillShow = function(slot){
 		 }
 	 }
 	 for(i in this.user.data){
-		 if(i != "equips" && i != "attr_arm" && i != "attr_def"){
+		 if(i != "equips" && i != "attr_arm" && i != "attr_def" && i != "skills"){
 			 userdata[i] = this.user.data[i];
 		 }
 	 }
-	 //处理装备
-	 if(!userdata["equips"]){
-		 userdata["equips"] = {};
+
+	 userdata["skills"] = {};
+	 for(i in this.user.data.skills){
+		 userdata["skills"][i] = this.user.data.skills[i].id;
 	 }
+
+	 //处理装备
+	 userdata["equips"] = {};
 	 for(i in this.user.data.equips){
 		 userdata["equips"][i] = this.user.data.equips[i].lvlneed;
 	 }
@@ -568,7 +572,7 @@ dm.Game.prototype.skillShow = function(slot){
 	 var savedata = {};
 	 savedata['gamedata'] = gamedata;
 	 savedata['userdata'] = userdata;
-	 savedata['gems'] = this.findAllGems();
+	 savedata['gems'] = this.saveAllGems();
 	 //处理gems
 	 var json_data = JSON.stringify(savedata);
 	 dm.api('System.save',{"id":"wangkun", "data":json_data});
@@ -598,9 +602,14 @@ dm.Game.prototype.skillShow = function(slot){
 	  var i, c, r;
 	  this.data = gdata;
 	  for(i in this.user.data){
-		  if(i != "equips"){
+		  if(i != "equips" && i != "skills"){
 			  this.user.data[i] = udata[i];
 		  }
+	  }
+
+	  this.user.data["skills"] = {};
+	  for(i in udata["skills"]){
+		  this.user.data.skills[i] = dm.conf.SK[udata["skills"][i]];
 	  }
 	  //根据装备的id附加装备
 	  this.user.data["equips"] = {};
@@ -624,6 +633,7 @@ dm.Game.prototype.skillShow = function(slot){
 	  this.updateData('exp', 0, "add");
 	  this.updateData('mana', 0, "add");
 	  this.updateData('hp', 0, "add");
+
 	  //重新生成gems
 	  this.board.loadGems(gems);
 	  var action = this.board.moveGems();
@@ -652,16 +662,19 @@ dm.Game.prototype.skillShow = function(slot){
 
 /**
  *保存gem的数据
+ *为了节省空间，只存非默认的数据
  */
  dm.Game.prototype.saveGem = function(gem){
 	 //id, hp, attack, defense, poison, canConnect, isBroken, isOnFire, stone, canAttack, poison_start
 	 var data = {};
-	 data["keep"] = gem.keep;
+	 !gem.keep && (data["keep"] = gem.keep);
+
 	 data["type"] = gem.type;
 	 data["index"] = gem.index;
-	 data["canSelect"] = gem.canSelect;
-	 data["isBroken"] = gem.isBroken;
-	 data["isOnFire"] = gem.isOnFire;
+
+	 !gem.canSelect && (data["canSelect"] = gem.canSelect);
+	 gem.isBroken && (data["isBroken"] = gem.isBroken);
+	 gem.isOnFire && (data["isOnFire"] = gem.isOnFire);
 
 	 if(gem.monster){
 		 data["monster"] = {};
@@ -673,18 +686,18 @@ dm.Game.prototype.skillShow = function(slot){
 		 data["monster"]["attack"] = gem.monster.attack ;
 		 data["monster"]["aliveturn"] = gem.monster.aliveturn;
 
-		 data["monster"]["poison"] = gem.monster.poison;
-		 data["monster"]["poison_start"] = gem.monster.poison_start;
-		 data["monster"]["stone"] = gem.monster.stone;
-		 data["monster"]["canAttack"] = gem.monster.canAttack;
+		 gem.monster.poison && (data["monster"]["poison"] = gem.monster.poison);
+		 //!gem.monster.poison_start && (data["monster"]["poison_start"] = gem.monster.poison_start);
+		 gem.monster.stone && (data["monster"]["stone"] = gem.monster.stone);
+		 !gem.monster.canAttack && (data["monster"]["canAttack"] = gem.monster.canAttack);
 	 }
 	 return data;
  }
 
  /**
-  * 找出所有的Gem,然后返回存储最小信息的Gems数据
+  * 找出所有的Gem,然后返回存储的Gems数据
   */
- dm.Game.prototype.findAllGems = function(){
+ dm.Game.prototype.saveAllGems = function(){
 	 var c, r, gems={};
 	  for (c = 0; c < this.board.cols; c++) {
 		  if(!gems[c]){

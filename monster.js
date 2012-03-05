@@ -11,7 +11,7 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	//基础属性
 	this.p = p;//gem
 	this.attack = 1 + Math.floor(turn/40); 
-	this.hp = Math.floor(turn/30)+4;
+	this.hp = Math.floor(turn/30)+5;
 	this.def = Math.floor(turn/40)+1;
 	this.aliveturn = 0;
 
@@ -56,7 +56,7 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	this.delay = config.delay;
 	this.poison = false; //受毒伤害
 	this.poison_dmg = 0;
-	this.poison_start = 1; //受毒伤害
+	this.poison_start = true; //受毒伤害
 	this.stone = false; //石化伤害
 	this.canAttack = true; //是否可以攻击
 

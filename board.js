@@ -219,7 +219,7 @@ dm.Board.prototype.checkSolutions = function() {
 	,fp = this.game.user.data.fp
 	,sp = this.game.user.data.sp
 	,data = this.game.data
-	,buff = this.game.buff
+	,buff = data["buff"]
 	,sk_action = new dm.Skill(this.game)
 	,keep
 	,attack = fp.a1 + this.game.data.attack_addtion 
@@ -231,6 +231,7 @@ dm.Board.prototype.checkSolutions = function() {
 	
 	//初始化
 
+	this.unStone();
 	//人物技能
 	for(i in buff){
 		if(buff[i] && dm.conf.SK['sk'+i]['delay'] == 1){ //回合中产生作用
@@ -245,18 +246,6 @@ dm.Board.prototype.checkSolutions = function() {
 		}
 	}
 	
-	/*
-	var mon_arr = this.findMonster();
-	for(i in mon_arr){
-		mon_arr[i].monster.startTurn();
-	}
-	*/
-
-	//怪物技能影响 
-	//
-	//
-	//
-
 	var indexes = 1;
 	//* 分类处理
 	if(s[0].type == 'sword' || s[0].type == 'monster'){
@@ -318,18 +307,25 @@ dm.Board.prototype.checkSolutions = function() {
 					}
 					g.keep = true;
 					if(Math.random()*100 < fp.a32){//毒伤害,todo: 加入持续时间
+					//test poison
+					//if(Math.random()*100 < 90){//毒伤害,todo: 加入持续时间
                         g.setSpecial('poison');
 
 						g.monster.poison = Math.round(attack_real*10/100) || 1;//fp.a33/100);
-						console.log('poison : '+g.poison);
+						//
+						//g.monster.poison = 1;
+						//
+						console.log('poison : '+g.monster.poison);
 
-						g.monster.poison_start = 1;
+						//g.monster.poison_start = true;
 					}
+					//test stone
 					if(Math.random()*100 < fp.a35){ //fp.a35){//石化
+					//if(Math.random()*100 < 80){ //fp.a35){//石化
 						console.log('freeze ');
 						g.setSpecial('freeze');
 
-						g.monster.stone = 1;
+						g.monster.stone = true;
 					}
 					p_type = 0;
 				}
@@ -393,10 +389,6 @@ dm.Board.prototype.checkSolutions = function() {
 	}
 	//回合结束其他动作
 	this.Poison(s); //其他怪物的毒伤害等
-	//
-	//反弹伤害
-	//
-	//
 
 	this.game.setScore(s.length * (s.length - 2));
 
@@ -468,7 +460,7 @@ dm.Board.prototype.checkSolutions = function() {
 		this.game.updateData('hp', -data['poison'], 'add');
 	}
 
-	this.unStone();
+//	this.unStone();
 
 	if(!ispoping){
 		this.turnEndShow();
@@ -1144,20 +1136,18 @@ dm.Board.prototype.getDamage = function(){
   * 每回合结束对怪物造成毒伤害
   */
   dm.Board.prototype.Poison = function(s){
-	var c,r,g,gem,exist=0;
+	var c, r, g, gem, exist=0;
     for (c = 0; c < this.cols; c++) {
         for (r in this.gems[c]) {
 			g = this.gems[c][r];
-            if(g.type == 'monster' && g.monster.hp_left > 0 && g.poison && g.poison > 0){
-				if(g.poison_start <= 0){
-					g.monster.hp_left -= g.poison;
-				}
-				g.poison_start--;
+            if(g.type == 'monster' && g.monster.hp_left > 0 && g.monster.poison && g.monster.poison > 0){
+				g.monster.hp_left -= g.monster.poison;
 				if(g.monster.hp_left <= 0){
 					g.monster.hplabel.setText(0);
 					g.setSpecial('Killed');
 					g.keep = false;
 					exist = 0;
+					/*
 					for(gem in s){
 						if(s[gem] == g){
 							exist = 1;
@@ -1166,8 +1156,9 @@ dm.Board.prototype.getDamage = function(){
 					if(exist == 0){
 						s.push(g);
 					}
+					*/
 				}
-				g.hplabel.setText(g.hp_left);
+				g.monster.hplabel.setText(g.monster.hp_left);
 			}   
         }
     }
@@ -1178,8 +1169,8 @@ dm.Board.prototype.getDamage = function(){
     for (c = 0; c < this.cols; c++) {
         for (r in this.gems[c]) {
 			g = this.gems[c][r];
-            if(g.type == 'monster' && g.stone == 1){
-				g.stone = 0;
+            if(g.type == 'monster' && g.monster.stone == 1){
+				g.monster.stone = 0;
 				g.unsetSpecial();
 			}
 		}
@@ -1226,13 +1217,26 @@ dm.Board.prototype.getDamage = function(){
         for (r = 0; r < this.rows; r++) {
             i++;
             var gem  = dm.Gem.random(this.GAP, this.GAP, gems[c][r].index);
+			var old  = gems[c][r];
+			var prop;
+			for(prop in old){
+				if(prop != "monster"){
+					gem[prop] = old[prop];
+				}
+			}
+			/*
 			gem.keep = gems[c][r].keep;
 			gem.canSelect = gems[c][r].canSelect;
 			gem.isBroken  = gems[c][r].isBroken;
 			gem.isOnFire  = gems[c][r].isOnFire;
+			*/
 
 			if(gem.type == 'monster'){
 				gem.monster = new dm.Monster(this.game.data.turn, gem, this.game, gems[c][r].monster.id);
+				for(prop in old.monster){
+					gem.monster[prop] = old.monster[prop];
+				}
+				/*
 				gem.monster['hp'] = gems[c][r].monster.hp;
 				gem.monster['hp_left'] = gems[c][r].monster.hp_left;
 				gem.monster['def'] = gems[c][r].monster.def;
@@ -1243,8 +1247,10 @@ dm.Board.prototype.getDamage = function(){
 				gem.monster['poison_start'] = gems[c][r].monster.poison_start;
 				gem.monster['stone'] = gems[c][r].monster.stone;
 				gem.monster['canAttack'] = gems[c][r].monster.canAttack;
-				gem.monster.attlabel.setText(gem.monster['hp_left']);
-				gem.monster.attlabel.setText(gem.monster['def_left']);
+				*/
+
+				gem.monster.hplabel.setText(gem.monster['hp_left']);
+				gem.monster.deflabel.setText(gem.monster['def_left']);
 				gem.monster.attlabel.setText(gem.monster['attack']);
 			}
 			//gem.genAttribute(this.game.data.turn);
