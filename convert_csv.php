@@ -34,6 +34,7 @@ foreach( $files  as $f=>$v){
 	$out .= json_encode($rows,JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 	//$out .= json_encode($rows);
 	file_put_contents($outf,$out);
+	echo    $outf."\n";
 	unset($columns); 
 	unset($rows);
 }

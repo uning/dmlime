@@ -34,9 +34,33 @@ class System{
 	 *
 	 */
 	public function login($params){
-		$id    =   getParam($params,'id',false,'');
-		$pass    =   getParam($params,'pass',false);
-		$auto    =   getParam($params,'auto',false,true);
+		$pid    =   getParam($params,'pid', false,'');
+		$pass    =   getParam($params,'passwd', false);
+		$email = getParam($params, 'email',false);
+		$create = getParam($params, 'create', false);
+		$auto    =   getParam($params,'auto', false, true);
+
+		$coll = $this->_collection;
+		$data = $coll->findOne(array("pid"=>$pid, "pass"=>$pass));
+		if(!isset($data)){
+			if($create){
+				$uid = $this->genUid();
+				if($coll->save(array("_id"=>$uid, "pid"=>$pid, "passwd"=>$pass, "email"=>$email))){
+					$ret['d'] = array("_id"=>$uid, "pid"=>$pid, "email"=>$email);
+					$ret['s'] = 'OK';
+					return $ret;
+				}
+				$ret['s'] = 'KO';
+				return $ret;
+			}else{
+				echo "<script type='text/javascript'>location.href='register.php'</script>";
+			//登陆错误
+			}
+		}else{
+			//登陆成功
+			echo "log success!";
+		}
+		/*
 		if($id){
 			 $isnew = false;
 			 $uid = model_Genid::getUid($id,$isnew);
@@ -44,8 +68,31 @@ class System{
 			 if($isnew){
 			 }
 		}
-		$ret['s'] = 'OK';
+		 */
+	}
+
+	public function checkName($params){
+		$pid = getParam($params, 'pid', true);
+		$coll = $this->_collection;
+		$data = $coll->findOne(array('pid' => $pid));
+		if(isset($data)){
+			$ret['d'] = "not avaliable";
+		}else{
+			$ret['d'] = "avaliable";
+		}
+		$ret[s] = 'ok';
 		return $ret;
+	}
+
+	function genUid(){
+		$coll = $this->_collection;
+		$data = $coll->findOne(array("key"=>"maxuid"));
+		if(!isset($data)){
+			$coll->save(array("key"=>"maxuid","maxuid"=>1));
+		}else{
+			$coll->update(array("key"=>"maxuid"), array('$inc'=>array("maxuid"=>1)));
+		}
+		return $data["maxuid"]+1;
 	}
 
 	function test($params){

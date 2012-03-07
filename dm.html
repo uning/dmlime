@@ -154,4 +154,7 @@
 </body>
 </html>
 <script>
+	// Hides the addressbar on non-post pages 
+	function hideURLbar() { window.scrollTo(0,1); } 
+	addEventListener('load', function(){setTimeout(hideURLbar, 0);}, false);
 </script>

@@ -99,6 +99,7 @@ dm.loadMenu = function() {
   move = new lime.animation.MoveBy(-dm.WIDTH, 0).enableOptimizations();
   btn = dm.makeButton('开始').setPosition(0, 200);
   goog.events.listen(btn, ['click', 'touchstart'], function() {
+	  //dm.api('System.checkName', {'pid':'wk'}, function(obj){alert(obj.d)});
     console.log('game start');
     return btns.runAction(move);
   });

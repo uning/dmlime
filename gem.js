@@ -46,12 +46,12 @@ dm.Gem = function() {
 goog.inherits(dm.Gem, lime.Sprite);
  
 dm.Gem.prototype.ICONS = {
-	'size':52
-	,'hp':{x:0,y:0}
-	,'monster':{x:0,y:53}
-	,'gold':{x:0,y:105}
-	,'mana':{x:0,y:512}
-	,'sword':{x:0,y:212}
+	'size':100
+	,'hp':'hp.png'
+	,'monster':'monster.png'
+	,'gold':'gold.png'
+	,'mana':'mana.png'
+	,'sword':'bow.png'
 };
 
 
@@ -110,13 +110,14 @@ dm.Gem.prototype.fillImage = function(w,h){
 	 y = (this.ICONS.ygap + size)* this.ICONS[this.type].y   
 	 */
 	 var x,y,scale,size
-	 x = this.ICONS[this.type].x
-	 y = this.ICONS[this.type].y
+	 //x = this.ICONS[this.type].x
+	 //y = this.ICONS[this.type].y
 	 size = this.ICONS['size']
 
 	 scale = w/(size+2) ;
 	 //console.log(size,x,y,scale)
-	 this.setFill(dm.IconManager.getFileIcon('assets/tiles.png',x,y,scale));
+	 //this.setFill(dm.IconManager.getFileIcon('assets/tiles.png',x,y,scale));
+	 this.setFill(dm.IconManager.getFileIcon('dmdata/dmimg/'+ this.ICONS[this.type], 0, 0, scale));
 	
 }
 
