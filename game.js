@@ -18,8 +18,10 @@ dm.Game = function(size,user){
     lime.Scene.call(this);
 	//初始化数据
 	this.initData(size, user);
-	this.createBoard();
 	this.createPanel();
+	this.createBoard();
+	//显示数据
+	this.showData();
 
 	//this.skill = new dm.Skill(this);
 	
@@ -167,23 +169,29 @@ dm.Game.prototype.changeAnim = function(str){
  * 面板的UI生成
  */
 dm.Game.prototype.createPanel = function(){
+	//背景层
 	this.panel = new lime.Layer();
-	var panel  = this.panel;
-	var i,slot,tailer, show_board; //slot 技能槽
+
+	var i, slot, tailer, show_board, backGround; //slot 技能槽
+
+	//背景图片
+	this.backGround = new lime.Sprite().setSize(720, 1004).setAnchorPoint(0,0).setFill(dm.IconManager.getFileIcon('dmdata/dmimg/background.png',0 , 0, 1));
+	this.panel.appendChild(this.backGround);
+
 	tailer = dm.Display.boardtailer;//尾部
 	//顶部技能槽
 	show_board = new lime.Sprite().setSize(690, 140).setAnchorPoint(0,0).setPosition(tailer.location.x, tailer.location.y).
 		setFill(dm.IconManager.getFileIcon('assets/tiles.png', tailer.img.x, tailer.img.y, 690/320, 140/76, 1));
 
-	panel.appendChild(show_board);
+	//this.backGround.appendChild(show_board);
 
 	var icon = dm.IconManager.getFileIcon('assets/menus.png', 248, 0, 110/53, 110/53, 1);
 	//
 	//4个技能槽
 	for( i=0; i<4; i++){
-		slot = new lime.Sprite().setSize(110,110).setAnchorPoint(0,0).setPosition(60 + i*120, 0).setFill(icon);
+		slot = new lime.Sprite().setSize(110,110).setAnchorPoint(0,0).setPosition(70 + i*125, 62).setFill(0, 0, 0, 0.7);
 		this.skillslot[i] = slot;
-		panel.appendChild(slot);
+		this.backGround.appendChild(slot);
 		goog.events.listen(this.skillslot[i], ['mousedown', 'touchstart'], function() {
 			if(this.sk) //slot对应的skill存在
 				this.getParent().getParent().skillShow(this);
@@ -195,7 +203,7 @@ dm.Game.prototype.createPanel = function(){
 	icon = dm.IconManager.getFileIcon('assets/tiles.png', 342, 336, 148/72, 50/26, 1);
 	var menu = new lime.Sprite().setSize(152, 50).setAnchorPoint(0, 0).setPosition(60 + 4*120, 0).setFill(icon);
     menu.domClassName = goog.getCssName('lime-button');
-	panel.appendChild(menu);
+	//this.backGround.appendChild(menu);
 	goog.events.listen(menu, ['mousedown', 'touchstart'], function() {
 		this.getParent().getParent().mainShow();
     });
@@ -205,12 +213,30 @@ dm.Game.prototype.createPanel = function(){
 	icon = dm.IconManager.getFileIcon('assets/tiles.png', 268, 336, 148/72, 50/26, 1);
 	var stat = new lime.Sprite().setSize(152, 50).setAnchorPoint(0, 0).setPosition(60 + 4*120, 60).setFill(icon);
     stat.domClassName = goog.getCssName('lime-button');
-	panel.appendChild(stat);
+	//this.backGround.appendChild(stat);
     goog.events.listen(stat, ['mousedown', 'touchstart'], function() {
 		this.getParent().getParent().statShow();
     });
-	this.appendChild(panel);
+	this.appendChild(this.panel);
 
+
+
+}
+
+/*
+ * create board
+ */
+dm.Game.prototype.createBoard = function(){
+    this.board = new dm.Board(this.size, this.size, this).setPosition(64, 202);
+    if(dm.isBrokenChrome()) this.board.setRenderer(lime.Renderer.CANVAS);
+    this.backGround.appendChild(this.board);
+}
+
+
+/**
+ * 显示游戏中的数值
+ */
+dm.Game.prototype.showData = function(){
 
     this.score = new lime.Label().setFontColor('#000').setFontSize(24).setText('0').setAnchorPoint(0, 0).setFontWeight(700);
 	this.show_vars = {
@@ -220,27 +246,18 @@ dm.Game.prototype.createPanel = function(){
 		,hp:{curdata:this.data.hp, max:this.user.data.fp.a6, loc:{x:600, y:890}}
 	}
 	
-	for( i in this.show_vars){
-		p = this.show_vars[i];
+	for( var i in this.show_vars){
+		var p = this.show_vars[i];
 		p._lct = new lime.Label().setFontSize(28).setText(p.curdata+'/'+p.max).setPosition(p.loc.x, p.loc.y);
-		panel.appendChild(p._lct);
+		this.backGround.appendChild(p._lct);
 	}
 	this.mon = new lime.Label().setFontColor('#000').setFontSize(34).setText(this.board.getDamage()).setPosition(260, 880);
 	this.att = new lime.Label().setFontColor('#000').setFontSize(34).setText(this.user.data.fp.a1).setPosition(470, 880);
-	panel.appendChild(this.mon);
-	panel.appendChild(this.att);	
+	this.backGround.appendChild(this.mon);
+	this.backGround.appendChild(this.att);	
 	this.show_create = 1;
-
 }
 
-/*
- * create board
- */
-dm.Game.prototype.createBoard = function(){
-    this.board = new dm.Board(this.size, this.size, this).setPosition(25, 134);
-    if(dm.isBrokenChrome()) this.board.setRenderer(lime.Renderer.CANVAS);
-    this.appendChild(this.board);
-}
 
 /*
  * 游戏数据初始化
@@ -250,14 +267,13 @@ dm.Game.prototype.initData = function(size, user){
 	this.size  = size ||  6;
 	this.user = user || new dm.User(1);
 	this.user.game = this;
+
+	//游戏展示变量
+	this.disp = {};
+
+	//游戏数据
 	this.data = {};
 	this.data.turn = 0; //回合数
-	/*
-	this.data.appearNum = {};
-	for( i = 0 ; i < dm.GEMTYPES.length ; ++i){
-		this.data.appearNum[i] = 0;
-	}
-	*/
 	this.data.hp    = this.user.data.fp.a6;
 	this.data.mana  = this.user.data.fp.a5;
 	this.data.def   = this.user.data.fp.a3;

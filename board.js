@@ -35,7 +35,8 @@ dm.Board = function(rows,cols,game) {
      * @type {number}
      */
 	
-    this.SIZE = dm.Display.framework.board;
+    //this.SIZE = dm.Display.framework.board;
+	this.SIZE = 600;
 
     this.rows = rows;
     this.cols = cols;
@@ -64,8 +65,8 @@ dm.Board = function(rows,cols,game) {
     // mask out edges so bubbles flowing in won't be over game controls.
     this.maskSprite = new lime.Sprite().setSize(this.SIZE, this.SIZE).setFill(100, 0, 0, .1).setAnchorPoint(0, 0);
 
-	this.backGround = new lime.Sprite().setSize(this.SIZE, this.SIZE).setFill(255,255,255).setAnchorPoint(0,0);//背景
-	this.appendChild(this.backGround);
+	//this.backGround = new lime.Sprite().setSize(this.SIZE, this.SIZE).setFill(255,255,255).setAnchorPoint(0,0);//背景
+	//this.appendChild(this.backGround);
     this.appendChild(this.maskSprite);
     this.setMask(this.maskSprite);
 
