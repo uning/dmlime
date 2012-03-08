@@ -47,7 +47,7 @@ class dm.Icon extends lime.fill.Image
 ###
  获取图片一部分,offset，size 都可以用 坐标指定
  offet 偏移
- offset_perc 偏移 scale
+ offset_perc 偏移 是否为 百分比
  size  由容器决定
 ###
 dm.IconManager::getIcon = (offset,scalex,scaley,offset_perc) ->
@@ -73,10 +73,16 @@ dm.IconManager::getIcon = (offset,scalex,scaley,offset_perc) ->
 
 dm.IconManager.getFileIcon = (file,offset,scalex,scaley,offset_perc) ->
 	inst  =  dm.IconManager::inst or= new dm.IconManager(file)
+	ofile = inst.file
 	inst.file = file
-	inst.getIcon offset,scalex,scaley,offset_perc
+	ret = inst.getIcon.apply inst,arguments
+	inst.file = ofile
+	ret
 
 dm.IconManager.getImg = (file)->
 	inst  =  dm.IconManager::inst or= new dm.IconManager(file)
+	ofile = inst.file
 	inst.file = file
-	inst.getIcon 0,1,1,1
+	ret = inst.getIcon 0,1,1,1
+	inst.file = ofile
+	ret

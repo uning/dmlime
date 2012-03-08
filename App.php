@@ -14,14 +14,8 @@ class App extends PL_Application{
 		parent::__construct();
 		$this['mods'] = array(
 			'api'=> ROOT.'/ApiServer.php'
-			,'help'=> ROOT.'/help/HelpServer.php'
-			,'support'=> ROOT.'/support/SupportServer.php'
+			,'page'=> ROOT.'/views/PageServer.php'
 		);
-
-		//关掉apc缓存
-		if(P_PLATFORM == 'dev' || ENV == 'test' ){
-			PL_Config_Numeric::$useapc = false;
-		}
 
 
 
@@ -29,14 +23,7 @@ class App extends PL_Application{
 	}
 
 	function getSession(){
-		if(PL_Session::canStart(true)){
-			return PL_Session::start();
-		}
-	}
-	/**
-	 * not need
-	 */
-	static function init($config){
+		return PL_Session::start(null,false,true);
 	}
 }
 

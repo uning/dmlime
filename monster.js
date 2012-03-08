@@ -4,14 +4,18 @@ goog.require('dm.conf.MS');
 dm.Monster = function(turn, p, game, mon_id){
 	this.game = game;
 	this.conf = dm.conf.MS;
-	this.genAttribute(turn, p, mon_id);
+	this.parentGem = p;
+	this.genAttribute(turn, mon_id);
+	//显示怪物攻防等图片
+	this.genImg();
 }
 
 dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	//基础属性
-	this.p = p;//gem
+	//this.p = p;//gem
+	p = this.parentGem;
 	this.attack = 1 + Math.floor(turn/40); 
-	this.hp = Math.floor(turn/30)+5;
+	this.hp = Math.floor(turn/30)+ 10;
 	this.def = Math.floor(turn/40)+1;
 	this.aliveturn = 0;
 
@@ -71,11 +75,42 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	this.attlabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.attack);
 	this.hplabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#f00').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.hp_left);
 	this.deflabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#00f').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.def);
+	/*
 	p.appendChild(this.attlabel.setPosition(w*0.4, -h/4));
 	p.appendChild(this.hplabel.setPosition(w*0.4, 0));
 	p.appendChild(this.deflabel.setPosition(w*0.4, h/4));
+	*/
 
 }
+
+/**
+ * 加载怪物图标等
+ */
+dm.Monster.prototype.genImg = function(){
+	this.disp = {};
+	var disp = this.disp;
+	var url = 'dmdata/dmimg/';
+	disp.att_bg = new lime.Sprite().setSize(25, 24).setPosition(35, -30).setFill(dm.IconManager.getImg(url + 'matt.png'));
+	disp.def_bg = new lime.Sprite().setSize(25, 24).setPosition(35, 0).setFill(dm.IconManager.getImg(url + 'mdef.png'));
+	disp.hp_bg = new lime.Sprite().setSize(25, 24).setPosition(35, 30).setFill(dm.IconManager.getImg(url + 'mhp.png'));
+
+	disp.att = this.game.genDigtalImg(this.attack);
+	disp.def = this.game.genDigtalImg(this.def);
+	disp.hp = this.game.genDigtalImg(this.hp);
+
+	var p = this.parentGem;
+	for(var i in disp){
+		p.appendChild(disp[i]);
+	}
+	disp.att_bg.appendChild(disp.att);
+	disp.def_bg.appendChild(disp.def);
+	disp.hp_bg.appendChild(disp.hp);
+}
+
+/**
+ *
+ */
+
 
 /**
  *当怪物被杀死的时候，得到相应奖励

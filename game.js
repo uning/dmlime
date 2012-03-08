@@ -12,8 +12,6 @@ goog.require('lime.animation.Loop');
  * @extends lime.Scene
  * 
  */
-
-
 dm.Game = function(size,user){
     lime.Scene.call(this);
 	//初始化数据
@@ -173,20 +171,14 @@ dm.Game.prototype.createPanel = function(){
 	this.panel = new lime.Layer();
 
 	var i, slot, tailer, show_board, backGround; //slot 技能槽
+	var gold_bar, blood_bar, skill_exp_bar, exp_bar;
+	var blood_mask;
 
 	//背景图片
-	this.backGround = new lime.Sprite().setSize(720, 1004).setAnchorPoint(0,0).setFill(dm.IconManager.getFileIcon('dmdata/dmimg/background.png',0 , 0, 1));
+	this.backGround = new lime.Sprite().setSize(720, 1004).setAnchorPoint(0,0).setFill(dm.IconManager.getImg('dmdata/dmimg/background.png'));//,0 , 0, 1));
 	this.panel.appendChild(this.backGround);
-
-	tailer = dm.Display.boardtailer;//尾部
-	//顶部技能槽
-	show_board = new lime.Sprite().setSize(690, 140).setAnchorPoint(0,0).setPosition(tailer.location.x, tailer.location.y).
-		setFill(dm.IconManager.getFileIcon('assets/tiles.png', tailer.img.x, tailer.img.y, 690/320, 140/76, 1));
-
-	//this.backGround.appendChild(show_board);
-
-	var icon = dm.IconManager.getFileIcon('assets/menus.png', 248, 0, 110/53, 110/53, 1);
 	//
+
 	//4个技能槽
 	for( i=0; i<4; i++){
 		slot = new lime.Sprite().setSize(110,110).setAnchorPoint(0,0).setPosition(70 + i*125, 62).setFill(0, 0, 0, 0.7);
@@ -197,6 +189,29 @@ dm.Game.prototype.createPanel = function(){
 				this.getParent().getParent().skillShow(this);
 		});
 	}
+	//
+	blood_bar  = new lime.Sprite().setSize(76, 130).setAnchorPoint(0,0).setPosition(548, 838);
+	blood_bar.setFill(dm.IconManager.getImg("dmdata/dmimg/blood_inside.png"));
+
+    blood_mask = new lime.Sprite().setSize(76, 80).setFill(100, 0, 0, .1).setAnchorPoint(0, 1).setPosition(0,130);
+
+	blood_bar.setMask(blood_mask);
+	blood_bar.appendChild(blood_mask);
+
+	this.backGround.appendChild(blood_bar);
+	
+
+
+
+	tailer = dm.Display.boardtailer;//尾部
+	//顶部技能槽
+	show_board = new lime.Sprite().setSize(690, 140).setAnchorPoint(0,0).setPosition(tailer.location.x, tailer.location.y).
+		setFill(dm.IconManager.getFileIcon('assets/tiles.png', tailer.img.x, tailer.img.y, 690/320, 140/76, 1));
+
+	//this.backGround.appendChild(show_board);
+
+	var icon = dm.IconManager.getFileIcon('assets/menus.png', 248, 0, 110/53, 110/53, 1);
+	//
 
 
 	//menu
@@ -725,3 +740,35 @@ dm.Game.prototype.skillShow = function(slot){
 	  }
 	  return gems;
  }
+
+
+ /**
+  *
+  */
+dm.Game.prototype.genDigtalImg = function(num){
+	var bit_arr = [];
+	var bit = 0;
+	var url = 'dmdata/dmimg/';
+	var height = 20;
+	if(num < 10){
+		return new lime.Sprite().setSize(height, height).//setPosition(0, 20).
+			setFill(dm.IconManager.getImg(url + num + '.png'));
+	}
+
+	while(num >= 1){
+		bit_arr[bit] = num % 10;
+		bit++;
+		num = parseInt(num/10);
+	}
+	var width = (bit-1)*20 + 20*0.5;
+	var digt = new lime.Sprite().setSize(width, height).setAnchorPoint(1, 0.5).setPosition(25/2, 0);
+	var i = bit-1;
+	var t = {};
+	for(i in bit_arr){
+		t = new lime.Sprite().setSize(height, height).setAnchorPoint(1, 0.5).setPosition(-i*height*0.5, 0).
+			setFill(dm.IconManager.getImg(url + bit_arr[i] + '.png'));
+		digt.appendChild(t);
+	}
+	//t['bg'] = digt.setFill(255, 255, 255, .5);
+	return digt;
+}
