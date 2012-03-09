@@ -178,6 +178,7 @@ dm.Game.prototype.createPanel = function(){
 	this.backGround = new lime.Sprite().setSize(720, 1004).setAnchorPoint(0,0).setFill(dm.IconManager.getImg('dmdata/dmimg/background.png'));//,0 , 0, 1));
 	this.panel.appendChild(this.backGround);
 	//
+	var game = this;
 
 	//4个技能槽
 	for( i=0; i<4; i++){
@@ -185,8 +186,9 @@ dm.Game.prototype.createPanel = function(){
 		this.skillslot[i] = slot;
 		this.backGround.appendChild(slot);
 		goog.events.listen(this.skillslot[i], ['mousedown', 'touchstart'], function() {
+			var game = this.getParent().getParent().getParent();
 			if(this.sk) //slot对应的skill存在
-				this.getParent().getParent().skillShow(this);
+				game.skillShow(this);
 		});
 	}
 	//
@@ -540,8 +542,8 @@ dm.Game.prototype.skillShow = function(slot){
 	 }
 	 switch(key){
 		 case 'exp':{
-			 while(data['exp'] >= 5){
-				 data['exp'] -= 5;
+			 while(data['exp'] >= 15){
+				 data['exp'] -= 15;
 				 this.pop.lvl++;
 			 }
 			 break;
@@ -556,8 +558,8 @@ dm.Game.prototype.skillShow = function(slot){
 			 break;
 		}
 		case 'gold':{
-			while(data['gold'] >= 3){
-				data['gold'] -= 3;
+			while(data['gold'] >= 30){
+				data['gold'] -= 30;
 
 				this.pop.shop += 1;
 			}

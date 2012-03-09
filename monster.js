@@ -14,9 +14,10 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	//基础属性
 	//this.p = p;//gem
 	p = this.parentGem;
-	this.attack = 1 + Math.floor(turn/40); 
-	this.hp = Math.floor(turn/30)+ 10;
-	this.def = Math.floor(turn/40)+1;
+	this.att_max = 1 + Math.floor(turn/40); 
+	this.hp_max = Math.floor(turn/30)+ 4;
+	this.def_max = Math.floor(turn/40)+1;
+
 	this.aliveturn = 0;
 
 	var mon_arr = this.game.data['specialMon'];
@@ -48,14 +49,18 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	var id = this.id;
 	var config = this.conf[id];
 	//
-	this.attack += parseInt(config.attack);
-	this.def += parseInt(config.defense);
-	this.hp += parseInt(config.hp);
+	this.att_max += parseInt(config.attack);
+	this.def_max += parseInt(config.defense);
+	this.hp_max  += parseInt(config.hp);
+
 	this.skill = config.skill;
 	this.bounce = config['bounce'];
 	//
-	this.def_left = this.def;
-	this.hp_left = this.hp;
+	//实际值
+	this.att = this.att_max
+	this.def = this.def_max;
+	this.hp  = this.hp_max;
+
 	//状态参数
 	this.delay = config.delay;
 	this.poison = false; //受毒伤害
@@ -68,18 +73,14 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	var name = config.name;
 	var tips = config.tips;
 	var size = p.getSize(), 
+
 	h=size.height, 
 	w=size.width;
 	p.index = 0;
 	p.fillImage(w, h);
-	this.attlabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.attack);
-	this.hplabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#f00').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.hp_left);
+	this.attlabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.att);
+	this.hplabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#f00').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.hp);
 	this.deflabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#00f').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.def);
-	/*
-	p.appendChild(this.attlabel.setPosition(w*0.4, -h/4));
-	p.appendChild(this.hplabel.setPosition(w*0.4, 0));
-	p.appendChild(this.deflabel.setPosition(w*0.4, h/4));
-	*/
 
 }
 
@@ -94,7 +95,7 @@ dm.Monster.prototype.genImg = function(){
 	disp.def_bg = new lime.Sprite().setSize(25, 24).setPosition(35, 0).setFill(dm.IconManager.getImg(url + 'mdef.png'));
 	disp.hp_bg = new lime.Sprite().setSize(25, 24).setPosition(35, 30).setFill(dm.IconManager.getImg(url + 'mhp.png'));
 
-	disp.att = this.game.genDigtalImg(this.attack);
+	disp.att = this.game.genDigtalImg(this.att);
 	disp.def = this.game.genDigtalImg(this.def);
 	disp.hp = this.game.genDigtalImg(this.hp);
 
@@ -110,7 +111,14 @@ dm.Monster.prototype.genImg = function(){
 /**
  *
  */
-
+dm.Monster.prototype.changeDisplay = function(type){
+	var disp = this.disp;
+	var parent = disp[type].getParent();
+	parent.removeChild(disp[type]);
+	disp[type] = this.game.genDigtalImg(this[type]);
+	parent.appendChild(disp[type]);
+	
+}
 
 /**
  *当怪物被杀死的时候，得到相应奖励
@@ -269,9 +277,10 @@ dm.Monster.prototype.cure = function(){
 	var i, gem;
 	for(i in type_arr['monster']){
 		gem = type_arr['monster'][i];
-		gem.monster.hp_left += Math.ceil(gem.monster.hp_left*0.1); //治疗10%；
-		gem.monster.hp_left = Math.min(gem.monster.hp_left, gem.monster.hp);
-		gem.monster.hplabel.setText(gem.monster.hp_left);
+		gem.monster.hp += Math.ceil(gem.monster.hp*0.1); //治疗10%；
+		gem.monster.hp  = Math.min(gem.monster.hp, gem.monster.hp_max);
+		gem.monster.hplabel.setText(gem.monster.hp);
+		gem.monster.changeDisplay('hp');
 	}
 }
 
@@ -291,7 +300,7 @@ dm.Monster.prototype.explode = function(){
 */
 dm.Monster.prototype.poisonAttack = function(){
 	//攻击造成20%的持续性毒伤害
-	this.game.updateData('poison', Math.ceil(0.2*this.attack));
+	this.game.updateData('poison', Math.ceil(0.2*this.att));
 }
 
   /**
@@ -305,9 +314,10 @@ dm.Monster.prototype.reduceDefense = function(){
 	* 怪物可以获得本轮玩家所受伤害10%的生命恢复,最多能恢复自身20%生命值
 */
 dm.Monster.prototype.steelHP = function(){
-	this.hp_left += Math.min(Math.round(this.game.data['finalDmg']*0.1), Math.round(this.hp*0.2));
-	this.hp_left = Math.min(this.hp_left, this.hp);
-	this.hplabel.setText(this.hp_left);
+	this.hp += Math.min(Math.round(this.game.data['finalDmg']*0.1), Math.round(this.hp_max*0.2));
+	this.hp = Math.min(this.hp, this.hp_max);
+	this.hplabel.setText(this.hp);
+	this.changeDisplay('hp');
 }
 
 /**
@@ -343,7 +353,7 @@ dm.Monster.prototype.throwMonster = function(){
 	if(mon.length > 0){
 		random = Math.round(Math.random()*(mon.length-1));//随机选一个gem
 		mon[random].keep = false;
-		this.game.updateData('hp', - mon[random].monster.hp_left, 'add');
+		this.game.updateData('hp', - mon[random].monster.hp, 'add');
 		if(data['hp'] <= 0){
 			if(data.revive == 1){
 				this.game.updateData('hp', fp.a6);
@@ -366,8 +376,9 @@ dm.Monster.prototype.monRevive = function(){
 	if(this.revive_timeout != -1){
 		if(this.revive_timeout == 0){
 			this.p.unsetSpecial();
-			this.hp_left = this.hp;
-			this.hplabel.setText(this.hp_left);
+			this.hp = this.hp_max;
+			this.hplabel.setText(this.hp);
+			this.changeDisplay('hp');
 			this.p.type = 'monster';
 		}else{
 			this.revive_timeout--;
@@ -400,16 +411,16 @@ dm.Monster.prototype.monRevive = function(){
 			 }
 		 }
 	 }
-	 data['fireDmg'] = this.attack;
+	 data['fireDmg'] = this.att;
  }
 
  /**
   * 克隆玩家属性
   */
   dm.Monster.prototype.clonePlayer = function(){
-	  this.attack = this.game.user.data.fp.a4;
-	  this.def = this.game.user.data.fp.a3;
-	  this.hp = this.game.user.data.fp.a6;
+	  this.att_max = this.game.user.data.fp.a4;
+	  this.def_max = this.game.user.data.fp.a3;
+	  this.hp_max = this.game.user.data.fp.a6;
   }
 
 

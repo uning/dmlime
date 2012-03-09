@@ -264,7 +264,7 @@ dm.Board.prototype.checkSolutions = function() {
 			g = s[i];
 			type = g.type;
 			if(type == 'monster' && (data['canDamageMon'] || g.monster.id == 16)){//可以对怪物造成伤害
-				var def_real = Math.round(g.monster.def_left*(100-fp.a31)/100); //实际防御值 = 防御数值 - 忽略掉的防御值
+				var mon_def_real = Math.round(g.monster.def*(100-fp.a31)/100); //实际防御值 = 防御数值 - 忽略掉的防御值
 				if(Math.random()*100 < fp.a37){//双倍伤害
 					attack_real = attack * 2;
 				}else{
@@ -275,16 +275,16 @@ dm.Board.prototype.checkSolutions = function() {
 					attack_real = Math.round(attack_real*0.5);
 				}
 				//
-				if(attack_real >= g.monster.hp_left + def_real){
+				if(attack_real >= g.monster.hp + mon_def_real){
 					if(g.monster.id == 18){//反弹伤害的怪物
-						monThornDmg = g.monster.hp_left;
+						monThornDmg = g.monster.hp;
 					}
 
 					leech = g.monster.hp*fp.a36/100; //生命偷取
 					console.log('leech: '+leech);
 
 					if(g.monster.id != 15){ //不是宝石骷髅
-						g.monster.hp_left = 0;
+						g.monster.hp = 0;
 						g.keep = false;
 						g.monster.onDeath(true);
 						this.game.updateData('exp', this.randExtra(fp.a17,fp.a18,fp.a19,fp.a20), 'add');
@@ -296,10 +296,10 @@ dm.Board.prototype.checkSolutions = function() {
 					}
 					//
 				}else{
-					if(attack_real > def_real){
-						g.monster.hp_left = g.monster.hp_left + def_real - attack_real;
+					if(attack_real > mon_def_real){
+						g.monster.hp = g.monster.hp + mon_def_real - attack_real;
 						if(g.monster.id == 18){//反弹伤害的怪物
-							monThornDmg = attack_real - def_real;
+							monThornDmg = attack_real - mon_def_real;
 						}
 
 						//
@@ -330,7 +330,7 @@ dm.Board.prototype.checkSolutions = function() {
 					}
 					p_type = 0;
 				}
-				g.monster.hplabel.setText(g.monster.hp_left);
+				g.monster.changeDisplay('hp');
 			}else if(g.type == 'monster'){
 				g.setSpecial('noDmg');
 				g.keep = true;
@@ -522,10 +522,10 @@ dm.Board.prototype.checkSolutions = function() {
 	var killed = 0;
 	for(var element in line){
 		if(line[element].type == 'monster'){
-			if(this.show_att *(this.game.data['dmgRatio'] || 1) >= line[element].monster.hp_left + line[element].monster.def_left){
+			if(this.show_att *(this.game.data['dmgRatio'] || 1) >= line[element].monster.hp + line[element].monster.def){
 				//杀死怪物了
 				line[element].setSpecial('killed!');
-				killed += line[element].monster.attack //死亡怪物不再造成伤害，从总显示数值中去掉。
+				killed += line[element].monster.att //死亡怪物不再造成伤害，从总显示数值中去掉。
 				this.game.mon.setText(Math.max(0,this.getDamage() - killed));
 			}else{
 				line[element].unsetSpecial();
@@ -786,7 +786,7 @@ dm.Board.prototype.getDamage = function(){
 		for (r = 0; r < this.gems[c].length; r++) {
 			if(this.gems[c][r].monster){
 				if(this.gems[c][r].monster.stone == 0 && this.gems[c][r].monster.canAttack){
-					damage += this.gems[c][r].monster.attack;
+					damage += this.gems[c][r].monster.att;
 				}
 			}
 		}
@@ -1141,10 +1141,12 @@ dm.Board.prototype.getDamage = function(){
     for (c = 0; c < this.cols; c++) {
         for (r in this.gems[c]) {
 			g = this.gems[c][r];
-            if(g.type == 'monster' && g.monster.hp_left > 0 && g.monster.poison && g.monster.poison > 0){
-				g.monster.hp_left -= g.monster.poison;
-				if(g.monster.hp_left <= 0){
-					g.monster.hplabel.setText(0);
+            if(g.type == 'monster' && g.monster.hp > 0 && g.monster.poison && g.monster.poison > 0){
+				g.monster.hp -= g.monster.poison;
+				if(g.monster.hp <= 0){
+					g.monster.hp = 0;
+					//g.monster.hplabel.setText(0);
+					g.monster.changeDisplay('hp');
 					g.setSpecial('Killed');
 					g.keep = false;
 					exist = 0;
@@ -1159,7 +1161,8 @@ dm.Board.prototype.getDamage = function(){
 					}
 					*/
 				}
-				g.monster.hplabel.setText(g.monster.hp_left);
+				//g.monster.hplabel.setText(g.monster.hp);
+				g.monster.changeDisplay('hp');
 			}   
         }
     }
@@ -1225,34 +1228,21 @@ dm.Board.prototype.getDamage = function(){
 					gem[prop] = old[prop];
 				}
 			}
-			/*
-			gem.keep = gems[c][r].keep;
-			gem.canSelect = gems[c][r].canSelect;
-			gem.isBroken  = gems[c][r].isBroken;
-			gem.isOnFire  = gems[c][r].isOnFire;
-			*/
 
 			if(gem.type == 'monster'){
 				gem.monster = new dm.Monster(this.game.data.turn, gem, this.game, gems[c][r].monster.id);
 				for(prop in old.monster){
 					gem.monster[prop] = old.monster[prop];
 				}
-				/*
-				gem.monster['hp'] = gems[c][r].monster.hp;
-				gem.monster['hp_left'] = gems[c][r].monster.hp_left;
-				gem.monster['def'] = gems[c][r].monster.def;
-				gem.monster['def_left'] = gems[c][r].monster.def_left;
-				gem.monster['attack'] = gems[c][r].monster.attack;
-				gem.monster['aliveturn'] = gems[c][r].monster.aliveturn;
-				gem.monster['poison'] = gems[c][r].monster.poison;
-				gem.monster['poison_start'] = gems[c][r].monster.poison_start;
-				gem.monster['stone'] = gems[c][r].monster.stone;
-				gem.monster['canAttack'] = gems[c][r].monster.canAttack;
-				*/
 
+				/*
 				gem.monster.hplabel.setText(gem.monster['hp_left']);
 				gem.monster.deflabel.setText(gem.monster['def_left']);
 				gem.monster.attlabel.setText(gem.monster['attack']);
+				*/
+				gem.monster.changeDisp('hp');
+				gem.monster.changeDisp('def');
+				gem.monster.changeDisp('att');
 			}
 			//gem.genAttribute(this.game.data.turn);
             gem.r = r;
