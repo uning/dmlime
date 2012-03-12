@@ -15,7 +15,7 @@ class App extends PL_Application{
 		$this['mods'] = array(
 			'api'=> ROOT.'/ApiServer.php'
 			,'page'=> ROOT.'/views/PageServer.php'
-			,'weibo'=> ROOT.'/views/PageServer.php'
+			,'weibo'=> ROOT.'/weibo/ThirdServer.php'
 		);
 
 
@@ -23,8 +23,9 @@ class App extends PL_Application{
 		
 	}
 
-	function getSession(){
-		return PL_Session::start(null,false,true);
+	static function getSession($id = null){
+		PL_Session::usecookie(true);
+		return PL_Session::start($id,false);
 	}
 }
 

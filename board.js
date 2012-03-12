@@ -91,8 +91,10 @@ dm.Board = function(rows,cols,game) {
 
     // register listener
     goog.events.listen(this, ['mousedown', 'touchstart','gesturestart'], this.pressHandler_);
+	/*
 	var EVENTS = goog.object.getValues(this.EventType);
 	dm.log.fine('Listening for: ' + EVENTS.join(', ') + '.');
+	*/
 
 	//register event debugger
 
@@ -850,7 +852,6 @@ dm.Board.prototype.getDamage = function(){
 				 board.turnEndShow();
 				 game.ispoping = false;
 				 board.removeChild(this.getParent());
-				 delete this.getParent();  
 			 });
 		 break;
 
@@ -913,7 +914,6 @@ dm.Board.prototype.getDamage = function(){
 					 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 					 board.removeChild(this.getParent());
 					 game.ispoping = false;
-					 delete this.getParent();
 				 }else{
 					 alert('choose one!');
 				 }
@@ -1034,7 +1034,6 @@ dm.Board.prototype.getDamage = function(){
 								 this.getParent().getParent().removeChild(this.getParent());
 
 								 board.game.ispoping = false;
-								 delete this.getParent();  
 							 });
 						 });
 					 }
@@ -1058,7 +1057,6 @@ dm.Board.prototype.getDamage = function(){
 					 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 					 game.ispoping = false;
 					 board.removeChild(this.getParent());
-					 delete this.getParent();  
 				 }else{
 					 alert('choose one');
 				 }

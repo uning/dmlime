@@ -66,6 +66,7 @@ register_shutdown_function('outdebug');
  */
 
 
+require_once ROOT.'/tdevenv.php';
 
 
 

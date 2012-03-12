@@ -74,12 +74,12 @@ dm.APIURL = 'api.php';
 
 dm.api = function(m, param, callback) {
   var proc;
-  console.log(m, 'api call ', param);
+  dm.log.fine(m, 'api call ', param);
   proc = function(e) {
     var obj, xhr;
     xhr = e.target;
     obj = xhr.getResponseJson();
-    console.log(m, 'api response', obj);
+    dm.log.fine(m, 'api response', obj);
     return callback && callback(obj);
   };
   return goog.net.XhrIo.send(dm.APIURL + '?m=' + m, proc, 'POST', goog.json.serialize({
@@ -99,8 +99,7 @@ dm.loadMenu = function() {
   move = new lime.animation.MoveBy(-dm.WIDTH, 0).enableOptimizations();
   btn = dm.makeButton('开始').setPosition(0, 200);
   goog.events.listen(btn, ['click', 'touchstart'], function() {
-	  //dm.api('System.checkName', {'pid':'wk'}, function(obj){alert(obj.d)});
-    console.log('game start');
+    dm.log.fine('game start');
     return btns.runAction(move);
   });
   btns.appendChild(btn);
@@ -195,8 +194,10 @@ dm.start = function() {
   */
   dm.Log.init(document.getElementById('log-div', 'fine'));
   dm.log = dm.Log;
+  console.log(dm.log);
+  dm.log.debug('debug');
   dm.log.fine('init');
-  console.log('in dm.start', el);
+  console.log('after fine init');
   dm.director = new lime.Director(el, dm.WIDTH, dm.HEIGHT);
   dm.director.makeMobileWebAppCapable();
   return dm.loadMenu();

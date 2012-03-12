@@ -47,11 +47,11 @@ dm.APIURL='api.php'
 
 #返回json数据
 dm.api  =(m,param,callback) ->
-	console.log m,'api call ',param
+	dm.log.fine m,'api call ',param
 	proc =(e)->
 		xhr = e.target
 		obj = xhr.getResponseJson()
-		console.log m,'api response',obj
+		dm.log.fine m,'api response',obj
 		callback && callback obj  #回调
 	
 
@@ -71,7 +71,7 @@ dm.loadMenu =  ->
 	btn = dm.makeButton('开始').setPosition 0, 200
 	goog.events.listen btn, ['click','touchstart'],
 		->
-			console.log 'game start' 
+			dm.log.fine 'game start' 
 			btns.runAction move
 
 	btns.appendChild btn
@@ -158,7 +158,7 @@ dm.start = ->
 	dm.log = goog.debug.Logger.getLogger 'dm'
 
 	logdiv = document.getElementById 'log-wrapper'
-	if not logdiv
+	if not logdiv 
 		logdiv = goog.dom.createDom 'div',{style:'
 						 position: absolute;
 						 width: 20%;
@@ -200,8 +200,6 @@ dm.start = ->
 
 	dm.log.fine 'init'
 
-
-	console.log 'in dm.start',el
 	dm.director = new lime.Director el, dm.WIDTH, dm.HEIGHT
 	dm.director.makeMobileWebAppCapable()
 	dm.loadMenu()

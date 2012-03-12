@@ -1,4 +1,5 @@
 goog.provide('jsDump');
+var jsDump_;
 /**
  * jsDump
  * Copyright (c) 2008 Ariel Flesler - aflesler(at)gmail(dot)com | http://flesler.blogspot.com
@@ -37,7 +38,7 @@ goog.provide('jsDump');
 	
 	var reName = /^function (\w+)/;
 	
-	jsDump = {
+	jsDump_ = {
 		MAXDEPTH:5,
 		parse:function( obj, type ){//type is used mostly internally, you can fix a (custom)type in advance
 			var	parser = this.parsers[ type || this.typeOf(obj) ];
@@ -172,3 +173,4 @@ goog.provide('jsDump');
 	};
 
 })();
+jsDump = jsDump_;

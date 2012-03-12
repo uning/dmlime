@@ -1,6 +1,8 @@
 goog.provide('dm.Log');
 goog.require('jsDump');
 goog.require('Delegator');
+
+console = console || {log:function(){}};
 /*
 <div class="controls">
 <button onclick="dm.Log.clear()">Clear</button>
@@ -16,54 +18,62 @@ goog.require('Delegator');
  dm.Log.debug.bind('myll')(data);
  dm.Log.debug.bind('myll')("nnallldlldf");
 */
-dm.Log = {
+var LOG = {
   levels: ['error', 'info', 'debug','fine'],
   root: null,
   count: 0,
 
   impl: function(level) {
     return function() {
-      dm.Log.write(level, Array.prototype.slice.apply(arguments));
+		console.log('in log',arguments);
+        LOG.write(level, Array.prototype.slice.apply(arguments));
     };
   },
 
   write: function(level, args) {
-    var
+	if(! LOG.root)
+		return;
+    if (level > LOG.level) {
+        return;
+    }
+	var name = LOG.levels[level],
       hd = args.shift(),
-      bd = dm.Log.dumpArray(args);
+      bd = LOG.dumpArray(args);
 
-    dm.Log.writeHTML(level, hd, bd);
+	var f = console[name];
+	if(typeof f === typeof setTimeout ){
+		f(name,hd,args);
+	}else
+		console.log(name,hd,args);
+
+
+    LOG.writeHTML(level, hd, bd);
   },
 
   dumpArray: function(args) {
     var bd = '';
-
     for (var i=0, l=args.length; i<l; i++) {
       if (bd) {
         bd += '<hr>';
       }
       bd += jsDump.parse(args[i]);
     }
-
     return bd;
   },
 
   writeHTML: function(level, hd, bd) {
-    if (level > dm.Log.level) {
-     // return;
-    }
 
     var entry = document.createElement('div');
-    entry.className = 'log-entry log-' + dm.Log.levels[level];
-    entry.innerHTML = dm.Log.genBare(hd, bd);
-    dm.Log.root.insertBefore(entry, dm.Log.root.firstChild);
+    entry.className = 'log-entry log-' + LOG.levels[level];
+    entry.innerHTML = LOG.genBare(hd, bd);
+    LOG.root.insertBefore(entry, LOG.root.firstChild);
   },
 
   genBare: function(hd, bd) {
     return (
       '<div class="hd">' +
         '<span class="toggle">&#9658;</span> ' +
-        '<span class="count">' + (++dm.Log.count) + '</span> ' +
+        '<span class="count">' + (++LOG.count) + '</span> ' +
         hd +
       '</div>' +
       (bd ? '<div class="bd" style="display: none;">' + bd + '</div>' : '')
@@ -71,17 +81,17 @@ dm.Log = {
   },
 
   genHTML: function(hd, bd) {
-    return '<div class="log-entry">' + dm.Log.genBare(hd, bd) + '</div>';
+    return '<div class="log-entry">' + LOG.genBare(hd, bd) + '</div>';
   },
 
   clear: function() {
-    dm.Log.root.innerHTML = '';
-    dm.Log.count = 0;
+    LOG.root.innerHTML = '';
+    LOG.count = 0;
   },
 
   getLevel: function(name) {
-    for (var i=0, l=dm.Log.levels.length; i<l; i++) {
-      if (name == dm.Log.levels[i]) {
+    for (var i=0, l=LOG.levels.length; i<l; i++) {
+      if (name == LOG.levels[i]) {
         return i;
       }
     }
@@ -90,16 +100,17 @@ dm.Log = {
 
   init: function(root, levelName) {
     jsDump.HTML = true;
-    dm.Log.level = dm.Log.getLevel(levelName);
-    dm.Log.root = root;
+    LOG.level = LOG.getLevel(levelName);
+    LOG.root = root || null;
     root.style.height = (
       (window.innerHeight || document.documentElement.clientHeight)
       + 'px'
     );
-    for (var i=0, l=dm.Log.levels.length; i<l; i++) {
-      var name = dm.Log.levels[i];
-      dm.Log[name] = dm.Log.impl(i);
-      dm.Log[name].bind = function(title) {
+    for (var i=0, l=LOG.levels.length; i<l; i++) {
+      var name = LOG.levels[i];
+	  console.log('in LOG.init',i,name);
+      LOG[name] = LOG.impl(i);
+      LOG[name].bind = function(title) {
         var self = this;
         return function() {
           var args = Array.prototype.slice.apply(arguments);
@@ -125,3 +136,4 @@ dm.Log = {
     });
   }
 };
+dm.Log = LOG

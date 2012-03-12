@@ -1,6 +1,11 @@
 goog.provide('dm.Monster');
 goog.require('dm.conf.MS');
 
+/**
+ * @constructor
+ * @extends 
+ * @param {string} txt Text shown on the button.
+ */
 dm.Monster = function(turn, p, game, mon_id){
 	this.game = game;
 	this.conf = dm.conf.MS;
@@ -97,7 +102,7 @@ dm.Monster.prototype.genImg = function(){
 
 	disp.att = this.game.genDigtalImg(this.att);
 	disp.def = this.game.genDigtalImg(this.def);
-	disp.hp = this.game.genDigtalImg(this.hp);
+	disp.hp = this.game.genDigtalImg(1234567809);
 
 	var p = this.parentGem;
 	for(var i in disp){
