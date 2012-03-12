@@ -15,6 +15,7 @@ class App extends PL_Application{
 		$this['mods'] = array(
 			'api'=> ROOT.'/ApiServer.php'
 			,'page'=> ROOT.'/views/PageServer.php'
+			,'weibo'=> ROOT.'/views/PageServer.php'
 		);
 
 

@@ -168,15 +168,19 @@ dm.Game.prototype.changeAnim = function(str){
  */
 dm.Game.prototype.createPanel = function(){
 	//背景层
-	this.panel = new lime.Layer();
+	//this.panel = new lime.Layer();
 
 	var i, slot, tailer, show_board, backGround; //slot 技能槽
 	var gold_bar, blood_bar, skill_exp_bar, exp_bar;
+	var menu , stat;
 	var blood_mask;
+
+	var url = 'dmdata/dmimg/';
+	var ext = '.png';
 
 	//背景图片
 	this.backGround = new lime.Sprite().setSize(720, 1004).setAnchorPoint(0,0).setFill(dm.IconManager.getImg('dmdata/dmimg/background.png'));//,0 , 0, 1));
-	this.panel.appendChild(this.backGround);
+	this.appendChild(this.backGround);
 	//
 	var game = this;
 
@@ -186,14 +190,14 @@ dm.Game.prototype.createPanel = function(){
 		this.skillslot[i] = slot;
 		this.backGround.appendChild(slot);
 		goog.events.listen(this.skillslot[i], ['mousedown', 'touchstart'], function() {
-			var game = this.getParent().getParent().getParent();
+			var game = this.getParent().getParent();
 			if(this.sk) //slot对应的skill存在
 				game.skillShow(this);
 		});
 	}
 	//
 	blood_bar  = new lime.Sprite().setSize(76, 130).setAnchorPoint(0,0).setPosition(548, 838);
-	blood_bar.setFill(dm.IconManager.getImg("dmdata/dmimg/blood_inside.png"));
+	blood_bar.setFill(dm.IconManager.getImg(url + 'blood_inside' + ext));//"dmdata/dmimg/blood_inside.png"));
 
     blood_mask = new lime.Sprite().setSize(76, 80).setFill(100, 0, 0, .1).setAnchorPoint(0, 1).setPosition(0,130);
 
@@ -207,34 +211,40 @@ dm.Game.prototype.createPanel = function(){
 
 	tailer = dm.Display.boardtailer;//尾部
 	//顶部技能槽
-	show_board = new lime.Sprite().setSize(690, 140).setAnchorPoint(0,0).setPosition(tailer.location.x, tailer.location.y).
-		setFill(dm.IconManager.getFileIcon('assets/tiles.png', tailer.img.x, tailer.img.y, 690/320, 140/76, 1));
+	//show_board = new lime.Sprite().setSize(690, 140).setAnchorPoint(0,0).setPosition(tailer.location.x, tailer.location.y).
+		//setFill(dm.IconManager.getFileIcon('assets/tiles.png', tailer.img.x, tailer.img.y, 690/320, 140/76, 1));
 
 	//this.backGround.appendChild(show_board);
 
-	var icon = dm.IconManager.getFileIcon('assets/menus.png', 248, 0, 110/53, 110/53, 1);
+	//var icon = dm.IconManager.getFileIcon('assets/menus.png', 248, 0, 110/53, 110/53, 1);
 	//
 
 
 	//menu
-	icon = dm.IconManager.getFileIcon('assets/tiles.png', 342, 336, 148/72, 50/26, 1);
-	var menu = new lime.Sprite().setSize(152, 50).setAnchorPoint(0, 0).setPosition(60 + 4*120, 0).setFill(icon);
-    menu.domClassName = goog.getCssName('lime-button');
+	//icon = dm.IconManager.getFileIcon('', 342, 336, 148/72, 50/26, 1);
+	menu = new lime.Sprite().setSize(104, 40).setAnchorPoint(0, 0).setPosition(580, 60).setFill(dm.IconManager.getImg(url+'menu'+ext));
+	menu.func = this.mainShow;
+    //menu.domClassName = goog.getCssName('lime-button');
 	//this.backGround.appendChild(menu);
-	goog.events.listen(menu, ['mousedown', 'touchstart'], function() {
+	goog.events.listen(menu, ['mousedown', 'touchstart'], this.pressHandler_);
+	/*goog.events.listen(menu, ['mousedown', 'touchstart'], function() {
 		this.getParent().getParent().mainShow();
-    });
+    });*/
 
 
 	//stat
-	icon = dm.IconManager.getFileIcon('assets/tiles.png', 268, 336, 148/72, 50/26, 1);
-	var stat = new lime.Sprite().setSize(152, 50).setAnchorPoint(0, 0).setPosition(60 + 4*120, 60).setFill(icon);
-    stat.domClassName = goog.getCssName('lime-button');
+	//icon = dm.IconManager.getFileIcon('assets/tiles.png', 268, 336, 148/72, 50/26, 1);
+	stat = new lime.Sprite().setSize(104, 40).setAnchorPoint(0, 0).setPosition(580, 125).setFill(dm.IconManager.getImg(url+'start'+ext));
+    //stat.domClassName = goog.getCssName('lime-button');
 	//this.backGround.appendChild(stat);
     goog.events.listen(stat, ['mousedown', 'touchstart'], function() {
 		this.getParent().getParent().statShow();
     });
-	this.appendChild(this.panel);
+
+
+	this.backGround.appendChild(menu);
+	this.backGround.appendChild(stat);
+	//this.appendChild(this.panel);
 
 
 
@@ -301,7 +311,7 @@ dm.Game.prototype.initData = function(size, user){
 	this.data.gold  = 0;
 	this.data.skillexp = 0;
     this.data.points = 0;
-	this.panel;
+	//this.panel;
 	this.skillslot = [];
 	//记录游戏buff
 	this.data.buff = {};
@@ -354,6 +364,24 @@ dm.Game.prototype.initData = function(size, user){
 
 }
 
+dm.Game.prototype.pressHandler_ = function(e){
+	e.target.func(game);
+}
+
+dm.Game.prototype.unlistenAll = function(){
+	goog.events.unlisten(this.board, ['mousedown','touchstart'], this.board.pressHandler_);
+	goog.events.unlisten(this, ['mousedown','touchstart'], this.statShow);
+	goog.events.unlisten(this, ['mousedown','touchstart'], this.mainShow);
+	goog.events.unlisten(this, ['mousedown','touchstart'], this.skillShow);
+}
+
+dm.Game.prototype.listenAll = function(){
+	goog.events.listen(this.board, ['mousedown','touchstart'], this.board.pressHandler_);
+	goog.events.listen(this, ['mousedown','touchstart'], this.mainShow);
+	goog.events.listen(this, ['mousedown','touchstart'], this.statShow);
+	goog.events.listen(this, ['mousedown','touchstart'], this.skillShow);
+}
+
 /*
  * 点击人物状态的图标，可以显示人物相关信息：武器装备，人物二级属性
  */
@@ -363,6 +391,12 @@ dm.Game.prototype.statShow = function(){
 	var spname,spval,fpname,fpval,loc=0; 
 	pos = this.board.getPosition();
 	goog.events.unlisten(this.board, ['mousedown','touchstart'], this.board.pressHandler_);
+	/*
+	goog.events.unlisten(this, ['mousedown','touchstart'], this.statShow);
+	goog.events.unlisten(this, ['mousedown','touchstart'], this.mainShow);
+	goog.events.unlisten(this, ['mousedown','touchstart'], this.skillShow);
+	*/
+	//this.unlistenAll();
     dialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(590, 590).setPosition(pos.x+50, pos.y+50).setAnchorPoint(0, 0).setRadius(20);
 	this.appendChild(dialog);
 	var frame = new lime.RoundedRect().setAnchorPoint(0,0).setFill(0,0,0,0.7).setPosition(10, 340).setSize(210, 240).setRadius(20);
@@ -427,6 +461,7 @@ dm.Game.prototype.statShow = function(){
     goog.events.listen(btn, ['mousedown', 'touchstart'], function() {
 		var game = this.getParent().getParent();
 		game.removeChild(this.getParent());
+		//game.listenAll();
 		goog.events.listen(game.board, ['mousedown','touchstart'], game.board.pressHandler_);
     });
 }
@@ -435,7 +470,7 @@ dm.Game.prototype.statShow = function(){
 /*
  * 点击menu按钮，实现弹出主菜单功能，有重新开始等功能
  */
-dm.Game.prototype.mainShow = function(){
+dm.Game.prototype.mainShow = function(game){
 		var board = this.board;
 		goog.events.unlisten(board, ['mousedown', 'touchstart'], board.pressHandler_);
 		var dialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(500, 480).setPosition(120, 260).setAnchorPoint(0, 0).setRadius(20);
@@ -774,3 +809,10 @@ dm.Game.prototype.genDigtalImg = function(num){
 	//t['bg'] = digt.setFill(255, 255, 255, .5);
 	return digt;
 }
+
+
+/*
+dm.Game.prototype.pressHandler = function(){
+	function skillUse
+}
+*/

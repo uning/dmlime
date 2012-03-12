@@ -18,7 +18,7 @@ dm.Skill.prototype.use = function(id){
 	}else{
 		this.game.data.skillCD[id] = 3
 		this.game.data.buff[id] = parseInt(this.sk_conf['sk'+id]['turn']); //持续时间
-		if(parseInt(this.sk_conf['sk'+id]['delay']) == 0){ //立即施展技能
+		if(parseInt(this.sk_conf['sk'+id]['delay']) != 2){ //立即施展技能
 			this.action(id);
 		}
 	}
@@ -62,7 +62,7 @@ dm.Skill.prototype.action = function(id, param){ //各个技能的作用效果
 		break;
 		case '7':{//防御力提升100%,属于额外护甲，受到伤害减少，或者持续3轮
 			this.game.updateData('enhenceDef', 100);
-			if(this.game.buff[7] == 3){//只在第一次加额外防御，额外防御承受攻击而减少，3回合后清零
+			if(this.game.data.buff[7] == 3){//只在第一次加额外防御，额外防御承受攻击而减少，3回合后清零
 				this.game.updateData('def_extra', this.game.data.enhenceDef/100 * this.game.user.data.fp.a3);
 			}
 		}
@@ -115,7 +115,7 @@ dm.Skill.prototype.action = function(id, param){ //各个技能的作用效果
 }
 
 dm.Skill.prototype.actionEnd = function(id, param){ //技能作用完毕的清理工作
-	var buff = this.game.buff;
+	var buff = this.game.data.buff;
 	switch(id){
 		case '4':{
 			this.game.updateData('attack_ratio', 0);

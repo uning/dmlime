@@ -22,7 +22,7 @@ goog.provide('dm.conf.FP');
     },
     "a3": {
         "id": "a3",
-        "def": "0",
+        "def": "1",
         "inc": "0",
         "min": "0",
         "max": "-1",

@@ -234,11 +234,13 @@ dm.Board.prototype.checkSolutions = function() {
 
 	this.unStone();
 	//人物技能
+	/*
 	for(i in buff){
 		if(buff[i] && dm.conf.SK['sk'+i]['delay'] == 1){ //回合中产生作用
 			sk_action.action(i);
 		}
 	}
+	*/
 
 	for(i=0;i<s.length;i++){
 		s[i].keep = false;
@@ -247,7 +249,7 @@ dm.Board.prototype.checkSolutions = function() {
 		}
 	}
 	
-	var indexes = 1;
+	//var indexes = 1;
 	//* 分类处理
 	if(s[0].type == 'sword' || s[0].type == 'monster'){
 		var weapon_dmg = 0;
@@ -514,6 +516,11 @@ dm.Board.prototype.checkSolutions = function() {
 	
 	return true;
 };
+
+
+
+
+
 
 /**
  * 计算选中序列
