@@ -11,6 +11,9 @@ goog.require('lime.animation.Loop');
  * @extends lime.Scene
  */
 dm.Game = function(size,user){
+
+	dm.log.fine('for ad',size,user)
+
     lime.Scene.call(this);
 	//初始化数据
 	this.initData(size, user);
@@ -25,12 +28,17 @@ dm.Game = function(size,user){
     lime.scheduleManager.scheduleWithDelay(this.changeData, this, 500);
      // show lime logo
     dm.builtWithLime(this);
-	//goog.events.listen(this, ['mousedown', 'touchstart'], this.pressHandler_, false, this);
+	goog.events.listen(this, ['mousedown', 'touchstart'], this.pressHandler_, false, this);
 	//
 	//加数值动画label
 	//this.notify = new lime.Label().setText('loading').setFontSize(80).setFontColor('#000').setPosition(dm.WIDTH/2, dm.HEIGHT/2).setOpacity(1);
 	//this.appendChild(this.notify);
 
+   /* lime.scheduleManager.scheduleWithDelay(function(){
+		var rotate = new lime.animation.RotateBy(-150);
+		this.disp.weapon_bg.runAction(rotate);
+		}, this, 200);
+		*/
 };
 goog.inherits(dm.Game, lime.Scene);
 
@@ -42,9 +50,8 @@ dm.Game.prototype.createPanel = function(){
 	//背景层
 	//this.panel = new lime.Layer();
 
-	var i, j, slot, tailer, show_board, backGround; //slot 技能槽
+	var i, j, slot, tailer, show_board; //slot 技能槽
 	var gold_bar, blood_bar, skill_exp_bar, exp_bar;
-	var menu , stat;
 	var blood_mask;
 
 	var url = 'dmdata/dmimg/';
@@ -56,22 +63,30 @@ dm.Game.prototype.createPanel = function(){
 	//
 
 	//player
-	this.disp.player = new lime.Sprite().setSize(75, 160).setAnchorPoint(0,0).setFill(dm.IconManager.getImg(url+'boy'+ext)).setPosition(70, 30);
+	this.disp.player = new lime.Sprite().setSize(75, 160).setFill(dm.IconManager.getImg(url+'boy'+ext)).setPosition(105, 110);
 	this.backGround.appendChild(this.disp.player);
 	//
 	//conterpart
-	this.disp.enemy = new lime.Sprite().setSize(75, 160).setAnchorPoint(0,0).setFill(dm.IconManager.getImg(url+'girl'+ext)).setPosition(450, 30);
-	this.backGround.appendChild(this.disp.enemy);
+	this.disp.enemy = new lime.Sprite().setSize(108, 160).setFill(dm.IconManager.getImg(url+'boss'+ext)).setPosition(630, 110);
+	this.backGround.appendChild(this.disp.enemy);//.setScale(-1, 1));
 
 	//box
 	this.disp.box = new lime.Sprite().setSize(90, 80).setAnchorPoint(0,0).setFill(dm.IconManager.getImg(url+'box'+ext)).setPosition(325, 65);
 	this.backGround.appendChild(this.disp.box);
 
+	//weapon
+	//this.disp.weapon_bg = new lime.Sprite().setSize(100, 100).setPosition(190, 150).setFill(dm.IconManager.getImg(url+'light'+ext));
+	//this.backGround.appendChild(this.disp.weapon_bg);
+	
+	//shield
+	//this.disp.shield_bg = new lime.Sprite().setSize(100, 100).setPosition(273, 150).setFill(dm.IconManager.getImg(url+'light'+ext));
+	//this.backGround.appendChild(this.disp.shield_bg);
+
 	//4个技能槽
 	for( i=0; i<2; i++){
 		for(j=0; j<2; j++){
 			slot = new lime.Sprite().setSize(60, 60).setAnchorPoint(0,0).setPosition(60 + i*74 , 840 + j*74 ).setFill(0, 0, 0, 0.7);
-			this.skillslot[i] = slot;
+			this.skillslot[i+j*2] = slot;
 			this.backGround.appendChild(slot);
 			goog.events.listen(this.skillslot[i], ['mousedown', 'touchstart'], this.pressHandler_, false, this);
 			slot.func = this.skillShow;
@@ -79,7 +94,7 @@ dm.Game.prototype.createPanel = function(){
 	}
 	//
 	blood_bar  = new lime.Sprite().setSize(76, 130).setAnchorPoint(0,0).setPosition(567, 841);
-	blood_bar.setFill(dm.IconManager.getImg(url + 'blood_inside' + ext));//"dmdata/dmimg/blood_inside.png"));
+	blood_bar.setFill(dm.IconManager.getImg(url + 'blood_inside' + ext));
 
     blood_mask = new lime.Sprite().setSize(76, 80).setFill(100, 0, 0, .1).setAnchorPoint(0, 1).setPosition(0,130);
 
@@ -87,21 +102,21 @@ dm.Game.prototype.createPanel = function(){
 	blood_bar.appendChild(blood_mask);
 
 	this.backGround.appendChild(blood_bar);
-	tailer = dm.Display.boardtailer;//尾部
 
 	//menu
-	menu = new lime.Sprite().setSize(104, 40).setAnchorPoint(0, 0).setPosition(580, 60).setFill(dm.IconManager.getImg(url+'menu'+ext));
-	menu.func = this.mainShow;
-	goog.events.listen(menu, ['mousedown', 'touchstart'], this.pressHandler_, false, this);
-
+	/*
+	this.disp.menu = new lime.Sprite().setSize(104, 40).setAnchorPoint(0, 0).setPosition(580, 60).setFill(dm.IconManager.getImg(url+'menu'+ext));
+	this.disp.menu.func = this.mainShow;
+	*/
 
 	//stat
-	stat = new lime.Sprite().setSize(104, 40).setAnchorPoint(0, 0).setPosition(580, 125).setFill(dm.IconManager.getImg(url+'start'+ext));
-	stat.func = this.statShow;
-    goog.events.listen(stat, ['mousedown', 'touchstart'], this.pressHandler_, false, this);
+	/*
+	this.disp.stat = new lime.Sprite().setSize(104, 40).setAnchorPoint(0, 0).setPosition(580, 125).setFill(dm.IconManager.getImg(url+'start'+ext));
+	this.disp.stat.func = this.statShow;
 
-	this.backGround.appendChild(menu);
-	this.backGround.appendChild(stat);
+	this.backGround.appendChild(this.disp.menu);
+	this.backGround.appendChild(this.disp.stat);
+	*/
 
 }
 
@@ -112,6 +127,7 @@ dm.Game.prototype.createBoard = function(){
     this.board = new dm.Board(this.size, this.size, this).setPosition(64, 202);
     if(dm.isBrokenChrome()) this.board.setRenderer(lime.Renderer.CANVAS);
     this.backGround.appendChild(this.board);
+	this.board.createSkillDialog();
 }
 
 
@@ -224,7 +240,18 @@ dm.Game.prototype.initData = function(size, user){
  *
  */
 dm.Game.prototype.pressHandler_ = function(e){
-	e.target.func(this);
+	var clickArea = {
+		menu:{w:104, h:40, x:580, y:60},
+		stat:{w:104, h:40, x:580, y:125}
+	}
+	var pos = e.position;
+	var i;
+	for(i in clickArea){
+		if(pos.x > clickArea[i].x && pos.x < clickArea[i].x + clickArea[i].w && pos.y > clickArea[i].y && pos.y < clickArea[i].y+clickArea[i].h){
+			//this.disp[i].func(this);
+		}
+	}
+	
 }
 
 
@@ -237,7 +264,7 @@ dm.Game.prototype.statShow = function(game){
 	var spname,spval,fpname,fpval,loc=0; 
 	pos = game.board.getPosition();
 	goog.events.unlisten(game.board, ['mousedown','touchstart'], game.board.pressHandler_);
-	//goog.events.unlisten(game, ['mousedown','touchstart'], game.pressHandler_, false, game);
+	goog.events.unlisten(game, ['mousedown','touchstart'], game.pressHandler_, false, game);
     dialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(590, 590).setPosition(pos.x+50, pos.y+50).setAnchorPoint(0, 0).setRadius(20);
 	game.appendChild(dialog);
 	var frame = new lime.RoundedRect().setAnchorPoint(0,0).setFill(0,0,0,0.7).setPosition(10, 340).setSize(210, 240).setRadius(20);

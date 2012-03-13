@@ -163,9 +163,9 @@ dm.User.prototype.upgrade=function(eqp, type){ //type = 0:主属性,type = 1:附
 	if(!type){//升级主属性
 		switch(id){
 			case 0:
-				case 1:
-				case 2:
-				case 3:
+			case 1:
+			case 2:
+			case 3:
 				this.data.equips[id] = dm.conf.EP[id+'_'+lvl] || {};
 			break;
 			default:{
@@ -173,7 +173,7 @@ dm.User.prototype.upgrade=function(eqp, type){ //type = 0:主属性,type = 1:附
 				this.data.equips[4] = dm.conf.EP['4_'+lvl] || {};
 				this.game.data.hp += parseInt(this.data.equips[4].fp.a6 - dm.conf.EP['4_'+(lvl-1)].fp.a6);
 				this.game.data.mana += parseInt(this.data.equips[4].fp.a5 - dm.conf.EP['4_'+(lvl-1)].fp.a5);
-				break;
+			break;
 			}
 		}
 		this.data.equips[id].icon = icon;
@@ -193,12 +193,14 @@ dm.User.prototype.genAttr = function(eqp, num){
 	//var sp = dm.conf.SP;
 
 	switch(type){
-		case 1:
+		case 1:{
 			conf = this.data.attr_arm;
-		break;
-		case 2:
+			break;
+		}
+		case 2:{
 			conf = this.data.attr_def;
-		break;
+			break;
+		}
 	}
 
 	num = Math.ceil(Math.random()*num) || 1;
@@ -231,14 +233,16 @@ dm.User.prototype.addatt=function(eqpid){
 	eqp = this.data.equips[eqpid];
 	for(i in add_att){
 		switch(i.charAt(0)){
-			case 'a':
+			case 'a':{
 				eqp['fp'][i] = add_att[i];
 				eqp['func'][i] = add_att[i];
 				break;
-			case 'b':
+			}
+			case 'b':{
 				eqp['sp'][i] = add_att[i];
 				eqp['func'][i] = add_att[i];
 				break;
+			}
 		}
 	}
 

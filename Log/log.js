@@ -2,7 +2,7 @@ goog.provide('dm.Log');
 goog.require('jsDump');
 goog.require('Delegator');
 
-console = console || {log:function(){}};
+var console = window['console'] || {log:function(){}};
 /*
 <div class="controls">
 <button onclick="dm.Log.clear()">Clear</button>
@@ -25,28 +25,26 @@ var LOG = {
 
   impl: function(level) {
     return function() {
-		console.log('in log',arguments);
+		//console.log('in log',arguments);
         LOG.write(level, Array.prototype.slice.apply(arguments));
     };
   },
 
   write: function(level, args) {
-	if(! LOG.root)
-		return;
     if (level > LOG.level) {
         return;
     }
 	var name = LOG.levels[level],
       hd = args.shift(),
-      bd = LOG.dumpArray(args);
-
-	var f = console[name];
+      bd = LOG.dumpArray(args),
+	  f = console[name];
 	if(typeof f === typeof setTimeout ){
-		f(name,hd,args);
+		f.call(console,name,args);
 	}else
-		console.log(name,hd,args);
+		console.log(name,args);
 
-
+	if(!LOG.root)
+		return;
     LOG.writeHTML(level, hd, bd);
   },
 
@@ -56,6 +54,7 @@ var LOG = {
       if (bd) {
         bd += '<hr>';
       }
+	  console.log(jsDump);
       bd += jsDump.parse(args[i]);
     }
     return bd;
@@ -101,14 +100,10 @@ var LOG = {
   init: function(root, levelName) {
     jsDump.HTML = true;
     LOG.level = LOG.getLevel(levelName);
-    LOG.root = root || null;
-    root.style.height = (
-      (window.innerHeight || document.documentElement.clientHeight)
-      + 'px'
-    );
+	//*
     for (var i=0, l=LOG.levels.length; i<l; i++) {
       var name = LOG.levels[i];
-	  console.log('in LOG.init',i,name);
+	  //console.log('in LOG.init',i,name);
       LOG[name] = LOG.impl(i);
       LOG[name].bind = function(title) {
         var self = this;
@@ -119,21 +114,35 @@ var LOG = {
         };
       };
     }
-
-    Delegator.listen('.log-entry .toggle', 'click', function() {
-      try {
-        var style = this.parentNode.nextSibling.style;
-        if (style.display == 'none') {
-          style.display = 'block';
-          this.innerHTML = '&#9660;';
-        } else {
-          style.display = 'none';
-          this.innerHTML = '&#9658;';
-        }
-      } catch(e) {
-        // ignore, the body is probably missing
-      }
-    });
+    //*/
+  //levels: ['error', 'info', 'debug','fine'],
+  LOG.error=LOG['error']
+  LOG.info=LOG['info']
+  LOG.debug=LOG['debug']
+  LOG.fine=LOG['fine']
+	
+  LOG.root = root || null
+  if(root){
+	  root.style.height = (
+		  (window.innerHeight || document.documentElement.clientHeight)
+		  + 'px'
+	  );
+	  Delegator.listen('.log-entry .toggle', 'click', function() {
+		  try {
+			  var style = this.parentNode.nextSibling.style;
+			  if (style.display == 'none') {
+				  style.display = 'block';
+				  this.innerHTML = '&#9660;';
+			  } else {
+				  style.display = 'none';
+				  this.innerHTML = '&#9658;';
+			  }
+		  } catch(e) {
+			  // ignore, the body is probably missing
+		  }
+	  });
   }
+  }
+
 };
 dm.Log = LOG

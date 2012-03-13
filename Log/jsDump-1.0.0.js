@@ -1,5 +1,4 @@
 goog.provide('jsDump');
-var jsDump_;
 /**
  * jsDump
  * Copyright (c) 2008 Ariel Flesler - aflesler(at)gmail(dot)com | http://flesler.blogspot.com
@@ -38,7 +37,7 @@ var jsDump_;
 	
 	var reName = /^function (\w+)/;
 	
-	jsDump_ = {
+	window['jsDump'] = {
 		MAXDEPTH:5,
 		parse:function( obj, type ){//type is used mostly internally, you can fix a (custom)type in advance
 			var	parser = this.parsers[ type || this.typeOf(obj) ];
@@ -101,12 +100,12 @@ var jsDump_;
 		_depth_: 1,
 		// This is the list of parsers, to modify them, use jsDump.setParser
 		parsers:{
-			window: '[Window]',
-			document: '[Document]',
-			error:'[ERROR]', //when no parser is found, shouldn't happen
-			unknown: '[Unknown]',
+			'window': '[Window]',
+			'document': '[Document]',
+			'error':'[ERROR]', //when no parser is found, shouldn't happen
+			'unknown': '[Unknown]',
 			'null':'null',
-			undefined:'undefined',
+			'undefined':'undefined',
 			'function':function( fn ){
 				var ret = 'function',
 					name = 'name' in fn ? fn.name : (reName.exec(fn)||[])[1];//functions never have name in IE
@@ -117,10 +116,10 @@ var jsDump_;
 				ret = [ ret, this.parse( fn, 'functionArgs' ), '){'].join('');
 				return join( ret, this.parse(fn,'functionCode'), '}' );
 			},
-			array: array,
-			nodelist: array,
-			arguments: array,
-			object:function( map ){
+			'array': array,
+			'nodelist': array,
+			'arguments': array,
+			'object':function( map ){
 				var ret = [ ];
 				this.up();
 				if(this._depth_  < jsDump.MAXDEPTH){
@@ -130,7 +129,7 @@ var jsDump_;
 				this.down();
 				return join( '{', ret, '}' );
 			},
-			node:function( node ){
+			'node':function( node ){
 				var open = this.HTML ? '&lt;' : '<',
 					close = this.HTML ? '&gt;' : '>';
 					
@@ -144,7 +143,7 @@ var jsDump_;
 				}
 				return ret + close + open + '/' + tag + close;
 			},
-			functionArgs:function( fn ){//function calls it internally, it's the arguments part of the function
+			'functionArgs':function( fn ){//function calls it internally, it's the arguments part of the function
 				var l = fn.length;
 				if( !l ) return '';				
 				
@@ -153,13 +152,13 @@ var jsDump_;
 					args[l] = String.fromCharCode(97+l);//97 is 'a'
 				return ' ' + args.join(', ') + ' ';
 			},
-			key:quote, //object calls it internally, the key part of an item in a map
-			functionCode:'[code]', //function calls it internally, it's the content of the function
-			attribute:quote, //onode calls it internally, it's an html attribute value
-			string:quote,
-			date:quote,
-			regexp:literal, //regex
-			number:literal,
+			'key':quote, //object calls it internally, the key part of an item in a map
+			'functionCode':'[code]', //function calls it internally, it's the content of the function
+			'attribute':quote, //onode calls it internally, it's an html attribute value
+			'string':quote,
+			'date':quote,
+			'regexp':literal, //regex
+			'number':literal,
 			'boolean':literal
 		},
 		DOMAttrs:{//attributes to dump from nodes, name=>realName
@@ -173,4 +172,4 @@ var jsDump_;
 	};
 
 })();
-jsDump = jsDump_;
+jsDump=window['jsDump'];

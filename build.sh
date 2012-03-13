@@ -14,4 +14,5 @@
 
 #bin/lime.py build helloworld -o helloworld/compiled/hw_adv.js -a -p helloworld.start
 cd ../
-bin/lime.py  build dm -o dm/compiled/dm.js -a -p dm.start
+# remove -a 
+bin/lime.py  build dm -o dm/compiled/dm.js  -p dm.start

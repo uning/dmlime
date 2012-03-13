@@ -165,9 +165,8 @@ dm.start = function() {
   var el, logdiv;
   el = document.getElementById('gamearea');
   el || (el = document.body);
-  dm.log = goog.debug.Logger.getLogger('dm');
   logdiv = document.getElementById('log-wrapper');
-  if (!logdiv) {
+  if (!logdiv && goog.DEBUG) {
     logdiv = goog.dom.createDom('div', {
       style: '\
 						 position: absolute;\
@@ -192,14 +191,19 @@ dm.start = function() {
   		(e) ->
   			dm.log.info elementType + ' ' + e.type + '.'
   */
-  dm.Log.init(document.getElementById('log-div', 'fine'));
+  if (goog.DEBUG) {
+    dm.Log.init(document.getElementById('log-div'), 'fine');
+  } else {
+    dm.Log.init(null, 'fine');
+  }
   dm.log = dm.Log;
-  console.log(dm.log);
-  dm.log.debug('debug');
-  dm.log.fine('init');
-  console.log('after fine init');
   dm.director = new lime.Director(el, dm.WIDTH, dm.HEIGHT);
   dm.director.makeMobileWebAppCapable();
+  dm.log.debug('width' + ' ' + el.clientWidth + ' ' + 'height' + ' ' + el.clientHeight + ' ' + 'offsetX' + ' ' + el.offsetLeft + ' ' + 'offsetY' + ' ' + el.offsetTop);
+  goog.events.listen(goog.global, ['orientationchange', goog.events.EventType.RESIZE], function(e) {
+    dm.log.debug('goog.global@orientationchange|RESIZE', e);
+    return dm.log.debug('width' + ' ' + el.clientWidth + ' ' + 'height' + ' ' + el.clientHeight + ' ' + 'offsetX' + ' ' + el.offsetLeft + ' ' + 'offsetY' + ' ' + el.offsetTop);
+  });
   return dm.loadMenu();
 };
 

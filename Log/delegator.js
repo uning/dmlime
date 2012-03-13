@@ -20,7 +20,6 @@ Delegator = {
   /**
    * Map's event types to subscribers lists.
    *
-   * @access private
    */
   subscribers: {},
 
@@ -36,7 +35,6 @@ Delegator = {
    * This should work with click, mousedown, mouseup, mousemove,
    * mouseover, mouseout, keydown, keypress, keyup, blur, focus.
    *
-   * @access public
    * @param selector  {String}   CSS selector
    * @param type      {String}   the event type
    * @param handler   {Function} the event handler
@@ -69,7 +67,6 @@ Delegator = {
   /**
    * Generate a handler for a given event type.
    *
-   * @access private
    * @param type {String} the event type
    * @returns {Function}
    */
@@ -82,7 +79,6 @@ Delegator = {
   /**
    * Dispatch a given event.
    *
-   * @access private
    * @param type  {String} the event type
    * @param event {Event}  the event object
    */
@@ -155,13 +151,11 @@ Delegator = {
   /**
    * Cache regexp's used to match classes.
    *
-   * @access private
    */
   regexpCache: {},
   /**
    * Checks if all the expected classes are in the given class string.
    *
-   * @access private
    * @param givenString  {String} the className value from a node
    * @param expectedList {Array}  the expected list of classes
    * @returns {Boolean} true if all expected classes are present
@@ -185,7 +179,6 @@ Delegator = {
    * And returns:
    *   { tagName: 'span', id: 'myId', className: ['myClass', 'myOtherClass'] }
    *
-   * @access private
    * @param s {String} a CSS selector
    * @returns {Object} described above
    */
@@ -236,14 +229,12 @@ Delegator = {
   /**
    * A load time test to determine if capture groups work as expected.
    *
-   * @access private
    */
   _compliantCG: /()??/.exec("")[1] === undefined,
   /**
    * Split a CSS selector into its parts. This function exists because
    * RegExp splits do not work the same in all browsers.
    *
-   * @access private
    * @param selector {String} the CSS selector
    * @returns {Array} the components of the selector
    */

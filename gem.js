@@ -14,13 +14,6 @@ dm.Gem = function() {
     // grphical body obejct
     this.domClassName = goog.getCssName('lime-button');
 
-	/*
-    this.label = new lime.Label().setFontSize(15);
-    this.label.domClassName = goog.getCssName('lime-button');
-	
-    this.appendChild(this.label);
-	*/
-
     this.circle = new lime.Sprite();
     this.appendChild(this.circle);
 	
@@ -60,17 +53,6 @@ dm.Gem.prototype.canConnect = function(g) {
 	return (Math.abs(g.r - this.r) < 2 && Math.abs(g.c - this.c) < 2 )
 	&& (g.type == this.type || (g.type == 'monster' && this.type == 'sword') || (g.type == 'sword' && this.type == 'monster'))
 		//宝石怪如果进入倒计时状态，不可以和剑或者怪物连接，只能跟金币连接才可以杀死
-		/*
-		 (g.type == 'monster' && (g.monster.id != 15 || (g.monster.id == 15 && g.monster.revive_timeout == -1)) && this.type == 'sword') ||
-
-		 (this.type == 'monster' && (this.monster.id != 15 || (this.monster.id == 15 && this.monster.revive_timeout == -1)) 
-		  && this.monster.id != 15 && g.type == 'sword') ||
-		 //
-		 //宝石怪物，死亡后需要和金币一起消除才能消灭
-		 (this.monster.id == 15 && this.monster.killed == true && g.type == 'gold') ||
-		 (this.type == 'gold' && g.type == 'monster' && g.monster.killed == true)
-	   ) 
-	   */
 	&& g.canSelect
 }
 
@@ -92,7 +74,6 @@ dm.Gem.random = function(w, h, index) {
 		gem.index = index;
 		gem.type = dm.GEMTYPES[index];
 	}
-	//gem.label.setText(gem.type);
 	gem.setSize(w,h);
 
     //gem.circle.setFill('assets/ball_' + id + '.png');
@@ -102,23 +83,7 @@ dm.Gem.random = function(w, h, index) {
 };
 
 dm.Gem.prototype.fillImage = function(w,h){
-	/*
-	var x =   Math.floor(Math.random() * this.ICONS.xmax),size = this.ICONS['size']
-	 x = 0;
-
-	 x  *=  (this.ICONS.xgap + size) 
-	 y = (this.ICONS.ygap + size)* this.ICONS[this.type].y   
-	 */
-	 var x,y,scale,size
-	 //x = this.ICONS[this.type].x
-	 //y = this.ICONS[this.type].y
-	 size = this.ICONS['size']
-
-	 //scale = w/(size+2) ;
-	 //console.log(size,x,y,scale)
-	 //this.setFill(dm.IconManager.getFileIcon('assets/tiles.png',x,y,scale));
 	 this.setFill(dm.IconManager.getImg('dmdata/dmimg/'+ this.ICONS[this.type]));//scale));
-	
 }
 
 /**
@@ -138,10 +103,12 @@ dm.Gem.prototype.select = function() {
 dm.Gem.prototype.deselect = function() {
     if (!this.selected_) return;
     this.removeChild(this.highlight);
+	if(this.type == "monster"){
+		this.monster.unsetKilled();
+	}
     this.selected_ = false;
 	
 };
-
 
 dm.Gem.prototype.setSpecial = function(str) {
 	this.special.setText(str).setOpacity(1);
@@ -151,17 +118,3 @@ dm.Gem.prototype.unsetSpecial = function() {
 	this.special.setOpacity(0);
 }
 
-
-/**
- * @inheritDoc
- */
-dm.Gem.prototype.update = function() {
-
-    // make circle size relative form bubble size
-    // todo: replace with AutoResize mask
-	/*
-    var size = this.getSize();
-    this.circle.setSize(size.width * .75, size.height * .75);
-	//*/
-    lime.Node.prototype.update.call(this);
-};

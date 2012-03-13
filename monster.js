@@ -87,6 +87,7 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	this.hplabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#f00').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.hp);
 	this.deflabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#00f').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.def);
 
+	this.killed = new lime.Sprite().setSize(this.parentGem.getSize()).setFill(new dm.IconManager.getImg("dmdata/dmimg/killed.png"));
 }
 
 /**
@@ -102,7 +103,7 @@ dm.Monster.prototype.genImg = function(){
 
 	disp.att = this.game.genDigtalImg(this.att);
 	disp.def = this.game.genDigtalImg(this.def);
-	disp.hp = this.game.genDigtalImg(1234567809);
+	disp.hp = this.game.genDigtalImg(this.hp);
 
 	var p = this.parentGem;
 	for(var i in disp){
@@ -114,7 +115,7 @@ dm.Monster.prototype.genImg = function(){
 }
 
 /**
- *
+ *改变怪物显示的数值
  */
 dm.Monster.prototype.changeDisplay = function(type){
 	var disp = this.disp;
@@ -123,6 +124,24 @@ dm.Monster.prototype.changeDisplay = function(type){
 	disp[type] = this.game.genDigtalImg(this[type]);
 	parent.appendChild(disp[type]);
 	
+}
+
+/**
+ * 怪物被杀死的图标
+ */
+dm.Monster.prototype.setKilled = function(){
+	if(this.parentGem.getChildIndex(this.killed) == -1){ 
+		this.parentGem.appendChild(this.killed);
+	}
+}
+
+/**
+ *
+ */
+dm.Monster.prototype.unsetKilled = function(){
+	if(this.parentGem.getChildIndex(this.killed) != -1){
+		this.parentGem.removeChild(this.killed);
+	}
 }
 
 /**

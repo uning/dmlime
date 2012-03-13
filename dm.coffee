@@ -155,10 +155,9 @@ dm.start = ->
 	# Set up a logger to track responses
 	el = document.getElementById 'gamearea'
 	el or= document.body
-	dm.log = goog.debug.Logger.getLogger 'dm'
 
 	logdiv = document.getElementById 'log-wrapper'
-	if not logdiv 
+	if not logdiv and goog.DEBUG
 		logdiv = goog.dom.createDom 'div',{style:'
 						 position: absolute;
 						 width: 20%;
@@ -194,14 +193,24 @@ dm.start = ->
 		(e) ->
 			dm.log.info elementType + ' ' + e.type + '.'
 	###
-	dm.Log.init document.getElementById('log-div','fine')
+	if goog.DEBUG
+	   dm.Log.init document.getElementById('log-div'),'fine'
+	else
+	   dm.Log.init null,'fine'
 	dm.log = dm.Log
 
 
-	dm.log.fine 'init'
 
 	dm.director = new lime.Director el, dm.WIDTH, dm.HEIGHT
 	dm.director.makeMobileWebAppCapable()
+
+  #	dm.log.debug 'width',el.clientWidth,'height',el.clientHeight,'offsetX',el.offsetLeft,'offsetY',el.offsetTop
+	dm.log.debug 'width'+' ' + el.clientWidth+' ' + 'height'+' ' + el.clientHeight+' ' + 'offsetX'+' ' + el.offsetLeft+' ' + 'offsetY'+' ' + el.offsetTop
+	goog.events.listen( goog.global , ['orientationchange', goog.events.EventType.RESIZE]
+		,(e)->
+		  dm.log.debug 'goog.global@orientationchange|RESIZE',e
+		  dm.log.debug 'width'+' '+el.clientWidth+' '+'height'+' '+ el.clientHeight+' '+'offsetX'+' ' + el.offsetLeft+' ' + 'offsetY'+' ' + el.offsetTop
+	)
 	dm.loadMenu()
 
 

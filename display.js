@@ -101,11 +101,23 @@ dm.Display = {
 	},
 
 
-	//下面的面板
-	boardtailer:{
-		size:{width:700,height:170},
-		location:{x:24,y:830},
-		img:{x:0,y:437}
+	gameboard:{
+		sk1:{w:60, h:60, x:60, y:840}, 
+		sk2:{w:60, h:60, x:134, y:(840+74)}, 
+		sk3:{w:60, h:60, x:60, y:840}, 
+		sk4:{w:60, h:60, x:134, y:(840+74)}, 
+
+		blood_bar:{w:76, h:130, x:567, y:841},
+
+		player:{w:75, h:160, x:70, y:30},
+		enemy:{w:75, h:160, x:450, y:30},
+
+		box:{w:90, h:90, x:325, y:65},
+
+		menu:{w:104, h:40, x:580, y:60},
+
+		stat:{w:104, h:40, x:580, y:125}
+
 	}
 }
 

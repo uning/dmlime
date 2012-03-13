@@ -1,5 +1,4 @@
 goog.provide('dm.Board');
-
 goog.require('goog.events');
 goog.require('lime.Sprite');
 goog.require('lime.Polygon');
@@ -14,8 +13,6 @@ goog.require('dm.Log');
 goog.require('dm.Skill');
 goog.require('dm.Monster');
 
-
-
 /**
  * Board object. Manages the square area with bubbles.
  * @param {number} rows Number of rows on board.
@@ -26,22 +23,16 @@ goog.require('dm.Monster');
  */
 dm.Board = function(rows,cols,game) {
     lime.Sprite.call(this);
-	//this.setRenderer(lime.Renderer.CANVAS);
-
+	this.setRenderer(lime.Renderer.CANVAS);
     this.game = game ;
-
     /**
      * @const
      * @type {number}
      */
-	
-    //this.SIZE = dm.Display.framework.board;
 	this.SIZE = 600;
-
     this.rows = rows;
     this.cols = cols;
     this.gems = new Array(cols);
-	//
 	//每一轮的各种宝石的数组
 	this.type_arr = new Array(5);
 	this.type_arr['hp']=[];
@@ -52,71 +43,38 @@ dm.Board = function(rows,cols,game) {
 	//
 	this.selectedGems = [];
 	this.drawedLines = [];
-
 	//用于显示的数值
-	
 	this.fp = this.game.user.data.fp;
 	this.show_att = this.fp.a1;
 	this.show_dmg = 0;
-	
 	//
     this.setSize(this.SIZE, this.SIZE).setAnchorPoint(0, 0);
-
     // mask out edges so bubbles flowing in won't be over game controls.
     this.maskSprite = new lime.Sprite().setSize(this.SIZE, this.SIZE).setFill(100, 0, 0, .1).setAnchorPoint(0, 0);
-
-	//this.backGround = new lime.Sprite().setSize(this.SIZE, this.SIZE).setFill(255,255,255).setAnchorPoint(0,0);//背景
-	//this.appendChild(this.backGround);
     this.appendChild(this.maskSprite);
     this.setMask(this.maskSprite);
-
-	
-
     // space that one bubble takes
     this.GAP = Math.round(this.SIZE / cols);
-
     // we will keep every column in own layer so they can be animated together
     this.layers = [];
     for (var i = 0; i < cols; i++) {
         this.layers[i] = new lime.Layer();
         this.appendChild(this.layers[i]);
     }
-
 	//划线
 	this.lineLayer = new lime.Layer();
 	this.appendChild(this.lineLayer);
-
     // load in first bubbles
     this.fillGems();
-
     // register listener
     goog.events.listen(this, ['mousedown', 'touchstart','gesturestart'], this.pressHandler_);
-	/*
 	var EVENTS = goog.object.getValues(this.EventType);
 	dm.log.fine('Listening for: ' + EVENTS.join(', ') + '.');
-	*/
-
 	//register event debugger
-
     // start moving (but give some time to load) //自动触发move 操作
     lime.scheduleManager.callAfter(this.moveGems, this, 100);
-
-
-	//tool function sense neighbor
-	
-	
-
-
 };
 goog.inherits(dm.Board, lime.Sprite);
-
-dm.Board.prototype.startGame = function(){
-	this.moveGems();
-	var mon_arr = this.findMonster();
-	for(var i in mon_arr){
-		mon_arr[i].monster.startSkill();
-	}
-}
 
 /**
  * Fill the board so that all columns have max amount
@@ -133,11 +91,9 @@ dm.Board.prototype.fillGems = function(type) {
 			if(gem.type == 'monster'){
 				gem.monster = new dm.Monster(this.game.data.turn, gem, this.game);
 			}
-			//gem.genAttribute(this.game.data.turn);
             gem.r = r;
             gem.c = c;
             gem.setPosition((c + .5) * this.GAP, (-i + .5) * this.GAP);
-            //gem.setSize(this.GAP, this.GAP);
             this.gems[c].push(gem);
             this.layers[c].appendChild(gem);
         }
@@ -148,7 +104,7 @@ dm.Board.prototype.fillGems = function(type) {
 		this.game.mon.setText(this.show_dmg);
 		this.game.att.setText(this.show_att);
 	}
-	this.findGems();
+	this.findGemsType();
 };
 
 /**
@@ -202,14 +158,11 @@ dm.Board.prototype.randExtra = function(basev,randratio,baseadd,ratio) {
 	}
 	return 0;
 }
-
-
  
 /**
  * 计算分数
  */
 dm.Board.prototype.checkSolutions = function() {
-	
 	this.isMoving_ = 1;
 	this.genType = -1;
 	
@@ -218,130 +171,138 @@ dm.Board.prototype.checkSolutions = function() {
         new lime.animation.FadeTo(0).setDuration(.1)
     ).enableOptimizations();
 
-    var s = this.selectedGems,g,type,i,leech,attack_real,dtom
-	,fp = this.game.user.data.fp
-	,sp = this.game.user.data.sp
-	,data = this.game.data
-	,buff = data["buff"]
-	,sk_action = new dm.Skill(this.game)
-	,keep
-	,attack = fp.a1 + this.game.data.attack_addtion 
-	,defense = fp.a3
-	,p_type = []
-	,fireDmg = 0
-	,monThornDmg = 0 //怪物反弹伤害
-	,ispoping = this.game.ispoping;
+    var s = this.selectedGems;	
+	this.checkStart();
+	this.playerAction(s);
+	this.monsterAttack();
+	this.checkEnd(s);
 	
-	//初始化
+	this.isMoving_ = 0;
+	
+	return true;
+};
 
-	this.unStone();
-	//人物技能
-	/*
-	for(i in buff){
-		if(buff[i] && dm.conf.SK['sk'+i]['delay'] == 1){ //回合中产生作用
-			sk_action.action(i);
+/**
+ * 玩家进行攻击
+ */
+dm.Board.prototype.playerAttack = function(s){
+	var data = this.game.data;
+	var userdata = this.game.user.data;
+	var fp = userdata.fp;
+	var sp = userdata.sp;
+	var attack = fp.a1 + data.attack_addtion;
+	var i, g;
+	var weapon_dmg = 0;
+	var reflectionDmg = 0;
+	for(i = 0; i < s.length; i++){
+		if(s[i].type == 'sword' && !s[i].isBroken){
+			weapon_dmg += fp.a2*(100 + data['attack_ratio']*i)/100; //每个武器伤害递增
 		}
 	}
-	*/
-
-	for(i=0;i<s.length;i++){
-		s[i].keep = false;
-		if(s[i].isOnFire == true){
-			fireDmg += data['fireDmg'];
-		}
-	}
-	
-	//var indexes = 1;
-	//* 分类处理
-	if(s[0].type == 'sword' || s[0].type == 'monster'){
-		var weapon_dmg = 0;
-		for(i = 0; i < s.length; i++){
-			if(s[i].type == 'sword' && !s[i].isBroken){
-				weapon_dmg += fp.a2*(100 + data['attack_ratio']*i)/100; //每个武器伤害递增
+	attack += weapon_dmg;
+	attack *= data['dmgRatio'];
+	attack = Math.round(attack);
+	for(i = 0; i < s.length; i++){
+		g = s[i];
+		type = g.type;
+		if(type == 'monster' && (data['canDamageMon'] || g.monster.id == 16)){//可以对怪物造成伤害
+			var mon_def_real = Math.round(g.monster.def*(100-fp.a31)/100); //实际防御值 = 防御数值 - 忽略掉的防御值
+			if(Math.random()*100 < fp.a37){//双倍伤害
+				attack_real = attack * 2;
+			}else{
+				attack_real = attack;
 			}
-		}
-		attack += weapon_dmg;
-		attack *= data['dmgRatio'];
-		attack = Math.round(attack);
-
-		for(i = 0; i < s.length; i++){
-			g = s[i];
-			type = g.type;
-			if(type == 'monster' && (data['canDamageMon'] || g.monster.id == 16)){//可以对怪物造成伤害
-				var mon_def_real = Math.round(g.monster.def*(100-fp.a31)/100); //实际防御值 = 防御数值 - 忽略掉的防御值
-				if(Math.random()*100 < fp.a37){//双倍伤害
-					attack_real = attack * 2;
-				}else{
-					attack_real = attack;
+			if(data['isWeaken'] == true){//玩家虚弱，伤害减半
+				attack_real = Math.round(attack_real*0.5);
+			}
+			if(attack_real >= g.monster.hp + mon_def_real){
+				if(g.monster.id == 18){//反弹伤害的怪物
+					reflectionDmg += g.monster.hp;
 				}
-				//
-				if(data['isWeaken'] == true){//玩家虚弱，伤害减半
-					attack_real = Math.round(attack_real*0.5);
-				}
-				//
-				if(attack_real >= g.monster.hp + mon_def_real){
-					if(g.monster.id == 18){//反弹伤害的怪物
-						monThornDmg = g.monster.hp;
-					}
-
-					leech = g.monster.hp*fp.a36/100; //生命偷取
-					console.log('leech: '+leech);
-
-					if(g.monster.id != 15){ //不是宝石骷髅
-						g.monster.hp = 0;
-						g.keep = false;
-						g.monster.onDeath(true);
-						this.game.updateData('exp', this.randExtra(fp.a17,fp.a18,fp.a19,fp.a20), 'add');
-					}else{
-						g.monster.canAttack = false; //不会攻击
-						g.monster.revive_timeout = 1; //开始复活倒计时
-						g.type = 'gold';
-						g.keep = true;
-					}
-					//
+				leech = g.monster.hp*fp.a36/100; //生命偷取
+				if(g.monster.id != 15){ //不是宝石骷髅
+					g.monster.hp = 0;
+					g.keep = false;
+					g.monster.onDeath(true);
+					this.game.updateData('exp', this.randExtra(fp.a17,fp.a18,fp.a19,fp.a20), 'add');
 				}else{
-					if(attack_real > mon_def_real){
-						g.monster.hp = g.monster.hp + mon_def_real - attack_real;
-						if(g.monster.id == 18){//反弹伤害的怪物
-							monThornDmg = attack_real - mon_def_real;
-						}
-
-						//
-						leech = attack_real*fp.a36/100;
-						console.log('leech: '+leech);
-					}
+					g.monster.canAttack = false; //不会攻击
+					g.monster.revive_timeout = 1; //开始复活倒计时
+					g.type = 'gold';
 					g.keep = true;
-					if(Math.random()*100 < fp.a32){//毒伤害,todo: 加入持续时间
-					//test poison
-					//if(Math.random()*100 < 90){//毒伤害,todo: 加入持续时间
-                        g.setSpecial('poison');
-
-						g.monster.poison = Math.round(attack_real*10/100) || 1;//fp.a33/100);
-						//
-						//g.monster.poison = 1;
-						//
-						console.log('poison : '+g.monster.poison);
-
-						//g.monster.poison_start = true;
-					}
-					//test stone
-					if(Math.random()*100 < fp.a35){ //fp.a35){//石化
-					//if(Math.random()*100 < 80){ //fp.a35){//石化
-						console.log('freeze ');
-						g.setSpecial('freeze');
-
-						g.monster.stone = true;
-					}
-					p_type = 0;
 				}
-				g.monster.changeDisplay('hp');
-			}else if(g.type == 'monster'){
-				g.setSpecial('noDmg');
+			}else{
+				if(attack_real > mon_def_real){
+					g.monster.hp = g.monster.hp + mon_def_real - attack_real;
+					if(g.monster.id == 18){//反弹伤害的怪物
+						reflectionDmg += attack_real - mon_def_real;
+					}
+					leech = attack_real*fp.a36/100;
+				}
 				g.keep = true;
+				if(Math.random()*100 < fp.a32){//毒伤害,todo: 加入持续时间
+					g.setSpecial('poison');
+					g.monster.poison = Math.round(attack_real*10/100) || 1;//fp.a33/100);
+				}
+				if(Math.random()*100 < fp.a35){ //fp.a35){//石化
+					g.setSpecial('freeze');
+					g.monster.stone = true;
+				}
 			}
+			g.monster.changeDisplay('hp');
+		}else if(g.type == 'monster'){
+			g.setSpecial('noDmg');
+			g.keep = true;
 		}
 	}
 
+	if(!data['noDmg']){
+		this.game.updateData('hp', -reflectionDmg, 'add');//反弹的伤害
+	}
+}
+
+/**
+ * 怪物开始攻击
+ */
+dm.Board.prototype.monsterAttack = function(){
+	var data = this.game.data;
+	var fp = this.game.user.data.fp;
+	var sp = this.game.user.data.sp
+	var total_dmg = this.getDamage();
+	//闪避？
+	if(Math.random()*100 > (fp.a38 + data['extAvoid'])){
+		if(!data['noDmg']){ 
+		//伤害减少
+			var def_extra = data['def_extra'];
+			//怪物减少玩家防御
+			var def_reduce = data['def_reduce'];
+
+			total_dmg = Math.ceil(total_dmg*(100-fp.a29)/100);//被动属性减少伤害
+			this.game.updateData('hp', -Math.max(0, total_dmg - def_extra), 'add');
+			this.game.updateData('def_extra', Math.max(0, def_extra - total_dmg));
+
+			total_dmg = Math.max(0, total_dmg - def_extra);
+			//记录玩家最终所承受的伤害
+			data['finalDmg'] = total_dmg;
+			//
+
+			var dtom = Math.round(total_dmg*fp.a28/100);//实际伤害转到魔法的增加
+			this.game.updateData('mana', Math.min(fp.a5, data['mana']+dtom));
+		}else{
+			alert('不受伤害');//
+		}
+	}else{
+		alert('闪避');
+	}
+}
+
+/**
+ * 收获其他类型的宝石
+ */
+dm.Board.prototype.gainGems = function(s){
+	var data = this.game.data;
+	var fp = this.game.user.data.fp;
+	var sp = this.game.user.data.sp
 	if(s[0].type == 'gold'){// || s[0].monster.id == 15){
 		var gold = 0;
 		for(i in s){
@@ -368,6 +329,8 @@ dm.Board.prototype.checkSolutions = function() {
 					hp -= fp.a9;
 				}else{
 					hp += fp.a9;//*(doublegain?2:1);
+					//吃到血瓶则解毒
+					this.game.updateData('poison', 0);
 				}
 			}
 		}
@@ -375,9 +338,6 @@ dm.Board.prototype.checkSolutions = function() {
 			hp += this.randExtra(fp.a9,fp.a10,fp.a11,fp.a12)
 		}
 		this.game.updateData('hp', hp, 'add');
-		//
-		//吃到血瓶则解毒
-		this.game.updateData('poison', 0);
 	}
 	
 	if(s[0].type == 'mana'){
@@ -392,72 +352,58 @@ dm.Board.prototype.checkSolutions = function() {
 		}
 		this.game.updateData('mana', mana, 'add');
 	}
-	//回合结束其他动作
-	this.Poison(s); //其他怪物的毒伤害等
+ }
 
-	this.game.setScore(s.length * (s.length - 2));
 
-	var total_dmg = this.getDamage();
-	//闪避？
-	if(Math.random()*100 > (fp.a38 + data['extAvoid'])){
-		if(!data['noDmg']){ 
-		//伤害减少
-			var def_extra = data['def_extra'];
-			//
-			//怪物减少玩家防御
-			var def_reduce = data['def_reduce'];
 
-			total_dmg = Math.ceil(total_dmg*(100-fp.a29)/100);//被动属性减少伤害
-			this.game.updateData('hp', -Math.max(0, total_dmg - def_extra), 'add');
-			this.game.updateData('def_extra', Math.max(0, def_extra - total_dmg));
+/**
+ *checkSolutions开始阶段的动作
+ */
+dm.Board.prototype.checkStart = function(){
+	this.unStoneMonsters(); //上一轮被石化的怪物恢复
+}
 
-			total_dmg = Math.max(0, total_dmg - def_extra);
-			//
-			//记录玩家最终所承受的伤害
-			data['finalDmg'] = total_dmg;
-			//
-
-			dtom = Math.round(total_dmg*fp.a28/100);//实际伤害转到魔法的增加
-			this.game.updateData('mana', Math.min(fp.a5, data['mana']+dtom));
-		}else{
-			alert('不受伤害');//
-		}
+/**
+ *玩家回合开始
+ */
+dm.Board.prototype.playerAction = function(s){
+	var fireDmg = 0;
+	var data = this.game.data;
+	if(s[0].type == 'sword' || s[0].type == 'monster'){
+		this.playerAttack(s);
 	}else{
-		alert('闪避');
+		this.gainGems(s);
+	};
+	//火焰伤害
+	for(i=0;i<s.length;i++){
+		s[i].keep = false;
+		if(s[i].isOnFire == true){
+			fireDmg += parseInt(data['fireDmg']);
+		}
 	}
-
 	if(!data['noDmg']){
 		this.game.updateData('hp', -fireDmg, 'add');//火焰伤害
-		this.game.updateData('hp', -monThornDmg, 'add');//反弹的伤害
 	}
+}
 
-	if(data['hp'] <= 0){
-		if(data.revive == 1){
-			this.game.updateData('hp', fp.a6);
-			this.game.updateData('mana', fp.a5);
-			console.log('revive');
-			
-		}else{
-			this.game.endGame();
-		}
-	}
-	
-	//
+/**
+ *玩家回合完成，怪物回合开始
+ */
+dm.Board.prototype.checkEnd = function(s){
+	var i;
+	var data = this.game.data;
+	var buff = data['buff'];
+	var sk_action = new dm.Skill(this.game);
+
+	//回合结束其他动作
+	this.poisonMonsters(s); //其他怪物的毒伤害等
+	this.game.setScore(s.length * (s.length - 2));
+
 	//回合末技能生效
 	for(i in buff){
 		if(buff[i] && dm.conf.SK['sk'+i]['delay'] == 2){ //回合末技能生效
 			sk_action.action(i);
 		}
-	}
-	
-
-
-	//生命魔法恢复
-	if(fp.a26 && fp.a26>0){
-		this.game.updateData('hp', fp.a26, 'add');
-	}
-	if(fp.a27 && fp.a27>0){
-		this.game.updateData('mana', fp.a27, 'add');
 	}
 
 	//毒伤害
@@ -465,24 +411,22 @@ dm.Board.prototype.checkSolutions = function() {
 		this.game.updateData('hp', -data['poison'], 'add');
 	}
 
-//	this.unStone();
+	this.recover();
 
-	if(!ispoping){
+	if(data['hp'] <= 0){
+		if(data.revive == 1){
+			this.game.updateData('hp', fp.a6);
+			this.game.updateData('mana', fp.a5);
+		}else{
+			this.game.endGame();
+		}
+	}
+	
+	if(!this.game.ispoping){
 		this.turnEndShow();
 	}
-	this.changeProg(this.game, p_type);
-
+	//this.changeProg(this.game, p_type);
 	this.game.updateData('turn', 1, 'add');
-	//
-	//回合末怪物作用
-	/*
-	mon_arr = this.findMonster();
-	for(i in mon_arr){
-		mon_arr[i].monster.endTurn();
-	}
-	*/
-
-	//
 	//冷却时间减少
 	if(data['canCD']){
 		for(i in data['skillCD']){
@@ -491,11 +435,7 @@ dm.Board.prototype.checkSolutions = function() {
 			}
 		}
 	}
-	//
-	//
-	//data['canCD'] = 1;
-	//怪物回合开始
-	
+
 	this.clearGem();
 	if(!data['disableSkill']){ //怪物可以使用技能
 		var mon_arr = this.findMonster();
@@ -514,35 +454,40 @@ dm.Board.prototype.checkSolutions = function() {
 			}
 		}
 	}
-	this.isMoving_ = 0;
-	
-	return true;
-};
+}
 
-
-
-
-
+/**
+ * 玩家恢复
+ */
+dm.Board.prototype.recover = function(){
+	var fp = this.game.user.data.fp;
+	//生命魔法恢复
+	if(fp.a26 && fp.a26>0){
+		this.game.updateData('hp', fp.a26, 'add');
+	}
+	if(fp.a27 && fp.a27>0){
+		this.game.updateData('mana', fp.a27, 'add');
+	}
+}
 
 /**
  * 计算选中序列
  */
  dm.Board.prototype.checkLine = function( line ) {
-	var killed = 0;
-	for(var element in line){
+	var monster, element, reduceDmg=0;
+	for(element in line){
 		if(line[element].type == 'monster'){
-			if(this.show_att *(this.game.data['dmgRatio'] || 1) >= line[element].monster.hp + line[element].monster.def){
+			monster = line[element].monster;
+			if(this.show_att *(this.game.data['dmgRatio'] || 1) >= monster.hp + monster.def){
 				//杀死怪物了
-				line[element].setSpecial('killed!');
-				killed += line[element].monster.att //死亡怪物不再造成伤害，从总显示数值中去掉。
-				this.game.mon.setText(Math.max(0,this.getDamage() - killed));
+				monster.setKilled();
+				reduceDmg += monster.att //死亡怪物不再造成伤害，从总显示数值中去掉。
+				this.game.mon.setText(Math.max(0,this.getDamage() - reduceDmg));
 			}else{
-				line[element].unsetSpecial();
+				monster.unsetKilled();
 			}
 		}
 	}
-	//this.game.att.setText(this.show_att);
-	//
  }
 
 /**
@@ -856,72 +801,10 @@ dm.Board.prototype.getDamage = function(){
 		 break;
 
 		 //
-		 case 'Skill':
-
-			 //-------------------------------------------------
-			 var sn=0, icon, frame, sk_key;
-		 for(i in this.game.user.data.skills){
-			 sn++;
-		 }
-			 if(sn < 4){ //可以随机新技能
-				 sk_key = user.randSel(user.findKey(dm.conf.SK), 2); //随机两个技能，选择学习或者升级
-			 }else if(sn == 4){
-				 sk_key = user.randSel(user.findKey(user.data.skills), 2);
-			 }
-			 frame = new lime.RoundedRect().setSize(500, 300).setPosition(0, 130).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
-			 btn = new dm.Button().setText(text).setSize(200, 50).setPosition(250, 470);
-			 popdialog.appendChild(frame);
-			 popdialog.appendChild(btn);
-
-			 for(i in sk_key){
-				 icon = new lime.Sprite().setSize(100, 100).setPosition(100+ i*200, 20).setAnchorPoint(0,0);
-				 icon.skill = dm.conf.SK[sk_key[i]]; //传递选中技能
-				 icon.button = btn; // 传递选中技能到btn中
-				 icon.frame = frame;
-				 icon.setFill(dm.IconManager.getFileIcon('assets/tiles.png', 510+((parseInt(icon.skill.no)-1)%10)*50, Math.floor((parseInt(icon.skill.no))/10)*50 , 2, 2.1, 1));
-				 popdialog.appendChild(icon);
-				 //
-
-				 goog.events.listen(icon, ['mousedown', 'touchstart'], function() {
-					 //技能相关描述
-					 this.frame.removeAllChildren();
-					 this.button.skill = this.skill;
-
-					 var nm = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 10);
-					 nm.setText(' 技能：'+this.skill['name']);
-					 this.frame.appendChild(nm);
-
-					 var disc = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 40);
-					 disc.setText(' 描述：'+this.skill['tips']);
-					 this.frame.appendChild(disc);
-
-					 var cd = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 70);
-					 cd.setText(' 冷却时间(轮)：'+this.skill['cd']);
-					 this.frame.appendChild(cd);
-
-					 var cost = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 100);
-					 cost.setText(' 魔法消耗：'+this.skill['mana']);
-					 this.frame.appendChild(cost);
-				 });
-			 };
-
-		 //-------------------------------------------------
-			 goog.events.listen(btn, ['mousedown', 'touchstart'], function() {
-				 board = this.getParent().getParent();
-				 game = board.game
-				 if(this.skill){
-					 game.user.skillUp(this.skill);
-					 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
-					 board.removeChild(this.getParent());
-					 game.ispoping = false;
-				 }else{
-					 alert('choose one!');
-				 }
-
-			 });
+		 case 'Skill':{
+			 this.createSkillDialog();
 			 break;
-
-
+		 }
 
 		 case 'Shop':
 			 btn = new dm.Button().setText('升级装备').setSize(200, 50).setPosition(250, 570);
@@ -1102,17 +985,17 @@ dm.Board.prototype.getDamage = function(){
  /**
   * 寻找某个gem
   */
-  dm.Board.prototype.findGems = function(){
-	  var c, r;
-	  for(var i in this.type_arr){
-		  this.type_arr[i] = [];
-	  }
-	  for (c = 0; c < this.cols; c++) {
-		  for (r = 0; r < this.gems[c].length; r++) {
-			  this.type_arr[this.gems[c][r].type].push(this.gems[c][r]);
-		  }
-	  }
-  }
+ dm.Board.prototype.findGemsType = function(){
+	 var c, r;
+	 for(var i in this.type_arr){
+		 this.type_arr[i] = [];
+	 }
+	 for (c = 0; c < this.cols; c++) {
+		 for (r = 0; r < this.gems[c].length; r++) {
+			 this.type_arr[this.gems[c][r].type].push(this.gems[c][r]);
+		 }
+	 }
+ }
 
  /*
   * 找出本轮所有的怪物
@@ -1141,7 +1024,7 @@ dm.Board.prototype.getDamage = function(){
  /*
   * 每回合结束对怪物造成毒伤害
   */
-  dm.Board.prototype.Poison = function(s){
+  dm.Board.prototype.poisonMonsters = function(s){
 	var c, r, g, gem, exist=0;
     for (c = 0; c < this.cols; c++) {
         for (r in this.gems[c]) {
@@ -1150,30 +1033,18 @@ dm.Board.prototype.getDamage = function(){
 				g.monster.hp -= g.monster.poison;
 				if(g.monster.hp <= 0){
 					g.monster.hp = 0;
-					//g.monster.hplabel.setText(0);
 					g.monster.changeDisplay('hp');
-					g.setSpecial('Killed');
+					g.monster.setKilled();
 					g.keep = false;
 					exist = 0;
-					/*
-					for(gem in s){
-						if(s[gem] == g){
-							exist = 1;
-						}
-					}
-					if(exist == 0){
-						s.push(g);
-					}
-					*/
 				}
-				//g.monster.hplabel.setText(g.monster.hp);
 				g.monster.changeDisplay('hp');
 			}   
         }
     }
  }
 
- dm.Board.prototype.unStone = function(){
+ dm.Board.prototype.unStoneMonsters = function(){
 	var c,r,g,gem,exist=0;
     for (c = 0; c < this.cols; c++) {
         for (r in this.gems[c]) {
@@ -1212,60 +1083,54 @@ dm.Board.prototype.getDamage = function(){
  /**
   * 读取存储的gems信息，重新填充board里面的gems
   */
-  dm.Board.prototype.loadGems = function(gems){
-	var c, r, i;
-    for (c = 0; c < this.cols; c++) {
-        for (r = 0; r < this.rows; r++) {
-			this.gems[c][r].getParent().removeChild(this.gems[c][r]);
-		}
-		this.gems[c] = [];
-	}
-    for (c = 0; c < this.cols; c++) {
-        if (!this.gems[c]) this.gems[c] = [];
-        i = 0;
-        for (r = 0; r < this.rows; r++) {
-            i++;
-            var gem  = dm.Gem.random(this.GAP, this.GAP, gems[c][r].index);
-			var old  = gems[c][r];
-			var prop;
-			for(prop in old){
-				if(prop != "monster"){
-					gem[prop] = old[prop];
-				}
-			}
+ dm.Board.prototype.loadGems = function(gems){
+	 var c, r, i;
+	 for (c = 0; c < this.cols; c++) {
+		 for (r = 0; r < this.rows; r++) {
+			 this.gems[c][r].getParent().removeChild(this.gems[c][r]);
+		 }
+		 this.gems[c] = [];
+	 }
+	 for (c = 0; c < this.cols; c++) {
+		 if (!this.gems[c]) this.gems[c] = [];
+		 i = 0;
+		 for (r = 0; r < this.rows; r++) {
+			 i++;
+			 var gem  = dm.Gem.random(this.GAP, this.GAP, gems[c][r].index);
+			 var old  = gems[c][r];
+			 var prop;
+			 for(prop in old){
+				 if(prop != "monster"){
+					 gem[prop] = old[prop];
+				 }
+			 }
 
-			if(gem.type == 'monster'){
-				gem.monster = new dm.Monster(this.game.data.turn, gem, this.game, gems[c][r].monster.id);
-				for(prop in old.monster){
-					gem.monster[prop] = old.monster[prop];
-				}
+			 if(gem.type == 'monster'){
+				 gem.monster = new dm.Monster(this.game.data.turn, gem, this.game, gems[c][r].monster.id);
+				 for(prop in old.monster){
+					 gem.monster[prop] = old.monster[prop];
+				 }
 
-				/*
-				gem.monster.hplabel.setText(gem.monster['hp_left']);
-				gem.monster.deflabel.setText(gem.monster['def_left']);
-				gem.monster.attlabel.setText(gem.monster['attack']);
-				*/
-				gem.monster.changeDisp('hp');
-				gem.monster.changeDisp('def');
-				gem.monster.changeDisp('att');
-			}
-			//gem.genAttribute(this.game.data.turn);
-            gem.r = r;
-            gem.c = c;
-            gem.setPosition((c + .5) * this.GAP, (-i + .5) * this.GAP);
-            //gem.setSize(this.GAP, this.GAP);
-            this.gems[c].push(gem);
-            this.layers[c].appendChild(gem);
-        }
-    }
-	this.show_att = this.fp.a1 + (this.game.data.attack_addtion || 0);
-	this.show_dmg = this.getDamage();
-	if(this.game.show_create == 1){
-		this.game.mon.setText(this.show_dmg);
-		this.game.att.setText(this.show_att);
-	}
-	this.findGems();
-  }
+				 gem.monster.changeDisp('hp');
+				 gem.monster.changeDisp('def');
+				 gem.monster.changeDisp('att');
+			 }
+			 gem.r = r;
+			 gem.c = c;
+			 gem.setPosition((c + .5) * this.GAP, (-i + .5) * this.GAP);
+
+			 this.gems[c].push(gem);
+			 this.layers[c].appendChild(gem);
+		 }
+	 }
+	 this.show_att = this.fp.a1 + (this.game.data.attack_addtion || 0);
+	 this.show_dmg = this.getDamage();
+	 if(this.game.show_create == 1){
+		 this.game.mon.setText(this.show_dmg);
+		 this.game.att.setText(this.show_att);
+	 }
+	 this.findGemsType();
+ }
 
 /**
  * 找到有特殊状态的gems，加载状态
@@ -1285,3 +1150,126 @@ dm.Board.prototype.getDamage = function(){
 		}
 	}
  }
+
+/**
+ * 技能对话框
+ * @param {action} 
+ *     study -- 学习; use -- 使用
+ */
+dm.Board.prototype.createSkillDialog = function(action){
+	var user = this.game.user;
+	action = "study";
+	var dialog = new lime.Sprite().setSize(473, 416).setAnchorPoint(0, 0).
+		setPosition(720/2-473/2, 1004/2-416/2).setFill(dm.IconManager.getImg("dmdata/dmimg/skilldialog.png"));
+	this.game.appendChild(dialog);
+	var btn_cancel = new lime.Sprite().setSize(87, 33).setAnchorPoint(0,0).
+		setPosition(300, 335).setFill(dm.IconManager.getImg("dmdata/dmimg/cancel.png"));
+	dialog.appendChild(btn_cancel);
+	var textarea = new lime.RoundedRect().setSize(390, 150).setPosition(40, 160).setFill(0,0,0,.3).setAnchorPoint(0,0); 
+	dialog.appendChild(textarea);
+	var icon;
+	switch(action){
+		case "study":{
+			var sn=0, frame, sk_key;
+			for(i in this.game.user.data.skills){
+				sn++;
+			}
+			if(sn < 4){ //可以随机新技能
+				sk_key = user.randSel(user.findKey(dm.conf.SK), 2); //随机两个技能，选择学习或者升级
+			}else if(sn == 4){
+				sk_key = user.randSel(user.findKey(user.data.skills), 2);
+			}
+			for(i in sk_key){
+				icon = new lime.Sprite().setSize(90, 85).setAnchorPoint(0,0).
+					setPosition(46 + i*140, 42);
+				icon.skill = dm.conf.SK[sk_key[i]]; //传递选中技能
+
+
+		//		icon.button = btn; // 传递选中技能到btn中
+				icon.textarea = textarea;
+				icon.setFill(dm.IconManager.getImg('dmdata/dmimg/sk/'+sk_key[i]+'.png'));
+				dialog.appendChild(icon);
+				dialog.appendChild(textarea);
+				goog.events.listen(icon, ['mousedown', 'touchstart'], function(){
+					//技能相关描述
+					this.textarea.removeAllChildren();
+					//this.button.skill = this.skill;
+
+					var nm = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 00);
+					nm.setText(' 技能：'+this.skill['name']);
+					this.textarea.appendChild(nm.setSize(textarea.getSize().width, nm.getSize().height));
+
+					var disc = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 30);
+					disc.setText(' 描述：'+this.skill['tips']);
+					this.textarea.appendChild(disc.setSize(textarea.getSize().width, disc.getSize().height));
+
+					var cd = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 60);
+					cd.setText(' 冷却时间(轮)：'+this.skill['cd']);
+					this.textarea.appendChild(cd.setSize(textarea.getSize().width, cd.getSize().height));
+
+					var cost = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 90);
+					cost.setText(' 魔法消耗：'+this.skill['mana']);
+					this.textarea.appendChild(cost.setSize(textarea.getSize().width, cost.getSize().height));
+				});
+			};
+			var btn_study = new lime.Sprite().setSize(87, 33).setAnchorPoint(0,0).setPosition(100,335).
+				setFill(dm.IconManager.getImg("dmdata/dmimg/study.png"));
+			dialog.appendChild(btn_study);
+
+			break;
+		}
+		case "use":{
+
+			break;
+		}
+	}
+	/*
+
+			 //-------------------------------------------------
+			 //frame = new lime.RoundedRect().setSize(500, 300).setPosition(0, 130).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
+			 //btn = new dm.Button().setText(text).setSize(200, 50).setPosition(250, 470);
+			 popdialog.appendChild(frame);
+			 popdialog.appendChild(btn);
+
+				 //
+
+				 goog.events.listen(icon, ['mousedown', 'touchstart'], function() {
+					 //技能相关描述
+					 this.frame.removeAllChildren();
+					 this.button.skill = this.skill;
+
+					 var nm = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 10);
+					 nm.setText(' 技能：'+this.skill['name']);
+					 this.frame.appendChild(nm);
+
+					 var disc = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 40);
+					 disc.setText(' 描述：'+this.skill['tips']);
+					 this.frame.appendChild(disc);
+
+					 var cd = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 70);
+					 cd.setText(' 冷却时间(轮)：'+this.skill['cd']);
+					 this.frame.appendChild(cd);
+
+					 var cost = new lime.Label().setFontColor('#FFF').setFontSize(20).setAnchorPoint(0, 0).setPosition(0, 100);
+					 cost.setText(' 魔法消耗：'+this.skill['mana']);
+					 this.frame.appendChild(cost);
+				 });
+			 };
+
+		 //-------------------------------------------------
+			 goog.events.listen(btn, ['mousedown', 'touchstart'], function() {
+				 board = this.getParent().getParent();
+				 game = board.game
+				 if(this.skill){
+					 game.user.skillUp(this.skill);
+					 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+					 board.removeChild(this.getParent());
+		 			 game.ispoping = false;
+				 }else{
+					 alert('choose one!');
+				 }
+
+			 });
+			 */
+}
+
