@@ -131,10 +131,10 @@ dm.User.prototype.skillUp=function(sk){
 	};
 	if(sn < 4){
 		this.data.skills[sk.id] = sk;
-		var img = dm.IconManager.getFileIcon('assets/tiles.png', 510+((parseInt(sk.no)-1)%10)*50, Math.floor(parseInt(sk.no)/10)*50 , 2, 2.1, 1);
-		this.game.skillslot[sn].setFill(img);
-		this.game.skillslot[sn].no = sk.no;
-		this.game.skillslot[sn].sk = sk;
+		var img = dm.IconManager.getImg("dmdata/dmimg/sk/"+sk.id+".png");
+		this.game.disp.skillslot[sn].setFill(img);
+		this.game.disp.skillslot[sn].no = sk.no;
+		this.game.disp.skillslot[sn].sk = sk;
 	}
 }
 

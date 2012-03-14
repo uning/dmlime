@@ -20,8 +20,8 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	//this.p = p;//gem
 	p = this.parentGem;
 	this.att_max = 1 + Math.floor(turn/40); 
-	this.hp_max = Math.floor(turn/30)+ 4;
-	this.def_max = Math.floor(turn/40)+1;
+	this.hp_max = Math.floor(turn/30)+ 3;
+	this.def_max = Math.floor(turn/40);
 
 	this.aliveturn = 0;
 

@@ -199,39 +199,39 @@ dm.Skill.prototype.reduceHp = function(ratio){
  /**
   * 收集某类图标，产生作用获得其相关的奖励
   */
-   dm.Skill.prototype.gainGem = function(gem){
-	   var fp = this.game.user.data.fp
-	   ,sp = this.game.user.data.sp
-	   ,data = this.game.data
-	   ,p_type
-	   if(gem.isBroken)
-		   return;
-	   switch(gem.type){
-		   case 'sword':{
-			   this.game.updateData('attack_addtion', fp.a2, 'add');
-		   }
-		   break;
-		   case 'monster':{
-			   this.game.updateData('exp', fp.a17, 'add');
-			   //gem.monster.onDeath(true);
-		   }
-		   break;
-		   case 'hp':{
-			   if(!(gem.ispoison == true)){
-				   this.game.updateData('hp', fp.a9, 'add');
-			   }
-		   }
-		   break;
-		   case 'gold':{
-			   this.game.updateData('gold', fp.a13, 'add');
-		   }
-		   break;
-		   case 'mana':{
-			   this.game.updateData('mana', fp.a21, 'add');
-		   }
-		   break;
-	   }
-   }
+  dm.Skill.prototype.gainGem = function(gem){
+	  var fp = this.game.user.data.fp
+	  ,sp = this.game.user.data.sp
+	  ,data = this.game.data
+	  ,p_type
+	  if(gem.isBroken)
+		  return;
+	  switch(gem.type){
+		  case 'sword':{
+			  this.game.updateData('attack_addtion', fp.a2, 'add');
+		  }
+		  break;
+		  case 'monster':{
+			  this.game.updateData('exp', fp.a17, 'add');
+			  //gem.monster.onDeath(true);
+		  }
+		  break;
+		  case 'hp':{
+			  if(!(gem.ispoison == true)){
+				  this.game.updateData('hp', fp.a9, 'add');
+			  }
+		  }
+		  break;
+		  case 'gold':{
+			  this.game.updateData('gold', fp.a13, 'add');
+		  }
+		  break;
+		  case 'mana':{
+			  this.game.updateData('mana', fp.a21, 'add');
+		  }
+		  break;
+	  }
+  }
 
  /**
   * 重新排列所有的图标

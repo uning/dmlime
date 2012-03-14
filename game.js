@@ -50,7 +50,7 @@ dm.Game.prototype.createPanel = function(){
 	//背景层
 	//this.panel = new lime.Layer();
 
-	var i, j, slot, tailer, show_board; //slot 技能槽
+	var i, j, slot
 	var gold_bar, blood_bar, skill_exp_bar, exp_bar;
 	var blood_mask;
 
@@ -58,20 +58,21 @@ dm.Game.prototype.createPanel = function(){
 	var ext = '.png';
 
 	//背景图片
-	this.backGround = new lime.Sprite().setSize(720, 1004).setAnchorPoint(0,0).setFill(dm.IconManager.getImg('dmdata/dmimg/background.png'));//,0 , 0, 1));
+	this.backGround = new lime.Sprite().setSize(720, 1004).setFill(dm.IconManager.getImg('dmdata/dmimg/background.png'));
+	this.backGround.setPosition(720/2, 1004/2);
 	this.appendChild(this.backGround);
 	//
 
 	//player
-	this.disp.player = new lime.Sprite().setSize(75, 160).setFill(dm.IconManager.getImg(url+'boy'+ext)).setPosition(105, 110);
+	this.disp.player = new lime.Sprite().setSize(75, 160).setFill(dm.IconManager.getImg(url+'boy'+ext)).setPosition(-250, -400);
 	this.backGround.appendChild(this.disp.player);
 	//
 	//conterpart
-	this.disp.enemy = new lime.Sprite().setSize(108, 160).setFill(dm.IconManager.getImg(url+'boss'+ext)).setPosition(630, 110);
+	this.disp.enemy = new lime.Sprite().setSize(108, 158).setFill(dm.IconManager.getImg(url+'boss'+ext)).setPosition(250, -400);
 	this.backGround.appendChild(this.disp.enemy);//.setScale(-1, 1));
 
 	//box
-	this.disp.box = new lime.Sprite().setSize(90, 80).setAnchorPoint(0,0).setFill(dm.IconManager.getImg(url+'box'+ext)).setPosition(325, 65);
+	this.disp.box = new lime.Sprite().setSize(90, 80).setFill(dm.IconManager.getImg(url+'box'+ext)).setPosition(10, -393);
 	this.backGround.appendChild(this.disp.box);
 
 	//weapon
@@ -85,21 +86,21 @@ dm.Game.prototype.createPanel = function(){
 	//4个技能槽
 	for( i=0; i<2; i++){
 		for(j=0; j<2; j++){
-			slot = new lime.Sprite().setSize(60, 60).setAnchorPoint(0,0).setPosition(60 + i*74 , 840 + j*74 ).setFill(0, 0, 0, 0.7);
-			this.skillslot[i+j*2] = slot;
+			slot = new lime.Sprite().setSize(60, 60).setPosition(-270 + i*73 , 368 + j*73 ).setFill(0, 0, 0, 0.7);
+			this.disp.skillslot[i+j*2] = slot;
 			this.backGround.appendChild(slot);
-			goog.events.listen(this.skillslot[i], ['mousedown', 'touchstart'], this.pressHandler_, false, this);
-			slot.func = this.skillShow;
+			//goog.events.listen(this.disp.skillslot[i], ['mousedown', 'touchstart'], this.pressHandler_, false, this);
 		}
 	}
 	//
-	blood_bar  = new lime.Sprite().setSize(76, 130).setAnchorPoint(0,0).setPosition(567, 841);
+	blood_bar  = new lime.Sprite().setPosition(245, 404).setSize(76, 130);
 	blood_bar.setFill(dm.IconManager.getImg(url + 'blood_inside' + ext));
 
-    blood_mask = new lime.Sprite().setSize(76, 80).setFill(100, 0, 0, .1).setAnchorPoint(0, 1).setPosition(0,130);
+    blood_mask = new lime.Sprite().setFill(100, 0, 0, .1).setAnchorPoint(0.5, 1).setPosition(0,65).setSize(76, 130);
 
 	blood_bar.setMask(blood_mask);
 	blood_bar.appendChild(blood_mask);
+	this.disp.blood_mask = blood_mask;
 
 	this.backGround.appendChild(blood_bar);
 
@@ -124,10 +125,9 @@ dm.Game.prototype.createPanel = function(){
  * create board
  */
 dm.Game.prototype.createBoard = function(){
-    this.board = new dm.Board(this.size, this.size, this).setPosition(64, 202);
+    this.board = new dm.Board(this.size, this.size, this);
     if(dm.isBrokenChrome()) this.board.setRenderer(lime.Renderer.CANVAS);
     this.backGround.appendChild(this.board);
-	this.board.createSkillDialog();
 }
 
 
@@ -183,7 +183,7 @@ dm.Game.prototype.initData = function(size, user){
 	this.data.skillexp = 0;
     this.data.points = 0;
 	//this.panel;
-	this.skillslot = [];
+	this.disp.skillslot = {};
 	//记录游戏buff
 	this.data.buff = {};
 
@@ -241,17 +241,25 @@ dm.Game.prototype.initData = function(size, user){
  */
 dm.Game.prototype.pressHandler_ = function(e){
 	var clickArea = {
-		menu:{w:104, h:40, x:580, y:60},
-		stat:{w:104, h:40, x:580, y:125}
-	}
+		skArea:{
+			0:{w:60 ,h:60 ,x:-270 ,y:370},
+			1:{w:60 ,h:60 ,x:-195 ,y:370},
+			2:{w:60 ,h:60 ,x:-270 ,y:440},
+			3:{w:60 ,h:60 ,x:-195 ,y:440}
+		}
+	};
 	var pos = e.position;
-	var i;
+	var i,j;
 	for(i in clickArea){
-		if(pos.x > clickArea[i].x && pos.x < clickArea[i].x + clickArea[i].w && pos.y > clickArea[i].y && pos.y < clickArea[i].y+clickArea[i].h){
-			//this.disp[i].func(this);
+		for(j in clickArea[i]){
+			if(pos.x - 360 > clickArea[i][j].x - clickArea[i][j].w/2  &&  pos.x - 360 < clickArea[i][j].x + clickArea[i][j].w/2
+			   && pos.y - 502 > clickArea[i][j].y - clickArea[i][j].h/2 && pos.y - 502 < clickArea[i][j].y + clickArea[i][j].h/2){
+				   if(i == "skArea" && this.disp.skillslot[j].sk){
+					   this.skillUse(this.disp.skillslot[j].sk);
+				   }
+			   }
 		}
 	}
-	
 }
 
 
@@ -386,58 +394,6 @@ dm.Game.prototype.mainShow = function(game){
 
 }
 
-dm.Game.prototype.skillShow = function(game){
-	if(!this.sk){
-		return;
-	}
-	goog.events.unlisten(game.board, ['mousedown', 'touchstart'], game.board.pressHandler_);
-	goog.events.unlisten(game, ['mousedown', 'touchstart'], game.pressHandler_, false, game);
-	var sk = this.sk;
-	var dialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(500, 480).setPosition(120, 260).setAnchorPoint(0, 0).setRadius(20);
-	game.appendChild(dialog);
-
-	var nm = new lime.Label().setFontColor('#FFF').setFontSize(30).setAnchorPoint(0, 0).setPosition(50, 10);
-	nm.setText(' 技能：'+sk['name']);
-	dialog.appendChild(nm);
-
-	var disc = new lime.Label().setFontColor('#FFF').setFontSize(30).setAnchorPoint(0, 0).setPosition(50, 40);
-	disc.setText(' 描述：'+sk['tips']);
-	dialog.appendChild(disc);
-
-	var cd = new lime.Label().setFontColor('#FFF').setFontSize(30).setAnchorPoint(0, 0).setPosition(50, 70);
-	cd.setText(' 冷却时间(轮)：'+sk['cd']);
-	dialog.appendChild(cd);
-
-	var cost = new lime.Label().setFontColor('#FFF').setFontSize(30).setAnchorPoint(0, 0).setPosition(50, 100);
-	cost.setText(' 魔法消耗：'+sk['mana']);
-	dialog.appendChild(cost);
-
-	var btn_ok = new dm.Button('使用技能').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setAnchorPoint(0, 0).setPosition(180,300);
-	//传递技能
-	btn_ok.sk_no = sk.no;
-
-	var btn_cancel = new dm.Button('取消').setSize(dm.Display.btn.com.s.width, dm.Display.btn.com.s.height).setAnchorPoint(0, 0).setPosition(350,300);
-
-	dialog.appendChild(btn_ok);
-	dialog.appendChild(btn_cancel);
-
-	goog.events.listen(btn_ok, ['mousedown', 'touchstart'], function() {
-		var game = this.getParent().getParent();
-		var board = game.board;
-		var action = new dm.Skill(game);
-		action.use(this.sk_no);
-		game.removeChild(this.getParent());
-		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
-		goog.events.listen(game, ['mousedown', 'touchstart'], game.pressHandler_, false, game);
-	});
-	goog.events.listen(btn_cancel, ['mousedown', 'touchstart'], function() {
-		var game = this.getParent().getParent();
-		var board = game.board;
-		game.removeChild(this.getParent());
-		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
-		goog.events.listen(game, ['mousedown', 'touchstart'], game.pressHandler_, false, game);
-	});
-}
 
 
 /**
@@ -459,7 +415,7 @@ dm.Game.prototype.skillShow = function(game){
 		 case 'exp':{
 			 while(data['exp'] >= 5){
 				 data['exp'] -= 5;
-				 this.pop.lvl++;
+				 //this.pop.lvl++;
 			 }
 			 break;
 		 }
@@ -476,7 +432,7 @@ dm.Game.prototype.skillShow = function(game){
 			while(data['gold'] >= 3){
 				data['gold'] -= 3;
 
-				this.pop.shop += 1;
+				//this.pop.shop += 1;
 			}
 			break;
 		}
@@ -601,9 +557,9 @@ dm.Game.prototype.skillShow = function(game){
 	 for(i in this.user.data.skills){
 		 var sk = this.user.data.skills[i];
 		 var img = dm.IconManager.getFileIcon('assets/tiles.png', 510+((parseInt(sk.no) - 1)%10)*50, Math.floor(parseInt(sk.no)/10)*50 , 2, 2.1, 1);
-		 this.skillslot[slot].setFill(img);
-		 this.skillslot[slot].no = sk.no;
-		 this.skillslot[slot].sk = sk;
+		 this.disp.skillslot[slot].setFill(img);
+		 this.disp.skillslot[slot].no = sk.no;
+		 this.disp.skillslot[slot].sk = sk;
 		 slot++;
 	 }
  }
@@ -812,3 +768,130 @@ dm.Game.prototype.endGame = function() {
         dm.loadMenu();
     });
 };
+
+/**
+ * 技能对话框
+ * @param {action} 
+ *     study -- 学习; use -- 使用
+ *        {sk}
+ */
+//dm.Game.prototype.createSkillDialog = function(action){
+dm.Game.prototype.skillStudy = function(){
+	var user = this.user;
+
+	var dialog = new lime.Sprite().setSize(473, 416).setPosition(720/2, 1004/2);
+	this.appendChild(dialog);
+
+	var textarea = new lime.RoundedRect().setSize(390, 150).setPosition(0, 35).setFill(0,0,0,.3);
+	dialog.appendChild(textarea);
+	dialog.setFill(dm.IconManager.getImg("dmdata/dmimg/skilldialog.png"));
+
+	var icon;
+	var btn_study = new lime.Sprite().setSize(87, 33).setPosition(0, 150);
+	btn_study.setFill(dm.IconManager.getImg("dmdata/dmimg/study.png"));
+	dialog.appendChild(btn_study);
+	var sn=0, sk_key;
+
+	for(i in this.user.data.skills){
+		sn++;
+	}
+	if(sn < 4){ //可以随机新技能
+		sk_key = user.randSel(user.findKey(dm.conf.SK), 2); //随机两个技能，选择学习或者升级
+	}else if(sn == 4){
+		sk_key = user.randSel(user.findKey(user.data.skills), 2);
+	}
+
+	for(i in sk_key){
+		icon = new lime.Sprite().setSize(90, 85).setPosition(-145 + i*140, -125);
+		icon.skill = dm.conf.SK[sk_key[i]]; //传递选中技能
+		icon.button = btn_study; // 传递选中技能到btn中
+		icon.textarea = textarea;
+		icon.setFill(dm.IconManager.getImg('dmdata/dmimg/sk/'+sk_key[i]+'.png'));
+		dialog.appendChild(icon);
+		dialog.appendChild(textarea);
+		goog.events.listen(icon, ['mousedown', 'touchstart'], this.iconShow);
+	}
+
+	goog.events.listen(btn_study, ['mousedown', 'touchstart'], function(){
+		game = this.getParent().getParent();
+		board = game.board;
+		goog.events.unlisten(board, ['mousedown', 'touchstart'], board.pressHandler_);
+		if(this.skill){
+			game.user.skillUp(this.skill);
+			goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+		//	goog.events.listen(game, ['mousedown', 'touchstart'], game.pressHandler_);
+			game.removeChild(this.getParent());
+			game.ispoping = false;
+		}else{
+			alert('choose one!');
+		}
+	});
+}
+
+
+dm.Game.prototype.skillUse = function(sk){
+	var user = this.user;
+	var dialog = new lime.Sprite().setSize(473, 416).setPosition(720/2, 1004/2);
+	this.appendChild(dialog);
+	var textarea = new lime.RoundedRect().setSize(390, 150).setPosition(0, 35).setFill(0,0,0,.3);
+	dialog.appendChild(textarea);
+	dialog.setFill(dm.IconManager.getImg("dmdata/dmimg/skilluse.png"));
+	var btn_use = new lime.Sprite().setSize(87, 33).setPosition(-130, 150);
+	btn_use.setFill(dm.IconManager.getImg("dmdata/dmimg/use.png"));
+	dialog.appendChild(btn_use);
+
+	var icon = new lime.Sprite().setSize(90, 85).setPosition(-5, -125);
+	icon.setFill(dm.IconManager.getImg("dmdata/dmimg/sk/"+sk.id+".png"));
+	icon.skill = sk; //传递选中技能
+	icon.button = btn_use; // 传递选中技能到btn中
+	icon.textarea = textarea;
+	this.iconShow.call(icon);
+	dialog.appendChild(icon);
+	//goog.events.listen(icon, ['mousedown', 'touchstart'], this.iconShow);
+
+	btn_use.sk = sk;
+	goog.events.listen(btn_use, ['mousedown', 'touchstart'], function(){
+		game=this.getParent().getParent();
+		board = game.board;
+	//	goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+	//	goog.events.listen(game, ['mousedown', 'touchstart'], game.pressHandler_);
+		game.removeChild(this.getParent());
+		game.ispoping = false;
+		var action = new dm.Skill(game);
+		action.use(this.sk.no);
+	});
+
+	var btn_cancel = new lime.Sprite().setSize(87, 33).setPosition(120, 150).setFill(dm.IconManager.getImg("dmdata/dmimg/cancel.png"));
+	dialog.appendChild(btn_cancel);
+	goog.events.listen(btn_cancel, ['mousedown', 'touchstart'], function() {
+		game = this.getParent().getParent();
+		board = game.board;
+		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+	//	goog.events.listen(game, ['mousedown', 'touchstart'], game.pressHandler_);
+		game.removeChild(this.getParent());
+		game.ispoping = false;
+	});
+}
+
+dm.Game.prototype.iconShow = function(){
+		//技能相关描述
+		this.textarea.removeAllChildren();
+		this.button.skill = this.skill;
+		var textarea = this.textarea;
+
+		var nm = new lime.Label().setFontColor('#FFF').setFontSize(20).setPosition(0, 00);
+		nm.setText(' 技能：'+this.skill['name']);
+		this.textarea.appendChild(nm.setSize(textarea.getSize().width, nm.getSize().height));
+
+		var disc = new lime.Label().setFontColor('#FFF').setFontSize(20).setPosition(0, 30);
+		disc.setText(' 描述：'+this.skill['tips']);
+		this.textarea.appendChild(disc.setSize(textarea.getSize().width, disc.getSize().height));
+
+		var cd = new lime.Label().setFontColor('#FFF').setFontSize(20).setPosition(0, 60);
+		cd.setText(' 冷却时间(轮)：'+this.skill['cd']);
+		this.textarea.appendChild(cd.setSize(textarea.getSize().width, cd.getSize().height));
+
+		var cost = new lime.Label().setFontColor('#FFF').setFontSize(20).setPosition(0, 90);
+		cost.setText(' 魔法消耗：'+this.skill['mana']);
+		this.textarea.appendChild(cost.setSize(textarea.getSize().width, cost.getSize().height));
+}
