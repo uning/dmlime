@@ -101,9 +101,9 @@ dm.Monster.prototype.genImg = function(){
 	disp.def_bg = new lime.Sprite().setSize(25, 24).setPosition(35, 0).setFill(dm.IconManager.getImg(url + 'mdef.png'));
 	disp.hp_bg = new lime.Sprite().setSize(25, 24).setPosition(35, 30).setFill(dm.IconManager.getImg(url + 'mhp.png'));
 
-	disp.att = this.game.genDigtalImg(this.att);
-	disp.def = this.game.genDigtalImg(this.def);
-	disp.hp = this.game.genDigtalImg(this.hp);
+	disp.att = dm.Game.genDigtalImg(this.att);
+	disp.def = dm.Game.genDigtalImg(this.def);
+	disp.hp = dm.Game.genDigtalImg(this.hp);
 
 	var p = this.parentGem;
 	for(var i in disp){
@@ -121,7 +121,7 @@ dm.Monster.prototype.changeDisplay = function(type){
 	var disp = this.disp;
 	var parent = disp[type].getParent();
 	parent.removeChild(disp[type]);
-	disp[type] = this.game.genDigtalImg(this[type]);
+	disp[type] = dm.Game.genDigtalImg(this[type]);
 	parent.appendChild(disp[type]);
 	
 }
@@ -182,7 +182,13 @@ dm.Monster.prototype.suicide = function(turn){
  */
 dm.Monster.prototype.onDeath = function(bounce){
 	//使怪物可以产生
-	if(this.id){
+	if(this.id == 0){
+		this.game.updateData('killcommon', 1, 'add');
+	}else{
+		this.game.updateData('killspecial', 1, 'add');
+	}
+
+	if(this.id != 0){
 		this.game.data.specialMon.push(this.id);  
 		//怪物技能影响复原
 		this.endSkill();

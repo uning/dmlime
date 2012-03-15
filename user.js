@@ -154,6 +154,15 @@ dm.User.prototype.enterShop=function(){
 }
 
 
+dm.User.prototype.buyItem = function(type, lvl){
+	var bg = this.game.backGround;
+	var icon = new lime.Sprite().setSize(64, 64).setPosition(-170 + type*85, -350);
+	icon.setFill(dm.IconManager.getImg('dmdata/dmimg/equip/'+type+'_'+lvl+'.png'))
+	bg.appendChild(icon);
+	this.data.equips[type] = dm.conf.EP[type+'_'+lvl] || {};
+	this.popuFP();
+}
+
 //购买武器(换个名字)
 dm.User.prototype.upgrade=function(eqp, type){ //type = 0:主属性,type = 1:附加属性
 	var id = eqp.eqpid;
@@ -258,6 +267,7 @@ dm.User.prototype.lvlUp=function(){
 	}
 	this.popuFP();
 	this.data.lvl += 1;
+	this.game.disp.lvl.setText("lv."+this.data.lvl);
 	//this.game.data['exp'] -= 3;
 	
 }

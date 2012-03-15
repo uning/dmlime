@@ -28,7 +28,7 @@ dm.Game = function(size,user){
     lime.scheduleManager.scheduleWithDelay(this.changeData, this, 500);
      // show lime logo
     dm.builtWithLime(this);
-	goog.events.listen(this, ['mousedown', 'touchstart'], this.pressHandler_, false, this);
+	goog.events.listen(this, ['mousedown', 'touchstart', 'mouseup', 'touchend'], this.pressHandler_, false, this);
 	//
 	//加数值动画label
 	//this.notify = new lime.Label().setText('loading').setFontSize(80).setFontColor('#000').setPosition(dm.WIDTH/2, dm.HEIGHT/2).setOpacity(1);
@@ -58,10 +58,16 @@ dm.Game.prototype.createPanel = function(){
 	var ext = '.png';
 
 	//背景图片
-	this.backGround = new lime.Sprite().setSize(720, 1004).setFill(dm.IconManager.getImg('dmdata/dmimg/background.png'));
+	//this.backGround = new lime.Sprite().setSize(720, 1004).setFill(dm.IconManager.getImg('dmdata/dmimg/background.png'));
+	this.backGround = new lime.Sprite().setSize(720, 1004).setFill('dmdata/dmimg/background.png');
 	this.backGround.setPosition(720/2, 1004/2);
 	this.appendChild(this.backGround);
 	//
+	this.disp.lvl = new lime.Label().setFontSize(20).setText("lv."+this.user.data.lvl).setPosition(-310, -330);
+	this.backGround.appendChild(this.disp.lvl);
+	//
+	this.disp.turn = new lime.Label().setFontSize(20).setText(this.data.turn).setPosition(317, 353);
+	this.backGround.appendChild(this.disp.turn);
 
 	//player
 	this.disp.player = new lime.Sprite().setSize(75, 160).setFill(dm.IconManager.getImg(url+'boy'+ext)).setPosition(-250, -400);
@@ -75,29 +81,18 @@ dm.Game.prototype.createPanel = function(){
 	this.disp.box = new lime.Sprite().setSize(90, 80).setFill(dm.IconManager.getImg(url+'box'+ext)).setPosition(10, -393);
 	this.backGround.appendChild(this.disp.box);
 
-	//weapon
-	//this.disp.weapon_bg = new lime.Sprite().setSize(100, 100).setPosition(190, 150).setFill(dm.IconManager.getImg(url+'light'+ext));
-	//this.backGround.appendChild(this.disp.weapon_bg);
-	
-	//shield
-	//this.disp.shield_bg = new lime.Sprite().setSize(100, 100).setPosition(273, 150).setFill(dm.IconManager.getImg(url+'light'+ext));
-	//this.backGround.appendChild(this.disp.shield_bg);
-
 	//4个技能槽
 	for( i=0; i<2; i++){
 		for(j=0; j<2; j++){
 			slot = new lime.Sprite().setSize(60, 60).setPosition(-270 + i*73 , 368 + j*73 ).setFill(0, 0, 0, 0.7);
 			this.disp.skillslot[i+j*2] = slot;
 			this.backGround.appendChild(slot);
-			//goog.events.listen(this.disp.skillslot[i], ['mousedown', 'touchstart'], this.pressHandler_, false, this);
 		}
 	}
-	//
+
 	blood_bar  = new lime.Sprite().setPosition(245, 404).setSize(76, 130);
 	blood_bar.setFill(dm.IconManager.getImg(url + 'blood_inside' + ext));
-
     blood_mask = new lime.Sprite().setFill(100, 0, 0, .1).setAnchorPoint(0.5, 1).setPosition(0,65).setSize(76, 130);
-
 	blood_bar.setMask(blood_mask);
 	blood_bar.appendChild(blood_mask);
 	this.disp.blood_mask = blood_mask;
@@ -130,18 +125,16 @@ dm.Game.prototype.createBoard = function(){
     this.backGround.appendChild(this.board);
 }
 
-
 /**
  * 显示游戏中的数值
  */
 dm.Game.prototype.showData = function(){
-
     this.score = new lime.Label().setFontColor('#000').setFontSize(24).setText('0').setAnchorPoint(0, 0).setFontWeight(700);
 	this.show_vars = {
-		exp:{curdata:this.data.exp, max:100, loc:{x:370,y:940}}
-		,gold:{curdata:this.data.gold, max:100, loc:{x:100,y:900}}
-		,mana:{curdata:this.data.mana, max:this.user.data.fp.a5, loc:{x:370, y:910}}
-		,hp:{curdata:this.data.hp, max:this.user.data.fp.a6, loc:{x:600, y:890}}
+		exp:{curdata:this.data.exp, max:100, loc:{x:370 - 720/2,y:940 - 1004/2}}
+		,gold:{curdata:this.data.gold, max:100, loc:{x:100 - 360,y:900 - 502}}
+		,mana:{curdata:this.data.mana, max:this.user.data.fp.a5, loc:{x:370 -360, y:910 - 502}}
+		,hp:{curdata:this.data.hp, max:this.user.data.fp.a6, loc:{x:600 - 360, y:890 - 502}}
 	}
 	
 	for( var i in this.show_vars){
@@ -149,8 +142,8 @@ dm.Game.prototype.showData = function(){
 		p._lct = new lime.Label().setFontSize(28).setText(p.curdata+'/'+p.max).setPosition(p.loc.x, p.loc.y);
 		this.backGround.appendChild(p._lct);
 	}
-	this.mon = new lime.Label().setFontColor('#000').setFontSize(34).setText(this.board.getDamage()).setPosition(260, 880);
-	this.att = new lime.Label().setFontColor('#000').setFontSize(34).setText(this.user.data.fp.a1).setPosition(470, 880);
+	this.mon = new lime.Label().setFontColor('#000').setFontSize(34).setText(this.board.getDamage()).setPosition(260-360, 880-502);
+	this.att = new lime.Label().setFontColor('#000').setFontSize(34).setText(this.user.data.fp.a1).setPosition(470-360, 880-502);
 	this.backGround.appendChild(this.mon);
 	this.backGround.appendChild(this.att);	
 	this.show_create = 1;
@@ -230,8 +223,8 @@ dm.Game.prototype.initData = function(size, user){
 	//技能CD
 	this.data.skillCD = {};
 
-	var testjson = JSON.stringify(this.data);
-	var testdecode = JSON.parse(testjson);
+	//var testjson = JSON.stringify(this.data);
+	//var testdecode = JSON.parse(testjson);
 
 }
 
@@ -246,6 +239,13 @@ dm.Game.prototype.pressHandler_ = function(e){
 			1:{w:60 ,h:60 ,x:-195 ,y:370},
 			2:{w:60 ,h:60 ,x:-270 ,y:440},
 			3:{w:60 ,h:60 ,x:-195 ,y:440}
+		},
+		charArea:{
+			player:{w:75, h:160 ,x:-250, y:-400},
+			enemy:{w:108, h:160, x:250, y:-400}
+		},
+		killed:{
+			killed:{w:60, h:60, x:-90 ,y:337}
 		}
 	};
 	var pos = e.position;
@@ -256,97 +256,79 @@ dm.Game.prototype.pressHandler_ = function(e){
 			   && pos.y - 502 > clickArea[i][j].y - clickArea[i][j].h/2 && pos.y - 502 < clickArea[i][j].y + clickArea[i][j].h/2){
 				   if(i == "skArea" && this.disp.skillslot[j].sk){
 					   this.skillUse(this.disp.skillslot[j].sk);
+				   }else if(i == "charArea" && j == "player"){
+					   if( e.type == 'touchstart' || e.type == 'mousedown'){
+						   this.showStat();
+					   }else if(e.type == 'touchend' || e.type == 'mouseup'){
+						   this.backGround.removeChild(this.disp.charTip);
+						   this.disp.charTip = null;
+					   }
+				   }else if(i == "killed"){
+					   if( e.type == 'touchstart' || e.type == 'mousedown'){
+						   this.showKilled();
+					   }else if(e.type == 'touchend' || e.type == 'mouseup'){
+						   this.backGround.removeChild(this.disp.killedTip);
+						   this.disp.killedTip = null;
+					   }
 				   }
 			   }
 		}
 	}
 }
 
-
 /*
  * 点击人物状态的图标，可以显示人物相关信息：武器装备，人物二级属性
  */
-dm.Game.prototype.statShow = function(game){
-	var i,j,fp,dialog,eqpslot,sloticon,eqp,eqpicon,pos,eqpdetail,charinfo,charloc;
-	var sp = dm.conf.SP;
-	var spname,spval,fpname,fpval,loc=0; 
-	pos = game.board.getPosition();
-	goog.events.unlisten(game.board, ['mousedown','touchstart'], game.board.pressHandler_);
-	goog.events.unlisten(game, ['mousedown','touchstart'], game.pressHandler_, false, game);
-    dialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(590, 590).setPosition(pos.x+50, pos.y+50).setAnchorPoint(0, 0).setRadius(20);
-	game.appendChild(dialog);
-	var frame = new lime.RoundedRect().setAnchorPoint(0,0).setFill(0,0,0,0.7).setPosition(10, 340).setSize(210, 240).setRadius(20);
-	dialog.appendChild(frame);
-	//
-	sloticon = dm.IconManager.getFileIcon('assets/menus.png', 50, 0, 1.9, 1.85, 1);
-	eqp = game.user.data.equips;
-	fp = dm.conf.FP;
-
-	for(i=0;i<5;i++){
-		eqpslot = new lime.Sprite().setSize(100, 100).setAnchorPoint(0,0).setFill(sloticon).setPosition(10+(i%2)*110, 10+(i%3)*110);
-		eqpslot.no = i;
-		eqpslot.disp = frame;
-		if(eqp[i] && eqp[i].icon){
-			//eqpicon = dm.IconManager.getFileIcon('assets/icons.png',eqp[i].icon['x'],eqp[i].icon['y'],2,2,1);
-			eqpicon = game.user.data.equips[i].icon;
-			eqpslot.setFill(eqpicon); //装备图标
-
-			goog.events.listen(eqpslot, ['mousedown', 'touchstart'], function() {
-				//装备属性信息
-				this.disp.removeAllChildren();
-				var h = 0;
-				var user = this.getParent().getParent().user;
-				for(j in user.data.equips[this.no].fp){
-					fpname = dm.conf.FP[j].tips;
-					fpval  = user.data.equips[this.no].fp[j];
-					var wpinfo = new lime.Label().setFontColor('#FFF').setAnchorPoint(0,0).setFontSize(30).setPosition(10, h);
-					wpinfo.setText(fpname + ' +' + fpval);
-					h += wpinfo.getSize().height;
-					this.disp.appendChild(wpinfo);
-				}
-			});
-		}
-		dialog.appendChild(eqpslot);
+dm.Game.prototype.showStat = function(){
+	var loc = {
+		lvl:{x:48, y:-65},
+		b1:{x:-11, y:-45},
+		b2:{x:75, y:-45},
+		b3:{x:-11, y:-20},
+		b4:{x:75, y:-20},
+		a1:{x:50, y:0},
+		a2:{x:50, y:24},
+		a37:{x:15, y:43},
+		a38:{x:15, y:67}
 	}
-
-	//人物属性信息
-	charinfo = new lime.RoundedRect().setAnchorPoint(0,0).setFill(0,0,0,.7).setPosition(230, 10).setSize(350, 470).setRadius(20);
-	dialog.appendChild(charinfo);
-	for(i in game.user.data.sp){
-		spname = sp[i].name; //二级属性名字
-		spval = game.user.data.sp[i];
-		var splabel = new lime.Label().setAnchorPoint(0,0).setFontColor('#FFF').setFontSize(30);
-		splabel.setText(spname + ' +'+spval).setPosition(10, loc);
-		charinfo.appendChild(splabel);//二级属性条目显示
-		loc += splabel.getSize().height + 4;
-
-		for(j in sp[i].showfps){//二级属性点对应的一级属性
-			fpname = sp[i].showfps[j];
-			fpval = game.user.data.fp[j];
-			var fplabel = new lime.Label().setAnchorPoint(0,0).setFontColor('#FFF').setFontSize(20);
-			fplabel.setText(fpname + ' +'+fpval).setPosition(30,loc );
-			loc += fplabel.getSize().height + 4;
-			charinfo.appendChild(fplabel);
+	var i, j, value, label, charTip;
+	this.disp.charTip = new lime.Sprite().setSize(210, 166).setFill(dm.IconManager.getImg('dmdata/dmimg/chartip.png')).setPosition(-125, -390);
+	charTip = this.disp.charTip;
+	this.backGround.appendChild(charTip);
+	for(i in loc){
+		if(i[0] == 'a'){
+			value = this.user.data.fp[i]; 
+		}else if(i[0] == 'b'){
+			value = this.user.data.sp[i]; 
+		}else{
+			value = this.user.data.lvl;
 		}
+		label = new lime.Label().setText(value).setPosition(loc[i].x, loc[i].y); 
+		charTip.appendChild(label);
 	}
-	//
-
-
-    btn = new dm.Button().setText('return').setSize(200, 70).setPosition(480, 540),
-    dialog.appendChild(btn);
-    goog.events.listen(btn, ['mousedown', 'touchstart'], function() {
-		var game = this.getParent().getParent();
-		game.removeChild(this.getParent());
-		//game.listenAll();
-		goog.events.listen(game.board, ['mousedown','touchstart'], game.board.pressHandler_);
-		goog.events.listen(game, ['mousedown','touchstart'], game.pressHandler_, false, game);
-    });
 }
+
+dm.Game.prototype.showKilled = function(){
+	var loc = {
+		common:{x:35, y:-16, value:this.data.killcommon || 0},
+		special:{x:35, y:7, value:this.data.killspecial || 0}
+	}
+	var i, j, value, label, killedTip;
+	this.disp.killedTip = new lime.Sprite().setSize(126, 58).setFill(dm.IconManager.getImg('dmdata/dmimg/killtip.png')).setPosition(-90, 280);
+	killedTip = this.disp.killedTip;
+	this.backGround.appendChild(killedTip);
+	for(i in loc){
+		label = new lime.Label().setText(loc[i].value).setPosition(loc[i].x, loc[i].y); 
+		killedTip.appendChild(label);
+	}
+}
+
 
 
 /*
  * 点击menu按钮，实现弹出主菜单功能，有重新开始等功能
  */
+ /*
 dm.Game.prototype.mainShow = function(game){
 		var board = game.board;
 		goog.events.unlisten(board, ['mousedown', 'touchstart'], board.pressHandler_);
@@ -393,7 +375,7 @@ dm.Game.prototype.mainShow = function(game){
 		});
 
 }
-
+*/
 
 
 /**
@@ -402,6 +384,7 @@ dm.Game.prototype.mainShow = function(game){
  dm.Game.prototype.updateData = function(key, value, method){
 	 var fp = this.user.data.fp;
 	 var data = this.data;
+	 data[key] = data[key] || 0;
 
 	 if(method == 'add'){
 		 data[key] += value;
@@ -424,7 +407,7 @@ dm.Game.prototype.mainShow = function(game){
 			 data['mana'] = Math.min(fp.a5, data['mana']);
 			 while(data['skillexp'] >= 3){
 				 data['skillexp'] -= 3;
-				 this.pop.skill += 1;
+				 //this.pop.skill += 1;
 			 }
 			 break;
 		}
@@ -443,7 +426,6 @@ dm.Game.prototype.mainShow = function(game){
 	 }
 	 this.board.changeProg(this, key);
  }
-
 
 
 /**
@@ -488,9 +470,9 @@ dm.Game.prototype.mainShow = function(game){
 	 var game = this;
 	 dm.api('System.read',{"id":"wangkun"}, function(obj){game.parseData(obj.d)});
  }
+
  /**
   * 解析储存的游戏数据
-  *
   */
   dm.Game.prototype.parseData = function(savedata){
 
@@ -546,7 +528,6 @@ dm.Game.prototype.mainShow = function(game){
 		  this.board.setAllSpecial();
 	  },false ,this
 	  );
-
   }
 
 /**
@@ -614,11 +595,10 @@ dm.Game.prototype.mainShow = function(game){
 	  return gems;
  }
 
-
- /**
-  *
-  */
-dm.Game.prototype.genDigtalImg = function(num){
+/**
+ *将数字对应成图片
+ */
+dm.Game.genDigtalImg = function(num){
 	var bit_arr = [];
 	var bit = 0;
 	var url = 'dmdata/dmimg/';
@@ -627,7 +607,6 @@ dm.Game.prototype.genDigtalImg = function(num){
 		return new lime.Sprite().setSize(height, height).//setPosition(0, 20).
 			setFill(dm.IconManager.getImg(url + num + '.png'));
 	}
-
 	while(num >= 1){
 		bit_arr[bit] = num % 10;
 		bit++;
@@ -642,7 +621,6 @@ dm.Game.prototype.genDigtalImg = function(num){
 			setFill(dm.IconManager.getImg(url + bit_arr[i] + '.png'));
 		digt.appendChild(t);
 	}
-	//t['bg'] = digt.setFill(255, 255, 255, .5);
 	return digt;
 }
 
@@ -654,17 +632,17 @@ dm.Game.prototype.changeData = function() {
 		return;
 	if(this.pop.shop > 0 ){
 		this.pop.shop--;
-		this.board.popWindow('Shop');
+		this.popWindow('Shop');
 		return;
 	} 
 	if(this.pop.lvl > 0 ){
 		this.pop.lvl--;
-		this.board.popWindow('lvl Up');
+		this.popWindow('lvl');
 		return;
 	} 
 	if(this.pop.skill > 0 ){
 		this.pop.skill--;
-		this.board.popWindow('Skill');
+		this.popWindow('Skill');
 		return;
 	} 
 };
@@ -702,6 +680,7 @@ dm.Game.prototype.setScore = function(p) {
 /**
  * 改变数值等动画效果
  */
+ /*
 dm.Game.prototype.changeAnim = function(str){
 	this.notify.setText(str);
 	var disappeal = new lime.animation.FadeTo(0).setDuration(4);
@@ -723,28 +702,25 @@ dm.Game.prototype.changeAnim = function(str){
 		appearl,
 		hide
 	);
-
 	this.notify.runAction(step);
-
 };
 
+*/
 
 /**
  * Show game-over dialog
  */
 dm.Game.prototype.endGame = function() {
-
-   //unregister the event listeners and schedulers
-	//
    goog.events.unlisten(this.board, ['mousedown', 'touchstart'], this.board.pressHandler_);
+   goog.events.unlisten(this, ['mousedown', 'touchstart'],this.pressHandler_);
+
    lime.scheduleManager.unschedule(this.updateScore, this);
-   lime.scheduleManager.unschedule(this.decreaseTime, this);
 
     var dialog = new lime.RoundedRect().setFill(0, 0, 0, .7).setSize(500, 480).setPosition(360, 260).
         setAnchorPoint(.5, 0).setRadius(20);
     this.appendChild(dialog);
 
-    var title = new lime.Label().setText(this.curTime < 1 ? 'No more time!' : 'You are killed!').
+    var title = new lime.Label().setText('You are killed!').
         setFontColor('#ddd').setFontSize(40).setPosition(0, 70);
     dialog.appendChild(title);
 
@@ -761,7 +737,6 @@ dm.Game.prototype.endGame = function() {
          dm.newgame(this.board.cols);
     },false, this);
 
-
     btn = new dm.Button().setText('主菜单').setSize(200, 90).setPosition(110, 400);
     dialog.appendChild(btn);
     goog.events.listen(btn, ['mousedown', 'touchstart'], function() {
@@ -775,7 +750,6 @@ dm.Game.prototype.endGame = function() {
  *     study -- 学习; use -- 使用
  *        {sk}
  */
-//dm.Game.prototype.createSkillDialog = function(action){
 dm.Game.prototype.skillStudy = function(){
 	var user = this.user;
 
@@ -809,7 +783,7 @@ dm.Game.prototype.skillStudy = function(){
 		icon.setFill(dm.IconManager.getImg('dmdata/dmimg/sk/'+sk_key[i]+'.png'));
 		dialog.appendChild(icon);
 		dialog.appendChild(textarea);
-		goog.events.listen(icon, ['mousedown', 'touchstart'], this.iconShow);
+		goog.events.listen(icon, ['mousedown', 'touchstart'], this.skillInfoShow);
 	}
 
 	goog.events.listen(btn_study, ['mousedown', 'touchstart'], function(){
@@ -820,15 +794,19 @@ dm.Game.prototype.skillStudy = function(){
 			game.user.skillUp(this.skill);
 			goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 		//	goog.events.listen(game, ['mousedown', 'touchstart'], game.pressHandler_);
+			var dialog = this.getParent();
 			game.removeChild(this.getParent());
 			game.ispoping = false;
+			dialog = null;
 		}else{
 			alert('choose one!');
 		}
 	});
 }
 
-
+/**
+ * 使用技能
+ */
 dm.Game.prototype.skillUse = function(sk){
 	var user = this.user;
 	var dialog = new lime.Sprite().setSize(473, 416).setPosition(720/2, 1004/2);
@@ -845,7 +823,7 @@ dm.Game.prototype.skillUse = function(sk){
 	icon.skill = sk; //传递选中技能
 	icon.button = btn_use; // 传递选中技能到btn中
 	icon.textarea = textarea;
-	this.iconShow.call(icon);
+	this.skillInfoShow.call(icon);
 	dialog.appendChild(icon);
 	//goog.events.listen(icon, ['mousedown', 'touchstart'], this.iconShow);
 
@@ -855,8 +833,10 @@ dm.Game.prototype.skillUse = function(sk){
 		board = game.board;
 	//	goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 	//	goog.events.listen(game, ['mousedown', 'touchstart'], game.pressHandler_);
+		var dialog = this.getParent();
 		game.removeChild(this.getParent());
 		game.ispoping = false;
+		dialog = null;
 		var action = new dm.Skill(game);
 		action.use(this.sk.no);
 	});
@@ -869,11 +849,16 @@ dm.Game.prototype.skillUse = function(sk){
 		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 	//	goog.events.listen(game, ['mousedown', 'touchstart'], game.pressHandler_);
 		game.removeChild(this.getParent());
+		var rubbish = this.getParent();
+		rubbish = null;
 		game.ispoping = false;
 	});
 }
 
-dm.Game.prototype.iconShow = function(){
+/**
+ * 显示技能信息
+ */
+dm.Game.prototype.skillInfoShow = function(){
 		//技能相关描述
 		this.textarea.removeAllChildren();
 		this.button.skill = this.skill;
@@ -895,3 +880,281 @@ dm.Game.prototype.iconShow = function(){
 		cost.setText(' 魔法消耗：'+this.skill['mana']);
 		this.textarea.appendChild(cost.setSize(textarea.getSize().width, cost.getSize().height));
 }
+
+/**
+ *人物升级
+ */
+dm.Game.prototype.lvlup = function(){
+	var user = this.user;
+	var dialog = new lime.Sprite().setSize(473, 416).setPosition(720/2, 1004/2);
+	this.appendChild(dialog);
+
+	var textarea = new lime.RoundedRect().setSize(390, 150).setPosition(0, 35).setFill(0,0,0,.3);
+	dialog.appendChild(textarea);
+	dialog.setFill(dm.IconManager.getImg("dmdata/dmimg/skilluse.png"));
+
+	var btn_ok = new lime.Sprite().setSize(87, 33).setPosition(0, 150);
+	btn_ok.setFill(dm.IconManager.getImg("dmdata/dmimg/study.png"));
+	dialog.appendChild(btn_ok);
+
+	var icon = new lime.Sprite().setSize(90, 85).setPosition(-5, -125);
+	icon.setFill(dm.IconManager.getImg("dmdata/dmimg/lvlup.png"));
+	dialog.appendChild(icon);
+
+	var i, spname, spval, label, loc=20;
+	for(i in dm.conf.SP){
+		spname = dm.conf.SP[i].name;
+		spval = this.user.data.sp[i];
+		label = new lime.Label().setFontSize(30).setText(spname +' '+spval+' + '+dm.conf.SP[i].inc);
+		textarea.appendChild(label.setPosition(0, loc - 75));
+		loc += label.getSize().height;
+	}
+
+	goog.events.listen(btn_ok, ['mousedown', 'touchstart'], function() {
+		var game = this.getParent().getParent();
+		var board = game.board;
+		game.user.lvlUp();
+
+		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+		board.show_att = board.getBaseAttack() + game.data['attack_addtion'];
+		board.show_dmg = board.getDamage();
+		game.att.setText(board.show_att);
+		game.mon.setText(board.show_dmg);
+		game.data['hp'] += parseInt(dm.conf.FP.a6.inc); //每级增加血上限
+		game.data['mana'] += parseInt(dm.conf.FP.a5.inc);
+		board.turnEndShow();
+		game.ispoping = false;
+		game.removeChild(this.getParent());
+	});
+}
+
+
+/**
+ *装备升级
+ */
+dm.Game.prototype.itemBuy = function(){
+	var user = this.user;
+	var dialog = new lime.Sprite().setSize(473, 416).setPosition(720/2, 1004/2);
+	this.appendChild(dialog);
+
+	var textarea = new lime.RoundedRect().setSize(390, 150).setPosition(0, 35).setFill(0,0,0,.3);
+	dialog.appendChild(textarea);
+	dialog.setFill(dm.IconManager.getImg("dmdata/dmimg/skilldialog.png"));
+
+	var btn_buy = new lime.Sprite().setSize(87, 33).setPosition(0, 150);
+	btn_buy.setFill(dm.IconManager.getImg("dmdata/dmimg/study.png"));
+	dialog.appendChild(btn_buy);
+
+	var equip, i;
+	for(i=0;i<2;i++){
+		equip = new lime.Sprite().setSize(64, 64).setPosition(-145 + i*140, -125);
+		equip.textarea = textarea;
+		equip.btn = btn_buy;
+		equip.eqplvl = user.data.equips[i] && parseInt(user.data.equips[i].lvlneed)+1 || 1;
+		equip.eqptype = i;
+		equip.setFill(dm.IconManager.getImg('dmdata/dmimg/equip/'+ i +'_'+ equip.eqplvl +'.png'));
+		goog.events.listen(equip, ['mousedown', 'touchstart'], this.equipInfo);
+		dialog.appendChild(equip);
+	}
+
+
+	goog.events.listen(btn_buy,  ['mousedown', 'touchstart'], function() {
+		game = this.getParent().getParent();
+		board = game.board;
+		if(this.item){
+			game.user.buyItem(this.item.type, this.item.lvl);
+			board.turnEndShow();
+			board.show_att = board.getBaseAttack();
+			board.show_dmg = board.getDamage();
+			game.att.setText(board.show_att);
+			game.mon.setText(board.show_dmg);
+			goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+			game.ispoping = false;
+			game.removeChild(this.getParent());
+		}else{
+			alert('choose one');
+		}
+	});
+}
+
+/**
+ * 显示装备信息
+ */
+dm.Game.prototype.equipInfo = function(){
+	var i, h=0, fpname, fpval, info;
+	this.btn.item = {type:this.eqptype, lvl:this.eqplvl};
+	this.textarea.removeAllChildren();
+	for(i in dm.conf.EP[this.eqptype+'_'+this.eqplvl].func){
+		fpname = dm.conf.FP[i].tips;
+		fpval  = dm.conf.EP[this.eqptype+'_'+this.eqplvl].fp[i];
+		info = new lime.Label().setFontColor('#FFF').setFontSize(20).setPosition(-10, 10);
+		info.setText(fpname + ' +' + fpval);
+		h += info.getSize().height;
+		this.textarea.appendChild(info);
+	}
+
+}
+
+/**
+ * 弹窗口,购买，升级技能，等级升级等的相关窗口
+ */
+ dm.Game.prototype.popWindow = function(text){
+	 this.ispoping = true;
+	 goog.events.unlisten(this.board, ['mousedown', 'touchstart'], this.board.pressHandler_);
+
+	 switch(text){
+		 case 'lvl':{
+			 this.lvlup();
+			 break;
+		 }
+		 case 'Skill':{
+			 this.skillStudy();
+			 break;
+		 }
+
+		 case 'Shop':
+			 this.itemBuy();
+			 /*
+			 btn = new dm.Button().setText('升级装备').setSize(200, 50).setPosition(250, 570);
+			 popdialog.appendChild(btn);
+			 frame = new lime.RoundedRect().setSize(500, 200).setPosition(40, 240).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
+			 popdialog.appendChild(frame);
+			 //newequip = new lime.Sprite().setSize(100, 100).setPosition(10, 10).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
+			 //frame.appendChild(newequip);
+
+			 var eqp_sel = this.game.user.randSel([0,1,2,3,4], 3); //随机选3个部位购买装备
+			 var eqp = this.game.user.data.equips;
+			 var oldeqpicon, eqpicon, oldeqplvl, eqplvl;
+			 j=0;
+			 for(i in eqp_sel){
+				 icon = new lime.Sprite().setSize(100, 100).setPosition(80 + j*120, 20).setAnchorPoint(0,0);
+				 j++;
+				 eqplvl = (eqp[eqp_sel[i]] && (parseInt(eqp[eqp_sel[i]].lvlneed) + 1)) || 1;
+				 oldeqplvl = eqplvl -1;
+				 if(oldeqplvl){
+					 oldeqpicon = dm.IconManager.getFileIcon('assets/icons.png', ((oldeqplvl-1)%20)*50, parseInt(eqp_sel[i])*4*50, 2, 2, 1);
+					 icon.setFill(oldeqpicon);
+					 //旧图标
+				 }else{
+					 //没有装备的默认图标
+					 icon.setFill(0,0,0,.7);
+				 }
+				 eqpicon = dm.IconManager.getFileIcon('assets/icons.png', ((eqplvl-1)%20)*50, parseInt(eqp_sel[i])*4*50, 2, 2, 1);
+
+
+				 icon.popdialog = popdialog;
+				 icon.frame = frame;
+				 icon.eqpid = parseInt(eqp_sel[i]);
+				 icon.eqplvl = eqplvl;
+				 icon.eqpic = eqpicon; //传递新图标
+
+				 icon.btn = btn;
+
+				 popdialog.appendChild(icon);
+
+				 goog.events.listen(icon,  ['mousedown', 'touchstart'], function() {
+					 this.popdialog.removeChild(this.popdialog.btn2); //先移除刷新按钮，选择了可以刷新的装备才出现
+					 this.frame.removeAllChildren();
+					 var h = 0, fpname, fpval;
+					 var user = this.getParent().getParent().game.user;
+					 var newequip = new lime.Sprite().setSize(100, 100).setPosition(10, 10).setFill(0,0,0,.7).setAnchorPoint(0,0); 
+					 newequip.setFill(this.eqpic);
+					 this.frame.appendChild(newequip);
+					 for(j in dm.conf.EP[this.eqpid+'_'+(this.eqplvl-1)].func){
+						 fpname = dm.conf.FP[j].tips;
+						 fpval  = dm.conf.EP[this.eqpid+'_'+this.eqplvl].fp[j];
+						 var wpinfo = new lime.Label().setFontColor('#FFF').setAnchorPoint(0, 0).setFontSize(30).setPosition(110, 10+h);
+						 wpinfo.setText(fpname + ' +' + fpval);
+						 h += wpinfo.getSize().height;
+						 this.frame.appendChild(wpinfo);
+					 }
+					 this.btn.icon ={};
+					 this.btn.icon = this;
+					 if(this.eqplvl > 1){ //当前有装备才可以刷新
+						 var btn2 = new dm.Button().setText('刷新属性').setSize(200, 50).setPosition(250,470);
+						 this.popdialog.appendChild(btn2);
+						 this.popdialog.btn2 = btn2;
+
+						 goog.events.listen(btn2,  ['mousedown', 'touchstart'], function() {
+							 var popdialog = this.getParent(),
+							 user = popdialog.getParent().game.user,
+							 fpname, fpval, winfo, h=0;
+							 //
+							 popdialog.removeAllChildren();
+							 //要刷新的装备图标
+							 //
+							 var equip_icon = new lime.Sprite().setSize(100, 100).setPosition(200, 20).setAnchorPoint(0,0).setFill(this.icon.eqpic);
+							 var oldinfo = new lime.RoundedRect().setSize(400, 140).setPosition(50, 140).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
+							 var newinfo = new lime.RoundedRect().setSize(400, 140).setPosition(50, 300).setFill(0,0,0,.7).setRadius(20).setAnchorPoint(0,0); 
+							 var confirm = new dm.Button().setText('刷新').setSize(200, 50).setPosition(100,470);
+							// var back = new dm.Button().setText('返回').setSize(200, 50).setPosition(300,470);
+							 popdialog.appendChild(equip_icon);
+							 popdialog.appendChild(oldinfo);
+							 popdialog.appendChild(newinfo);
+							 popdialog.appendChild(confirm);
+							// popdialog.appendChild(back);
+							 
+							 //旧的附加属性
+							 for(j in user.data.eqp_add[this.icon.eqpid]){
+								 fpname = dm.conf.FP[j].tips;
+								 fpval = user.data.eqp_add[this.icon.eqpid][j];
+								 wpinfo = new lime.Label().setFontColor('#FFF').setAnchorPoint(0, 0).setFontSize(30).setPosition(0, h);
+								 wpinfo.setText(fpname + ' +' + fpval);
+								 h += wpinfo.getSize().height;
+								 oldinfo.appendChild(wpinfo);
+							 }
+
+							 //新的附加属性
+							 var atts = user.genAttr(this.icon);
+							 confirm.atts = atts;
+							 confirm.icon = this.icon;
+							 h = 0;
+							 for(j in atts){
+								 fpname = dm.conf.FP[j].tips;
+								 fpval  = atts[j];
+								 wpinfo = new lime.Label().setFontColor('#FFF').setAnchorPoint(0, 0).setFontSize(30).setPosition(0, h);
+								 wpinfo.setText(fpname + ' +' + fpval);
+								 h += wpinfo.getSize().height;
+								 newinfo.appendChild(wpinfo);
+							 }
+
+							 goog.events.listen(confirm,  ['mousedown', 'touchstart'], function() {
+								 var board = this.getParent().getParent();
+								 board.game.user.refresh(this.icon, atts);
+								 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+								 this.getParent().getParent().removeChild(this.getParent());
+
+								 board.game.ispoping = false;
+							 });
+						 });
+					 }
+					 if(btn2){
+						 btn2.icon ={};
+						 btn2.icon = this;
+					 }
+				 });
+			 }
+			 
+			 goog.events.listen(btn,  ['mousedown', 'touchstart'], function() {
+				 board = this.getParent().getParent();
+				 game = board.game
+				 if(this.icon){
+					 board.game.user.upgrade(this.icon);
+					 board.turnEndShow();
+					 board.show_att = board.getBaseAttack();
+					 board.show_dmg = board.getDamage();
+					 game.att.setText(board.show_att);
+					 game.mon.setText(board.show_dmg);
+					 goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+					 game.ispoping = false;
+					 board.removeChild(this.getParent());
+				 }else{
+					 alert('choose one');
+				 }
+			 });
+		 break;
+		 */
+	 }
+ }
+
+
