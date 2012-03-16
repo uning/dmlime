@@ -3,3 +3,6 @@ dmdata/*
 \.*
 test*
 assets/*
+t*
+*.coffee
+*.bakdd
