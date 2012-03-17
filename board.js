@@ -120,6 +120,9 @@ dm.Board.prototype.fillGems = function(type) {
 	this.findGemsType();
 };
 
+
+
+
 /**
  * Animate all the bubbles that are not in their correct position
  * to the board. Same function is used in the beginning and also when
@@ -686,6 +689,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	if(this.selectedGems.length > 0)
 		lastg = this.selectedGems[this.selectedGems.length - 1];
 	if(lastg  === g){
+		dm.log.fine('choose last ret');
 		return ; //
 	}
 
@@ -718,7 +722,53 @@ dm.Board.prototype.pressHandler_ = function(e) {
     }
 	//如果不相邻
 	if(lastg && !lastg.canConnect(g) || !g.canSelect){
-	//	this.addSelGem(null,e.position);//记录try pos
+		//	this.addSelGem(null,e.position);//记录try pos
+
+		//寻找两点间 相邻点
+		var g2 = g ,g1 = lastg , g3;
+		r = g2.r - g1.r,c = g2.c - g1.c
+		var rab  = r > 0 ? r : -r ,cab = c > 0 ? c : -c;
+
+
+
+		if ( cab >= rab ){
+			delta = c > 0 ? 1 : -1;
+			for(i = g1.c + delta ; ;i += delta ){
+				if(i != g2.c){
+					g3 = this.gems[i][g1.r + Math.round((i - g1.c)*r/c)];
+					if(lastg.canConnect(g3)){
+						this.addSelGem(g3);
+						lastg = g3;
+						this.checkLine(this.selectedGems);
+						dm.log.fine('line add ',g3.r,g3.c)
+					}else{
+						dm.log.fine('g3 not add ',g3.r,g3.c)
+					}
+					//ret.push([g1.r + Math.round((i - g1.c)*r/c),i] )
+				}else
+					break
+
+			}
+		}else{
+			delta = r > 0 ? 1 : -1;
+			for(i = g1.r + delta ; ;i += delta ){
+				if(i != g2.r){
+					g3 = this.gems[g1.c + Math.round((i - g1.r)*c/r)][i];
+					if(lastg.canConnect(g3)){
+						this.addSelGem(g3);
+						this.checkLine(this.selectedGems);
+						dm.log.fine('line add ',g3.r,g3.c)
+						lastg = g3;
+					}else{
+						dm.log.fine('g3 not add ',g3.r,g3.c)
+					}
+					//ret.push([i,g1.c + Math.round((i - g1.r)*c/r)] )
+				}else
+					break
+
+			}
+		}
+		dm.log.fine('not connect : ',g1.r,g1.c,g2.r,g.c);
 		return;
 	}
 	//this.lastPos = e.poistion;

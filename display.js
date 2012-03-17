@@ -35,9 +35,9 @@ dm.Display = {
 		this.weapon = {pos:{x:-170, y:-350}, size:{w:64, h:64}, url:this.url+'equips/0_'}
 		this.shield = {pos:{x:-170+85, y:-350}, size:this.weapon.size, url:this.url+'equips/1_'}
 
-		this.defense = {pos:{x:-75, y:345}, fontsize:this.kill.fontsize}
-		this.attack = {pos:{x:50, y:345}, fontsize:this.kill.fontsize}
-		this.gold = {pos:{x:152, y:345}, fontsize:this.kill.fontsize}
+		this.defense = {pos:{x:-75, y:345}, fontsize:35}
+		this.attack = {pos:{x:50, y:345}, fontsize:this.defense.fontsize}
+		this.gold = {pos:{x:152, y:345}, fontsize:this.defense.fontsize}
 		this.lvl = {pos:{x:-310, y:-330}, fontsize:30}
 		this.turn = {pos:{x:317, y:353}, fontsize:this.lvl.fontsize}
 
@@ -51,7 +51,7 @@ dm.Display = {
 
 		//charTip
 		this.charTip = {
-			pos:{x:-240, y:-390},
+			pos:{x:-130, y:-390},
 			size:{w:210, h:166},
 			img:'chartip.png',
 			substr:{
@@ -67,13 +67,19 @@ dm.Display = {
 			}
 		}
 
+		//点击区域
 		this.killarea= {pos:{x:-240, y:335}, size:{w:60, h:60}}
+		//文字
 		this.kill = {pos:{x:-173, y:345}, fontsize:35}
+		//弹框
 		this.killtip = {
+			pos:{x:-190, y:280},
 			size:{w:126, h:58},
 			img:'killtip.png',
-			common:{x:35, y:-16},
-			special:{x:35, y:7}
+			sub:{
+				common:{x:35, y:-16, value:'killcommon'},
+				special:{x:35, y:7, value:'killspecial'}
+			}
 		}
 		//board
 		this.board.pos = {x:this.background.x, y:this.background.y}

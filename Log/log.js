@@ -54,7 +54,6 @@ var LOG = {
       if (bd) {
         bd += '<hr>';
       }
-	  console.log(jsDump);
       bd += jsDump.parse(args[i]);
     }
     return bd;

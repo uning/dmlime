@@ -284,16 +284,20 @@ dm.Game.prototype.showStat = function(){
 }
 
 dm.Game.prototype.showKilled = function(){
+	/*
 	var loc = {
 		common:{x:35, y:-16, value:this.data.killcommon || 0},
 		special:{x:35, y:7, value:this.data.killspecial || 0}
 	}
+	*/
 	var i, j, value, label, killedTip;
-	this.disp.killedTip = new lime.Sprite().setSize(this.dp.ki, 58).setFill(dm.IconManager.getImg('dmdata/dmimg/killtip.png')).setPosition(-90, 280);
+	this.disp.killedTip = new lime.Sprite().setSize(this.dp.killtip.w, this.dp.killtip.h)
+	.setFill(this.dp.url + this.dp.killtip.img).setPosition(this.dp.killtip.pos.x, this.dp.killtip.pos.y);
 	killedTip = this.disp.killedTip;
 	this.backGround.appendChild(killedTip);
-	for(i in loc){
-		label = new lime.Label().setText(loc[i].value).setPosition(loc[i].x, loc[i].y); 
+	var sub = this.dp.killtip.sub;
+	for(i in sub){
+		label = new lime.Label().setText(this.data[sub[i].value]).setPosition(sub[i].x, sub[i].y); 
 		killedTip.appendChild(label);
 	}
 }
