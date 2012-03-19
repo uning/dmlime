@@ -1,7 +1,8 @@
 goog.provide('dm.User');
 goog.require('dm.conf.FP');
 goog.require('dm.conf.SP');
-goog.require('dm.conf.EP');
+goog.require('dm.conf.WP');
+goog.require('dm.conf.SLD');
 goog.require('dm.conf.SK');
 
 
@@ -19,8 +20,8 @@ dm.User = function(uid, game){
   this.data.equips ={};//0:head,1:body,2:cape,3:jewel,4:武器
   this.data.eqp_add = {};//存装备的附加属性
   this.data.id = uid;
-  this.data.attr_arm = dm.conf.EP.attack.attr;
-  this.data.attr_def = dm.conf.EP.defense.attr;
+  this.data.attr_arm = dm.conf.WP.attack.attr;
+  this.data.attr_def = dm.conf.SLD.defense.attr;
   this.data.sp = {};
   this.data.fp = {};//计算结果
   this.popuFP();
@@ -155,15 +156,25 @@ dm.User.prototype.enterShop=function(){
 
 
 dm.User.prototype.buyItem = function(type, lvl){
-	var bg = this.game.backGround;
-	var icon = new lime.Sprite().setSize(64, 64).setPosition(-170 + type*85, -350);
-	icon.setFill(dm.IconManager.getImg('dmdata/dmimg/equip/'+type+'_'+lvl+'.png'))
-	bg.appendChild(icon);
-	this.data.equips[type] = dm.conf.EP[type+'_'+lvl] || {};
+	//var bg = this.game.backGround;
+	var slot;
+	//var icon = new lime.Sprite().setSize(64, 64).setPosition(-170 + type*85, -350);
+	var conf;  
+	if(type == 0){
+		slot = this.game.disp.weapon;
+		conf = dm.conf.WP;
+	}else if(type == 1){
+		slot = this.game.disp.shield;
+		conf = dm.conf.SLD;
+	}
+	slot.setFill(dm.IconManager.getImg('dmdata/dmimg/equip/'+type+'_'+lvl+'.png'))
+	//bg.appendChild(icon);
+	this.data.equips[type] = conf[type+'_'+lvl] || {};
 	this.popuFP();
 }
 
 //购买武器(换个名字)
+/*
 dm.User.prototype.upgrade=function(eqp, type){ //type = 0:主属性,type = 1:附加属性
 	var id = eqp.eqpid;
 	var lvl   = eqp.eqplvl;
@@ -189,6 +200,7 @@ dm.User.prototype.upgrade=function(eqp, type){ //type = 0:主属性,type = 1:附
 	}
 	this.popuFP();
 }
+*/
 
 
 dm.User.prototype.genAttr = function(eqp, num){

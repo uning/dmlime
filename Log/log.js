@@ -36,15 +36,15 @@ var LOG = {
     }
 	var name = LOG.levels[level],
       hd = args.shift(),
-      bd = LOG.dumpArray(args),
 	  f = console[name];
 	if(typeof f === typeof setTimeout ){
-		f.call(console,name,args);
+		f.call(console,name,hd,args);
 	}else
-		console.log(name,args);
+		console.log(name,hd,args);
 
 	if(!LOG.root)
 		return;
+    bd = LOG.dumpArray(args),
     LOG.writeHTML(level, hd, bd);
   },
 
@@ -54,7 +54,6 @@ var LOG = {
       if (bd) {
         bd += '<hr>';
       }
-	  console.log(jsDump);
       bd += jsDump.parse(args[i]);
     }
     return bd;

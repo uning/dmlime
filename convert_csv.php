@@ -11,7 +11,8 @@
  *
  */
 
-$files= array('first_property.csv'=>'FP', 'second_property.csv'=>'SP', 'equips.csv'=>'EP', 'skill.csv'=>'SK', 'monster.csv'=>'MS');
+$files= array('first_property.csv'=>'FP', 'second_property.csv'=>'SP', 'equips_bow.csv'=>'WP', 'equips_wrist.csv'=>'SLD', 
+'skill.csv'=>'SK', 'monster.csv'=>'MS');
 
 //
 $conf_dir = __DIR__.'/dmdata/';

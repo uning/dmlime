@@ -49,11 +49,12 @@ dm.Board = function(rows,cols,game) {
 	this.show_dmg = 0;
 	//
     this.setSize(this.SIZE, this.SIZE);
-    // mask out edges so bubbles flowing in won't be over game controls.
+    /* mask out edges so bubbles flowing in won't be over game controls.
     this.maskSprite = new lime.Sprite().setSize(this.SIZE, this.SIZE)
     this.appendChild(this.maskSprite);
 	this.setMask(this.maskSprite);
     // space that one bubble takes
+	 //*/
     this.GAP = Math.round(this.SIZE / cols);
     // we will keep every column in own layer so they can be animated together
     this.layers = [];
@@ -81,7 +82,13 @@ goog.inherits(dm.Board, lime.Sprite);
  * of bubbles again. Poistion out of screen so they can be animated in
  */
 dm.Board.prototype.fillGems = function(type) {
-	var c,r;
+	var c,r,pos;
+	
+    this.mm = new lime.animation.Spawn(
+        new lime.animation.ScaleTo(1)
+		,new lime.animation.FadeTo(1).setDuration(.8)
+    ).enableOptimizations();
+
     for (c = 0; c < this.cols; c++) {
         if (!this.gems[c]) this.gems[c] = [];
         var i = 0;
@@ -93,7 +100,12 @@ dm.Board.prototype.fillGems = function(type) {
 			}
             gem.r = r;
             gem.c = c;
-            gem.setPosition((c + .5) * this.GAP - 300, (-i + .5) * this.GAP - 300);
+            pos = new goog.math.Coordinate((c + .5) * this.GAP - this.SIZE/2, this.getSize().height - (r + .5) * this.GAP -this.SIZE/2);
+            //gem.setPosition((c + .5) * this.GAP - this.SIZE/2, (-i + .5) * this.GAP - this.SIZE/2);
+			gem.setPosition(pos);
+			gem.setScale(0.5);
+			gem.setOpacity(0);
+			this.mm.addTarget(gem);
             this.gems[c].push(gem);
             this.layers[c].appendChild(gem);
         }
@@ -101,11 +113,15 @@ dm.Board.prototype.fillGems = function(type) {
 	this.show_att = this.fp.a1 + (this.game.data.attack_addtion || 0);
 	this.show_dmg = this.getDamage();
 	if(this.game.show_create == 1){
-		this.game.mon.setText(this.show_dmg);
-		this.game.att.setText(this.show_att);
+		//this.game.mon.setText(this.show_dmg);
+		this.game.disp.attack.setText(this.show_att);
 	}
+	this.mm.play();
 	this.findGemsType();
 };
+
+
+
 
 /**
  * Animate all the bubbles that are not in their correct position
@@ -123,7 +139,7 @@ dm.Board.prototype.moveGems = function(opt_static) {
             g = this.gems[c][r];
             g.r = r;
             g.c = c;
-            pos = new goog.math.Coordinate((c + .5) * this.GAP -300, this.getSize().height - (r + .5) * this.GAP -300);
+            pos = new goog.math.Coordinate((c + .5) * this.GAP - this.SIZE/2, this.getSize().height - (r + .5) * this.GAP -this.SIZE/2);
             if (!goog.math.Coordinate.equals(pos, g.getPosition())) {
                 mm.addNode(g, goog.math.Coordinate.difference(pos, g.getPosition()));
             }
@@ -136,8 +152,11 @@ dm.Board.prototype.moveGems = function(opt_static) {
         goog.events.listen(action, lime.animation.Event.STOP, function() {
 			dm.log.fine('in moveGems : action.play stop')
 			this.isMoving_ = 0;
+			//this.mm.play();
         },false, this);
-    }
+    }else{
+			//this.mm.play();
+	}
 
     return action || false;
 };
@@ -166,16 +185,13 @@ dm.Board.prototype.checkSolutions = function() {
 	this.isMoving_ = 1;
 	this.genType = -1;
 	
-    var action = new lime.animation.Spawn(
-        new lime.animation.ScaleTo(0).setDuration(.1),
-        new lime.animation.FadeTo(0).setDuration(.1)
-    ).enableOptimizations();
 
-    var s = this.selectedGems;	
+
 	this.checkStart();
-	this.playerAction(s);
+	this.playerAction();
 	this.monsterAttack();
-	this.checkEnd(s);
+	this.checkEnd();
+	this.game.disp.kill.setText((this.game.data.killcommon + this.game.data.killspecial) || 0)
 	
 	this.isMoving_ = 0;
 	
@@ -366,9 +382,10 @@ dm.Board.prototype.checkStart = function(){
 /**
  *玩家回合开始
  */
-dm.Board.prototype.playerAction = function(s){
-	var fireDmg = 0;
-	var data = this.game.data;
+dm.Board.prototype.playerAction = function(){
+	var fireDmg = 0,i;
+	var data = this.game.data,s=this.selectedGems;
+
 	for(i=0;i<s.length;i++){
 		s[i].keep = false;
 		if(s[i].isOnFire == true){
@@ -389,7 +406,8 @@ dm.Board.prototype.playerAction = function(s){
 /**
  *玩家回合完成，怪物回合开始
  */
-dm.Board.prototype.checkEnd = function(s){
+dm.Board.prototype.checkEnd = function(){
+    var s = this.selectedGems;	
 	var i;
 	var data = this.game.data;
 	var buff = data['buff'];
@@ -482,8 +500,8 @@ dm.Board.prototype.recover = function(){
 			if(this.show_att *(this.game.data['dmgRatio'] || 1) >= monster.hp + monster.def){
 				//杀死怪物了
 				monster.setKilled();
-				reduceDmg += monster.att //死亡怪物不再造成伤害，从总显示数值中去掉。
-				this.game.mon.setText(Math.max(0,this.getDamage() - reduceDmg));
+				//reduceDmg += monster.att //死亡怪物不再造成伤害，从总显示数值中去掉。
+				//this.game.mon.setText(Math.max(0,this.getDamage() - reduceDmg));
 			}else{
 				monster.unsetKilled();
 			}
@@ -540,7 +558,7 @@ dm.Board.prototype.addSelGem = function(g,trypos) {
 		if(g.type == 'sword' && !g.isBroken){
 			this.show_att += this.fp.a2;
 			//显示
-			this.game.att.setText(this.show_att);
+			this.game.disp.attack.setText(this.show_att);
 		}
 		this.selectedGems.push(g);
 	}
@@ -557,12 +575,12 @@ dm.Board.prototype.cancelSelGem = function(selid){
 		g.deselect();
 		if(g.type == 'sword' && !g.isBroken){
 			this.show_att -= this.fp.a2;
-			this.game.att.setText(this.show_att);
+			this.game.disp.attack.setText(this.show_att);
 		}
 		if(g.type == 'monster'){
 			g.unsetSpecial();
 			this.show_dmg = this.getDamage();
-			this.game.mon.setText(this.show_dmg);
+			//this.game.mon.setText(this.show_dmg);
 		}
 		this.lineLayer.removeChildAt(lc.length-1); //圆角
 		this.lineLayer.removeChildAt(lc.length-1); //线
@@ -604,23 +622,31 @@ dm.Board.prototype.selSense_= function (lastg,pos){
  */
 dm.Board.prototype.pressHandler_ = function(e) {
     // no touching allowed when still moving
-    if (this.isMoving_) return;
+	dm.log.fine(e.type);
+    if (this.isMoving_) {
+		dm.log.fine('pressHandler_ : isMoving_');
+		return;
+	}
 	if((e.type =='mousemove' || e.type == 'touchmove' || e.type == 'gesturechange')){
-		if(! this.doing_ )
+		if(! this.doing_ ){
+			dm.log.fine('pressHandler_ : not doing ');
 			return;
+		}
 
 	}
 	this.selectedGems = this.selectedGems || [];
 	//结束
 	if(e.type == 'mouseup'  || e.type == 'touchend' || e.type == 'touchcancel' || e.type == 'gestureend'){
-		dm.log.fine('pressHandler_: end ,event '+e.type);
+		dm.log.fine('pressHandler_: end ,event restart  '+e.type);
+		lime.scheduleManager.changeDirectorActivity(dm.directory,true);
+
 		this.doing_ = false;
 		for( i = 0 ;i < this.selectedGems.length ; i ++){
 			this.selectedGems[i].deselect();
 			this.selectedGems[i].unsetSpecial();
 			if(this.selectedGems[i].type == 'sword'){
 				this.show_att -= this.fp.a2;
-				this.game.att.setText(this.show_att);					
+				this.game.disp.attack.setText(this.show_att);					
 			}
 		}
 
@@ -630,19 +656,24 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		this.selectedGems = [];
 		this.drawedLines = [];
 		this.lineLayer.removeAllChildren();
+
+
 		this.checkLine(this.selectedGems);
 		return;
 	}
 
     var pos = e.position;
-    // get the cell and row value for the touch
-    var c = Math.floor((pos.x+300) / this.GAP),
-        r = this.rows - Math.ceil((pos.y+300) / this.GAP);
 
-	var valid_min = this.GAP*0.10,
-		valid_max = this.GAP*0.90,  //落在GEM矩形框内中心部分才有效
-		x_valid = (pos.x+300) - this.GAP*c;
-		y_valid = (pos.y+300) - this.GAP*(this.rows - 1 - r);
+	pos.x += this.SIZE/2;
+	pos.y += this.SIZE/2; //中心偏移
+    // get the cell and row value for the touch
+    var c = Math.floor(pos.x / this.GAP),
+        r = this.rows - Math.ceil(pos.y / this.GAP);
+
+	var valid_min = this.GAP*0.05,
+		valid_max = this.GAP*0.95,  //落在GEM矩形框内中心部分才有效
+		x_valid = pos.x - this.GAP*c;
+		y_valid = pos.y - this.GAP*(this.rows - 1 - r);
 
 	if(c >= this.cols || c < 0 || r < 0 || r >= this.rows ){
 		dm.log.fine('pressHandler_: outboard return '+e.type);
@@ -659,6 +690,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	if(this.selectedGems.length > 0)
 		lastg = this.selectedGems[this.selectedGems.length - 1];
 	if(lastg  === g){
+		dm.log.fine('choose last ret');
 		return ; //
 	}
 
@@ -674,6 +706,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		if(selid > -1){
 				this.cancelSelGem(selid);
 				this.checkLine(this.selectedGems);
+				dm.log.fine('pressHandler_: cancel to' + selid )
 				return;
 		}
 	}
@@ -684,12 +717,59 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		this.doing_ = true;
 		this.selectedGems = [];
 		this.lineLayer.removeAllChildren();
-		dm.log.fine('pressHandler_ start:'+e.type);
-        e.swallow(['mouseup','mousemove','touchmove', 'touchend','touchcancel','gestureend','gesturechange'], dm.Board.prototype.pressHandler_);
+		dm.log.fine('pressHandler_ start pause:'+e.type);
+		lime.scheduleManager.changeDirectorActivity(dm.directory,false);
+        e.swallow(['mouseup','mousemove','touchmove','mouseover', 'touchend','touchcancel','gestureend','gesturechange'], dm.Board.prototype.pressHandler_);
     }
 	//如果不相邻
 	if(lastg && !lastg.canConnect(g) || !g.canSelect){
-	//	this.addSelGem(null,e.position);//记录try pos
+		//	this.addSelGem(null,e.position);//记录try pos
+
+		//寻找两点间 相邻点
+		var g2 = g ,g1 = lastg , g3;
+		r = g2.r - g1.r,c = g2.c - g1.c
+		var rab  = r > 0 ? r : -r ,cab = c > 0 ? c : -c;
+
+
+
+		if ( cab >= rab ){
+			delta = c > 0 ? 1 : -1;
+			for(i = g1.c + delta ; ;i += delta ){
+				if(i != g2.c){
+					g3 = this.gems[i][g1.r + Math.round((i - g1.c)*r/c)];
+					if(lastg.canConnect(g3)){
+						this.addSelGem(g3);
+						lastg = g3;
+						this.checkLine(this.selectedGems);
+						dm.log.fine('line add ',g3.r,g3.c)
+					}else{
+						dm.log.fine('g3 not add ',g3.r,g3.c)
+					}
+					//ret.push([g1.r + Math.round((i - g1.c)*r/c),i] )
+				}else
+					break
+
+			}
+		}else{
+			delta = r > 0 ? 1 : -1;
+			for(i = g1.r + delta ; ;i += delta ){
+				if(i != g2.r){
+					g3 = this.gems[g1.c + Math.round((i - g1.r)*c/r)][i];
+					if(lastg.canConnect(g3)){
+						this.addSelGem(g3);
+						this.checkLine(this.selectedGems);
+						dm.log.fine('line add ',g3.r,g3.c)
+						lastg = g3;
+					}else{
+						dm.log.fine('g3 not add ',g3.r,g3.c)
+					}
+					//ret.push([i,g1.c + Math.round((i - g1.r)*c/r)] )
+				}else
+					break
+
+			}
+		}
+		dm.log.fine('not connect : ',g1.r,g1.c,g2.r,g.c);
 		return;
 	}
 	//this.lastPos = e.poistion;
@@ -706,7 +786,8 @@ dm.Board.prototype.getDamage = function(){
 	for (c = 0; c < this.cols; c++) {
 		for (r = 0; r < this.gems[c].length; r++) {
 			if(this.gems[c][r].monster){
-				if(this.gems[c][r].monster.stone == 0 && this.gems[c][r].monster.canAttack){
+				m = this.gems[c][r].monster;
+				if(m.stone == 0 && m.canAttack && m.hp > 0){
 					damage += this.gems[c][r].monster.att;
 				}
 			}
@@ -729,21 +810,30 @@ dm.Board.prototype.getDamage = function(){
  //传入game对象，要设定的类型
  //更新显示数值
  dm.Board.prototype.changeProg = function(game,type){
+	 var size;
 	 switch(type){
-		 case 'exp':
-		 case 'gold':
-			 //game.show_vars[type]._pg.setProgress(game.data[type]/100);
-			 game.show_vars[type]._lct.setText(game.data[type]+'/'+100);
+		 case 'exp':{
+			 size = game.disp.exp.getSize();
+			 game.disp.exp_mask.setSize(size.width*game.data.exp/5, size.height)
 			 break;
+		 }
+		 case 'gold':{
+			 game.disp.gold.setText(game.data.gold);
+			 //game.show_vars[type]._pg.setProgress(game.data[type]/100);
+			 //game.disp.gold._lct.setText(game.data[type]+'/'+100);
+			 break;
+		 }
 		 case 'hp':{
-			 game.show_vars['hp']._lct.setText(game.data['hp']+'/'+game.user.data.fp.a6);
-
-			 game.disp.blood_mask.setSize(76, 130*game.data['hp']/game.user.data.fp.a6);
+			 game.disp.hp.setText(game.data['hp']+'/'+game.user.data.fp.a6);
+			 size = game.disp.blood_bar.getSize();
+			 game.disp.blood_mask.setSize(size.width, size.height*game.data['hp']/game.user.data.fp.a6);
 			 break;
 		 }
 		 case 'mana':
+			 size = game.disp.mana.getSize();
+			 game.disp.mana_mask.setSize(size.width*game.data.mana/10, size.height)
 			 //game.show_vars['mana']._pg.setProgress(game.data['mana']/game.user.fp.a5);
-			 game.show_vars['mana']._lct.setText(game.data['mana']+'/'+game.user.data.fp.a5);
+			 //game.show_vars['mana']._lct.setText(game.data['mana']+'/'+game.user.data.fp.a5);
 			 break;
 	 }
 
@@ -836,16 +926,25 @@ dm.Board.prototype.getDamage = function(){
   * 找到keep = false 的图标，然后将其移除
   */
  dm.Board.prototype.clearGem = function(notfill){
-	 var s = [];
-	 for (var c = 0; c < this.cols; c++) {
-		 for (var r = 0; r < this.gems[c].length; r++) {
-			 if(this.gems[c][r] && (this.gems[c][r].keep == false)){
-				 if(this.gems[c][r].type == 'monster'){
-					 this.gems[c][r].monster.endSkill();
+	 var s = [],g,c,r,cc;
+    var action = new lime.animation.Spawn(
+        new lime.animation.ScaleTo(0).setDuration(.6),
+        new lime.animation.FadeTo(0).setDuration(.6)
+    ).enableOptimizations();
+
+	 for (c = 0; c < this.cols; c++) {
+		 cc = this.gems[c];
+		 for (r = 0; r < cc.length; r++) {
+			 g = cc[r];
+			 if( g && g.keep == false){
+				 if(g.type == 'monster'){
+					 g.monster.endSkill();
 				 }
-				 this.gems[c][r].getParent().removeChild(this.gems[c][r]);
-				 goog.array.remove(this.gems[c], this.gems[c][r]);
+
+				 g.getParent().removeChild(g);
+				 goog.array.remove(cc, g);
 				 r--;
+				//action.addTarget(g);
 			 }
 		 }
 	 }
@@ -853,6 +952,7 @@ dm.Board.prototype.getDamage = function(){
 		 this.fillGems(this.genType);
 		 this.moveGems();
 	 }
+	// action.play();
  }
 
  /**
@@ -901,8 +1001,8 @@ dm.Board.prototype.getDamage = function(){
 	 this.show_att = this.fp.a1 + (this.game.data.attack_addtion || 0);
 	 this.show_dmg = this.getDamage();
 	 if(this.game.show_create == 1){
-		 this.game.mon.setText(this.show_dmg);
-		 this.game.att.setText(this.show_att);
+		// this.game.mon.setText(this.show_dmg);
+		 this.game.disp.attack.setText(this.show_att);
 	 }
 	 this.findGemsType();
  }

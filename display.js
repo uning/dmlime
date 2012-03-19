@@ -1,123 +1,107 @@
 goog.provide('dm.Display');
-/*
-goog.require('dm.Progress');
-goog.require('lime.CanvasContext');
-goog.require('lime.animation.RotateBy');
-goog.require('lime.animation.MoveBy');
-goog.require('lime.animation.Loop');
-*/
 
 /**
  * 定义显示元素
- * 
  */
-
+//dm = {}
 dm.Display = {
-//framework
+	url:'dmdata/dmimg/',
 	framework:{
 		com:{
-		//constant iPad size
 			width: 720,
 			height: 1004
 		},
 		hor:{
 			width: 1004,
 			height: 720
-		},
-		board: 690   //board 参数
-	},
-//
-	btn:{
-		com:{
-			l:{
-				width: 300,
-				height: 90
-			},
-			s:{
-				width: 140,
-				height: 70
-			}
-		},
-		hor:{
-			l:{
-				width: 90,
-				height: 300
-			},
-			s:{
-				width: 70,
-				height: 140
-			}
 		}
 	},
+	board:{ 
+		size:600   //board 参数
+	},
 
-// 四个显示槽
-	bar:{
-		length: 260,
-		width: 30,
-		title:{ 
-			exp:{color:'#00ff00', text:'经验'},
-			gold:{color:'#ffff00', text:'金钱'},
-			def:{color:'#0000ff', text:'防御'},
-			hp:{color:'#ff0000', text:'生命'}
-		},
-		show:{
-			current:0,
-			max:100
+	gem:{
+		size:100
+	},
+
+
+	exp:{max:50, inc:5},
+	mana:{max:50, inc:5},
+
+	init:function(){
+		this.background = {pos:{x:this.framework.com.width/2, y:this.framework.com.height/2}, img:'background.png'}
+		//panel
+		this.score = {pos:{x:147, y:-433}, fontsize:25}
+		this.hp = {pos:{x:244, y:444}, fontsize:25, fontcolor:'#2482ff'}
+		this.mana = {pos:{x:-137, y:-457}, size:{w:120,h:11}, img:'mana_bar.png'}
+		this.exp = {pos:{x:this.mana.pos.x, y:-429}, size:this.mana.size, img:'exp_bar.png'}
+		this.player = {pos:{x:-250, y:-400}, size:{w:75, h:160}, img:{m:'boy.png', f:'girl.png'}}
+		this.enemy = {pos:{x:285, y:-400}, size:{w:108, h:158}}
+		this.box = {pos:{x:10, y:-393}, size:{w:90, h:80}, img:'box.png'}
+		this.blood_bar = {pos:{x:245, y:404}, size:{w:76, h:130}, img:'blood_inside.png'}
+		this.blood_mask = {pos:{x:0, y:65}, size:this.blood_bar.size}
+
+		this.weapon = {pos:{x:-170, y:-350}, size:{w:64, h:64}, url:this.url+'equips/0_'}
+		this.shield = {pos:{x:-170+85, y:-350}, size:this.weapon.size, url:this.url+'equips/1_'}
+
+		this.defense = {pos:{x:-77, y:345}, fontsize:35, fontcolor:"#693807"}
+		this.attack = {pos:{x:46, y:345}, fontsize:this.defense.fontsize, fontcolor:this.defense.fontcolor}
+		this.gold = {pos:{x:152, y:345}, fontsize:this.defense.fontsize, fontcolor:this.defense.fontcolor}
+		this.lvl = {pos:{x:-310, y:-325}, fontsize:25}
+		this.turn = {pos:{x:317, y:360}, fontsize:this.lvl.fontsize}
+
+		this.skillslot = {
+			0:{pos:{x:-220, y:420}},
+			1:{pos:{x:-104, y:420}},
+			2:{pos:{x:13, y:420}},
+			3:{pos:{x:128, y:420}},
+			size:{w:90, h:85}
 		}
-	},
-//
-	line:{
-		length:690,
-		width:2
-	},
 
-	score:{
-		text:'得分',
-		color:'#4f96ed'
-	},
+		//charTip
+		this.charTip = {
+			pos:{x:-130, y:-390},
+			size:{w:210, h:166},
+			img:'chartip.png',
+			substr:{
+				lvl:{x:48, y:-65},
+				b1:{x:-11, y:-45},
+				b2:{x:75, y:-45},
+				b3:{x:-11, y:-20},
+				b4:{x:75, y:-20},
+				a1:{x:50, y:0},
+				a2:{x:50, y:24},
+				a37:{x:15, y:43},
+				a38:{x:15, y:67}
+			}
+		}
 
-	turn:{
-		text:'回合',
-		color:'#4f96ed'
-	},
-
-	position:{
-		btn_hint:{x:650,y:874}, //board面板下面的按钮
-		btn_menu:{x:100,y:874},
-		damage: {x:250, y:849},
-		dmg_num:{x:360, y:849},
-		attack :{x:250, y:879},
-		att_num:{x:360, y:879},
-
-		exp_l:  {x:30,  y:22},
-		exp_p:  {x:220, y:22},
-		gold_l: {x:370, y:22},
-		gold_p: {x:560, y:22},
-		def_l:  {x:30,  y:57},
-		def_p:  {x:220, y:57},
-		hp_l:   {x:370, y:57},
-		hp_p:   {x:560, y:57}
-		
-	},
-
-
-	gameboard:{
-		sk1:{w:60, h:60, x:60, y:840}, 
-		sk2:{w:60, h:60, x:134, y:(840+74)}, 
-		sk3:{w:60, h:60, x:60, y:840}, 
-		sk4:{w:60, h:60, x:134, y:(840+74)}, 
-
-		blood_bar:{w:76, h:130, x:567, y:841},
-
-		player:{w:75, h:160, x:70, y:30},
-		enemy:{w:75, h:160, x:450, y:30},
-
-		box:{w:90, h:90, x:325, y:65},
-
-		menu:{w:104, h:40, x:580, y:60},
-
-		stat:{w:104, h:40, x:580, y:125}
-
+		//点击区域
+		this.killarea= {pos:{x:-240, y:335}, size:{w:60, h:60}}
+		//文字
+		this.kill = {pos:{x:-180, y:345}, fontsize:35, fontcolor:this.defense.fontcolor}
+		//弹框
+		this.killtip = {
+			pos:{x:-230, y:280},
+			size:{w:126, h:58},
+			img:'killtip.png',
+			sub:{
+				common:{x:35, y:-16, value:'killcommon'},
+				special:{x:35, y:7, value:'killspecial'}
+			}
+		}
+		//board
+		this.board.pos = {x:this.background.x, y:this.background.y}
+		this.gemSize = this.board.size/2;
+		this.gemImg = {
+			'hp':this.url+'hp.png',
+			'mana':this.url+'mana.png',
+			'sword':this.url+'sword.png',
+			'gold':this.url+'gold.png'
+		}
+		//
 	}
 }
 
+//dm.Display.init();
+//console.log(dm.Display);

@@ -3,3 +3,10 @@ dmdata/*
 \.*
 test*
 assets/*
+t*
+*.coffee
+*.bakdd
+conf/*
+bootstrap*
+dm
+log/*

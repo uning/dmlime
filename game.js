@@ -1,4 +1,5 @@
 goog.provide('dm.Game');
+goog.require('dm.Display');
 goog.require('dm.Progress');
 goog.require('lime.CanvasContext');
 goog.require('lime.animation.RotateBy');
@@ -13,9 +14,9 @@ goog.require('lime.animation.Loop');
 dm.Game = function(size,user){
 
 	dm.log.fine('for ad',size,user)
-
     lime.Scene.call(this);
 	//初始化数据
+	dm.Display.init();
 	this.initData(size, user);
 	this.createPanel();
 	this.createBoard();
@@ -28,7 +29,8 @@ dm.Game = function(size,user){
     lime.scheduleManager.scheduleWithDelay(this.changeData, this, 500);
      // show lime logo
     dm.builtWithLime(this);
-	goog.events.listen(this, ['mousedown', 'touchstart', 'mouseup', 'touchend'], this.pressHandler_, false, this);
+	goog.events.listen(this, ['mousedown', 'touchstart', 'mouseup', 'touchend'], this.pressHandler_);
+	//goog.events.unlisten(this, ['mousedown', 'touchstart', 'mouseup', 'touchend'], this.pressHandler_, false, this);
 	//
 	//加数值动画label
 	//this.notify = new lime.Label().setText('loading').setFontSize(80).setFontColor('#000').setPosition(dm.WIDTH/2, dm.HEIGHT/2).setOpacity(1);
@@ -48,9 +50,7 @@ goog.inherits(dm.Game, lime.Scene);
  */
 dm.Game.prototype.createPanel = function(){
 	//背景层
-	//this.panel = new lime.Layer();
-
-	var i, j, slot
+	var i, j, slot, dp
 	var gold_bar, blood_bar, skill_exp_bar, exp_bar;
 	var blood_mask;
 
@@ -59,61 +59,43 @@ dm.Game.prototype.createPanel = function(){
 
 	//背景图片
 	//this.backGround = new lime.Sprite().setSize(720, 1004).setFill(dm.IconManager.getImg('dmdata/dmimg/background.png'));
-	this.backGround = new lime.Sprite().setSize(720, 1004).setFill('dmdata/dmimg/background.png');
-	this.backGround.setPosition(720/2, 1004/2);
+	dp = dm.Display;
+	this.backGround = new lime.Sprite().setSize(dp.framework.com.width, dp.framework.com.height).setFill(dp.url+dp.background.img);
+	this.backGround.setPosition(dp.background.pos.x, dp.background.pos.y);
 	this.appendChild(this.backGround);
-	//
-	this.disp.lvl = new lime.Label().setFontSize(20).setText("lv."+this.user.data.lvl).setPosition(-310, -330);
-	this.backGround.appendChild(this.disp.lvl);
-	//
-	this.disp.turn = new lime.Label().setFontSize(20).setText(this.data.turn).setPosition(317, 353);
-	this.backGround.appendChild(this.disp.turn);
 
-	//player
-	this.disp.player = new lime.Sprite().setSize(75, 160).setFill(dm.IconManager.getImg(url+'boy'+ext)).setPosition(-250, -400);
-	this.backGround.appendChild(this.disp.player);
-	//
-	//conterpart
-	this.disp.enemy = new lime.Sprite().setSize(108, 158).setFill(dm.IconManager.getImg(url+'boss'+ext)).setPosition(250, -400);
-	this.backGround.appendChild(this.disp.enemy);//.setScale(-1, 1));
+	this.disp.player = new lime.Sprite().setFill(dp.url+dp.player.img.m)
+	this.disp.enemy = new lime.Sprite().setFill(dp.url+'boss.png')
+	this.disp.box = new lime.Sprite().setFill(dp.url+dp.box.img)
+	this.disp.attack = new lime.Label().setText(this.user.data.fp.a1)
+	this.disp.defense = new lime.Label().setText(this.user.data.fp.a3)
+	this.disp.lvl = new lime.Label().setText(this.user.data.lvl)
+	this.disp.turn = new lime.Label().setText(this.data.turn)
+	this.disp.blood_bar  = new lime.Sprite().setFill(dp.url+dp.blood_bar.img)
+	this.disp.weapon = new lime.Sprite()
+	this.disp.shield = new lime.Sprite()
+	this.disp.kill = new lime.Label().setText((this.data.killcommon + this.data.killspecial) || 0)
 
-	//box
-	this.disp.box = new lime.Sprite().setSize(90, 80).setFill(dm.IconManager.getImg(url+'box'+ext)).setPosition(10, -393);
-	this.backGround.appendChild(this.disp.box);
-
-	//4个技能槽
-	for( i=0; i<2; i++){
-		for(j=0; j<2; j++){
-			slot = new lime.Sprite().setSize(60, 60).setPosition(-270 + i*73 , 368 + j*73 ).setFill(0, 0, 0, 0.7);
-			this.disp.skillslot[i+j*2] = slot;
-			this.backGround.appendChild(slot);
-		}
+	for(i in this.disp){
+		this.disp[i].setPosition(dp[i].pos.x, dp[i].pos.y);
+		dp[i].size && this.disp[i].setSize(dp[i].size.w, dp[i].size.h);
+		dp[i].fontsize && this.disp[i].setFontSize(dp[i].fontsize);
+		dp[i].fontcolor && this.disp[i].setFontColor(dp[i].fontcolor);
+		this.backGround.appendChild(this.disp[i]);
 	}
-
-	blood_bar  = new lime.Sprite().setPosition(245, 404).setSize(76, 130);
-	blood_bar.setFill(dm.IconManager.getImg(url + 'blood_inside' + ext));
-    blood_mask = new lime.Sprite().setFill(100, 0, 0, .1).setAnchorPoint(0.5, 1).setPosition(0,65).setSize(76, 130);
-	blood_bar.setMask(blood_mask);
-	blood_bar.appendChild(blood_mask);
-	this.disp.blood_mask = blood_mask;
-
-	this.backGround.appendChild(blood_bar);
-
-	//menu
-	/*
-	this.disp.menu = new lime.Sprite().setSize(104, 40).setAnchorPoint(0, 0).setPosition(580, 60).setFill(dm.IconManager.getImg(url+'menu'+ext));
-	this.disp.menu.func = this.mainShow;
-	*/
-
-	//stat
-	/*
-	this.disp.stat = new lime.Sprite().setSize(104, 40).setAnchorPoint(0, 0).setPosition(580, 125).setFill(dm.IconManager.getImg(url+'start'+ext));
-	this.disp.stat.func = this.statShow;
-
-	this.backGround.appendChild(this.disp.menu);
-	this.backGround.appendChild(this.disp.stat);
-	*/
-
+	//4个技能槽
+	this.disp.skillslot = {};
+	for( i=0; i<4; i++){
+		slot = new lime.Sprite().setSize(dp.skillslot.size.w, dp.skillslot.size.h)
+		.setPosition(dp.skillslot[i].pos.x, dp.skillslot[i].pos.y).setFill(0, 0, 0, 0.3);
+		this.disp.skillslot[i] = slot;
+		this.backGround.appendChild(slot);
+	}
+	
+    this.disp.blood_mask = new lime.Sprite().setFill(100, 200, 0, .3).setAnchorPoint(0.5, 1).setPosition(dp.blood_mask.pos.x, dp.blood_mask.pos.y).
+		setSize(dp.blood_mask.size.w, dp.blood_mask.size.h);
+	this.disp.blood_bar.appendChild(this.disp.blood_mask);
+	this.disp.blood_bar.setMask(this.disp.blood_mask);
 }
 
 /*
@@ -129,26 +111,30 @@ dm.Game.prototype.createBoard = function(){
  * 显示游戏中的数值
  */
 dm.Game.prototype.showData = function(){
-    this.score = new lime.Label().setFontColor('#000').setFontSize(24).setText('0').setAnchorPoint(0, 0).setFontWeight(700);
-	this.show_vars = {
-		exp:{curdata:this.data.exp, max:100, loc:{x:370 - 720/2,y:940 - 1004/2}}
-		,gold:{curdata:this.data.gold, max:100, loc:{x:100 - 360,y:900 - 502}}
-		,mana:{curdata:this.data.mana, max:this.user.data.fp.a5, loc:{x:370 -360, y:910 - 502}}
-		,hp:{curdata:this.data.hp, max:this.user.data.fp.a6, loc:{x:600 - 360, y:890 - 502}}
-	}
-	
-	for( var i in this.show_vars){
-		var p = this.show_vars[i];
-		p._lct = new lime.Label().setFontSize(28).setText(p.curdata+'/'+p.max).setPosition(p.loc.x, p.loc.y);
-		this.backGround.appendChild(p._lct);
-	}
-	this.mon = new lime.Label().setFontColor('#000').setFontSize(34).setText(this.board.getDamage()).setPosition(260-360, 880-502);
-	this.att = new lime.Label().setFontColor('#000').setFontSize(34).setText(this.user.data.fp.a1).setPosition(470-360, 880-502);
-	this.backGround.appendChild(this.mon);
-	this.backGround.appendChild(this.att);	
+	var dp = dm.Display
+	this.disp.score = new lime.Label().setPosition(dp.score.pos.x, dp.score.pos.y).setFontSize(dp.score.fontsize).setText(0)
+	this.disp.hp = new lime.Label().setPosition(dp.hp.pos.x, dp.hp.pos.y).setFontSize(dp.hp.fontsize).setText(this.data['hp']+'/'+this.user.data.fp.a6)
+
+	this.disp.mana = new lime.Sprite().setPosition(dp.mana.pos.x, dp.mana.pos.y).setSize(dp.mana.size.w, dp.mana.size.h).setFill(dp.url + dp.mana.img)
+	this.disp.mana_mask = new lime.Sprite().setAnchorPoint(0, .5).setPosition(- dp.mana.size.w/2, 0)//.setSize(dp.mana.size.w , dp.mana.size.h)
+	this.disp.mana.appendChild(this.disp.mana_mask)
+	this.disp.mana.setMask(this.disp.mana_mask)
+
+	this.disp.exp = new lime.Sprite().setPosition(dp.exp.pos.x, dp.exp.pos.y).setSize(dp.exp.size.w, dp.exp.size.h).setFill(dp.url + dp.exp.img);
+	this.disp.exp_mask = new lime.Sprite().setAnchorPoint(0, .5).setPosition(- dp.exp.size.w/2, 0)//.setSize(dp.exp.size.w, dp.exp.size.h)
+	this.disp.exp.setMask(this.disp.exp_mask)
+	this.disp.exp.appendChild(this.disp.exp_mask)
+
+	this.disp.gold = new lime.Label().setPosition(dp.gold.pos.x, dp.gold.pos.y).setFontSize(dp.gold.fontsize).setText(this.data['gold'])
+	this.disp.gold.setFontColor(dp.gold.fontcolor)
+
+	this.backGround.appendChild(this.disp.mana)
+	this.backGround.appendChild(this.disp.exp)
+	this.backGround.appendChild(this.disp.score)
+	this.backGround.appendChild(this.disp.hp)
+	this.backGround.appendChild(this.disp.gold)
 	this.show_create = 1;
 }
-
 
 /*
  * 游戏数据初始化
@@ -160,23 +146,21 @@ dm.Game.prototype.initData = function(size, user){
 	this.user.game = this;
 
 	//游戏展示变量
+	this.dp = dm.Display;
 	this.disp = {};
 
 	//游戏数据
 	this.data = {};
 	this.data.turn = 0; //回合数
 	this.data.hp    = this.user.data.fp.a6;
-	this.data.mana  = this.user.data.fp.a5;
+	this.data.mana  = 0;//this.user.data.fp.a5;
 	this.data.def   = this.user.data.fp.a3;
 	this.data.def_extra = 0; //额外护甲,技能增加的额外生命、护甲、魔法盾，都可看做是额外护甲形式
-	this.data.score = 0;
 	this.data.lvl   = 0;
 	this.data.exp   = 0;
 	this.data.gold  = 0;
-	this.data.skillexp = 0;
+	//this.data.skillexp = 0;
     this.data.points = 0;
-	//this.panel;
-	this.disp.skillslot = {};
 	//记录游戏buff
 	this.data.buff = {};
 
@@ -233,6 +217,15 @@ dm.Game.prototype.initData = function(size, user){
  *
  */
 dm.Game.prototype.pressHandler_ = function(e){
+	var dp = dm.Display;
+	dp.init();
+	var pos = e.position;
+	pos.x -= dp.framework.com.width/2;
+	pos.y -= dp.framework.com.height/2;
+	function inArea(cp, cs){
+		return (pos.x > cp.x - cs.w/2 && pos.x < cp.x + cs.w/2 && pos.y > cp.y - cs.h/2 && pos.y < cp.y + cs.h/2)
+	}
+	/*
 	var clickArea = {
 		skArea:{
 			0:{w:60 ,h:60 ,x:-270 ,y:370},
@@ -248,30 +241,39 @@ dm.Game.prototype.pressHandler_ = function(e){
 			killed:{w:60, h:60, x:-90 ,y:337}
 		}
 	};
-	var pos = e.position;
-	var i,j;
-	for(i in clickArea){
-		for(j in clickArea[i]){
-			if(pos.x - 360 > clickArea[i][j].x - clickArea[i][j].w/2  &&  pos.x - 360 < clickArea[i][j].x + clickArea[i][j].w/2
-			   && pos.y - 502 > clickArea[i][j].y - clickArea[i][j].h/2 && pos.y - 502 < clickArea[i][j].y + clickArea[i][j].h/2){
-				   if(i == "skArea" && this.disp.skillslot[j].sk){
-					   this.skillUse(this.disp.skillslot[j].sk);
-				   }else if(i == "charArea" && j == "player"){
-					   if( e.type == 'touchstart' || e.type == 'mousedown'){
-						   this.showStat();
-					   }else if(e.type == 'touchend' || e.type == 'mouseup'){
-						   this.backGround.removeChild(this.disp.charTip);
-						   this.disp.charTip = null;
-					   }
-				   }else if(i == "killed"){
-					   if( e.type == 'touchstart' || e.type == 'mousedown'){
-						   this.showKilled();
-					   }else if(e.type == 'touchend' || e.type == 'mouseup'){
-						   this.backGround.removeChild(this.disp.killedTip);
-						   this.disp.killedTip = null;
-					   }
-				   }
-			   }
+	*/
+	
+	var i, j, cpoint, csize;
+	for(i=0;i<4;i++){
+		cpoint = dp.skillslot[i].pos;
+		csize = dp.skillslot.size;
+		if(inArea(cpoint, csize)){
+			this.disp.skillslot[i].sk && this.skillUse(this.disp.skillslot[i].sk);
+		}
+	}
+
+	//player
+	cpoint = dp.player.pos;
+	csize = dp.player.size;
+	if(inArea(cpoint, csize)){
+		if( e.type == 'touchstart' || e.type == 'mousedown'){
+			this.showStat();
+		}else if(e.type == 'touchend' || e.type == 'mouseup'){
+			this.backGround.removeChild(this.disp.charTip);
+			this.disp.charTip = null;
+		}
+	}
+	
+	//killed
+	var kp, ks;
+	cpoint = dp.killarea.pos;
+	csize = dp.killarea.size;
+	if(inArea(cpoint, csize)){
+		if( e.type == 'touchstart' || e.type == 'mousedown'){
+			this.showKilled();
+		}else if(e.type == 'touchend' || e.type == 'mouseup'){
+			this.backGround.removeChild(this.disp.killedTip);
+			this.disp.killedTip = null;
 		}
 	}
 }
@@ -280,21 +282,16 @@ dm.Game.prototype.pressHandler_ = function(e){
  * 点击人物状态的图标，可以显示人物相关信息：武器装备，人物二级属性
  */
 dm.Game.prototype.showStat = function(){
-	var loc = {
-		lvl:{x:48, y:-65},
-		b1:{x:-11, y:-45},
-		b2:{x:75, y:-45},
-		b3:{x:-11, y:-20},
-		b4:{x:75, y:-20},
-		a1:{x:50, y:0},
-		a2:{x:50, y:24},
-		a37:{x:15, y:43},
-		a38:{x:15, y:67}
-	}
+	dm.Display.init();
+	var dialog = dm.Display.charTip;
+	var loc = dialog.substr;
 	var i, j, value, label, charTip;
-	this.disp.charTip = new lime.Sprite().setSize(210, 166).setFill(dm.IconManager.getImg('dmdata/dmimg/chartip.png')).setPosition(-125, -390);
+	this.disp.charTip = new lime.Sprite().setSize(dialog.size.w, dialog.size.h)
+	.setFill(dm.Display.url + dialog.img).setPosition(dialog.pos.x, dialog.pos.y);
 	charTip = this.disp.charTip;
+
 	this.backGround.appendChild(charTip);
+
 	for(i in loc){
 		if(i[0] == 'a'){
 			value = this.user.data.fp[i]; 
@@ -309,16 +306,20 @@ dm.Game.prototype.showStat = function(){
 }
 
 dm.Game.prototype.showKilled = function(){
+	/*
 	var loc = {
 		common:{x:35, y:-16, value:this.data.killcommon || 0},
 		special:{x:35, y:7, value:this.data.killspecial || 0}
 	}
+	*/
 	var i, j, value, label, killedTip;
-	this.disp.killedTip = new lime.Sprite().setSize(126, 58).setFill(dm.IconManager.getImg('dmdata/dmimg/killtip.png')).setPosition(-90, 280);
+	this.disp.killedTip = new lime.Sprite().setSize(this.dp.killtip.w, this.dp.killtip.h)
+	.setFill(this.dp.url + this.dp.killtip.img).setPosition(this.dp.killtip.pos.x, this.dp.killtip.pos.y);
 	killedTip = this.disp.killedTip;
 	this.backGround.appendChild(killedTip);
-	for(i in loc){
-		label = new lime.Label().setText(loc[i].value).setPosition(loc[i].x, loc[i].y); 
+	var sub = this.dp.killtip.sub;
+	for(i in sub){
+		label = new lime.Label().setText(this.data[sub[i].value] || 0).setPosition(sub[i].x, sub[i].y); 
 		killedTip.appendChild(label);
 	}
 }
@@ -403,11 +404,11 @@ dm.Game.prototype.mainShow = function(game){
 			 break;
 		 }
 		 case 'mana':{
-			 data['skillexp'] += Math.max(0, data['mana'] - fp.a5);
+			 //data['skillexp'] += Math.max(0, data['mana'] - fp.a5);
 			 data['mana'] = Math.min(fp.a5, data['mana']);
-			 while(data['skillexp'] >= 3){
-				 data['skillexp'] -= 3;
-				 //this.pop.skill += 1;
+			 while(data['mana'] >= 10){
+				 data['mana'] -= 10;
+				 this.pop.skill += 1;
 			 }
 			 break;
 		}
@@ -415,7 +416,7 @@ dm.Game.prototype.mainShow = function(game){
 			while(data['gold'] >= 3){
 				data['gold'] -= 3;
 
-				//this.pop.shop += 1;
+				this.pop.shop += 1;
 			}
 			break;
 		}
@@ -651,13 +652,13 @@ dm.Game.prototype.changeData = function() {
  * Increase value of score label when points have changed
  */
 dm.Game.prototype.updateScore = function() {
-    var curscore = parseInt(this.score.getText(), 10);
+    var curscore = parseInt(this.disp.score.getText() || 0, 10);
     if (curscore < this.data.points) {
 		this.step += 1;
 		if(this.step < 5)
-			this.score.setText(curscore + 1);
+			this.disp.score.setText(curscore + 1);
 		else{
-			this.score.setText(this.data.points);
+			this.disp.score.setText(this.data.points);
 		}
 	}else
 		this.step = 0;
@@ -712,7 +713,7 @@ dm.Game.prototype.changeAnim = function(str){
  */
 dm.Game.prototype.endGame = function() {
    goog.events.unlisten(this.board, ['mousedown', 'touchstart'], this.board.pressHandler_);
-   goog.events.unlisten(this, ['mousedown', 'touchstart'],this.pressHandler_);
+   goog.events.unlisten(this, ['mousedown', 'touchstart', 'mouseup', 'touchend'], this.pressHandler_);
 
    lime.scheduleManager.unschedule(this.updateScore, this);
 
@@ -753,6 +754,8 @@ dm.Game.prototype.endGame = function() {
 dm.Game.prototype.skillStudy = function(){
 	var user = this.user;
 
+	//goog.events.unlisten(this.board, ['mousedown', 'touchstart'], this.board.pressHandler_);
+	//goog.events.unlisten(this, ['mousedown', 'touchstart'], this.pressHandler_);
 	var dialog = new lime.Sprite().setSize(473, 416).setPosition(720/2, 1004/2);
 	this.appendChild(dialog);
 
@@ -774,6 +777,8 @@ dm.Game.prototype.skillStudy = function(){
 	}else if(sn == 4){
 		sk_key = user.randSel(user.findKey(user.data.skills), 2);
 	}
+	//test
+	sk_key[0] = 'sk7'
 
 	for(i in sk_key){
 		icon = new lime.Sprite().setSize(90, 85).setPosition(-145 + i*140, -125);
@@ -789,11 +794,11 @@ dm.Game.prototype.skillStudy = function(){
 	goog.events.listen(btn_study, ['mousedown', 'touchstart'], function(){
 		game = this.getParent().getParent();
 		board = game.board;
-		goog.events.unlisten(board, ['mousedown', 'touchstart'], board.pressHandler_);
+		//goog.events.unlisten(board, ['mousedown', 'touchstart'], board.pressHandler_);
 		if(this.skill){
 			game.user.skillUp(this.skill);
 			goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
-		//	goog.events.listen(game, ['mousedown', 'touchstart'], game.pressHandler_);
+			goog.events.listen(game, ['mousedown', 'touchstart', 'mouseup', 'touchend'], game.pressHandler_);
 			var dialog = this.getParent();
 			game.removeChild(this.getParent());
 			game.ispoping = false;
@@ -809,6 +814,8 @@ dm.Game.prototype.skillStudy = function(){
  */
 dm.Game.prototype.skillUse = function(sk){
 	var user = this.user;
+	goog.events.unlisten(this.board, ['mousedown', 'touchstart'], this.board.pressHandler_);
+	goog.events.unlisten(this, ['mousedown', 'touchstart', 'mouseup', 'touchstart'], this.pressHandler_);
 	var dialog = new lime.Sprite().setSize(473, 416).setPosition(720/2, 1004/2);
 	this.appendChild(dialog);
 	var textarea = new lime.RoundedRect().setSize(390, 150).setPosition(0, 35).setFill(0,0,0,.3);
@@ -831,8 +838,8 @@ dm.Game.prototype.skillUse = function(sk){
 	goog.events.listen(btn_use, ['mousedown', 'touchstart'], function(){
 		game=this.getParent().getParent();
 		board = game.board;
-	//	goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
-	//	goog.events.listen(game, ['mousedown', 'touchstart'], game.pressHandler_);
+		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+		goog.events.listen(game, ['mousedown', 'touchstart', 'mouseup', 'touchend'], game.pressHandler_);
 		var dialog = this.getParent();
 		game.removeChild(this.getParent());
 		game.ispoping = false;
@@ -847,7 +854,7 @@ dm.Game.prototype.skillUse = function(sk){
 		game = this.getParent().getParent();
 		board = game.board;
 		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
-	//	goog.events.listen(game, ['mousedown', 'touchstart'], game.pressHandler_);
+		goog.events.listen(game, ['mousedown', 'touchstart', 'mouseup', 'touchend'], game.pressHandler_);
 		game.removeChild(this.getParent());
 		var rubbish = this.getParent();
 		rubbish = null;
@@ -918,8 +925,9 @@ dm.Game.prototype.lvlup = function(){
 		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
 		board.show_att = board.getBaseAttack() + game.data['attack_addtion'];
 		board.show_dmg = board.getDamage();
-		game.att.setText(board.show_att);
-		game.mon.setText(board.show_dmg);
+		game.disp.attack.setText(board.show_att);
+		game.disp.defense.setText(game.user.data.fp.a3);
+		//game.mon.setText(board.show_dmg);
 		game.data['hp'] += parseInt(dm.conf.FP.a6.inc); //每级增加血上限
 		game.data['mana'] += parseInt(dm.conf.FP.a5.inc);
 		board.turnEndShow();
@@ -966,9 +974,11 @@ dm.Game.prototype.itemBuy = function(){
 			board.turnEndShow();
 			board.show_att = board.getBaseAttack();
 			board.show_dmg = board.getDamage();
-			game.att.setText(board.show_att);
-			game.mon.setText(board.show_dmg);
+			game.disp.attack.setText(board.show_att);
+			game.disp.defense.setText(game.user.data.fp.a3);
+			//game.mon.setText(board.show_dmg);
 			goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+			goog.events.listen(game, ['mousedown', 'touchstart', 'mouseup', 'touchend'], game.pressHandler_);
 			game.ispoping = false;
 			game.removeChild(this.getParent());
 		}else{
@@ -981,12 +991,22 @@ dm.Game.prototype.itemBuy = function(){
  * 显示装备信息
  */
 dm.Game.prototype.equipInfo = function(){
-	var i, h=0, fpname, fpval, info;
+	var i, h=0, fpname, fpval, info, conf;
 	this.btn.item = {type:this.eqptype, lvl:this.eqplvl};
 	this.textarea.removeAllChildren();
-	for(i in dm.conf.EP[this.eqptype+'_'+this.eqplvl].func){
+	switch(this.eqptype){
+		case 0:{
+			conf = dm.conf.WP;
+			break;
+		}
+		case 1:{
+			conf = dm.conf.SLD;
+		}
+	}
+
+	for(i in conf[this.eqptype+'_'+this.eqplvl].func){
 		fpname = dm.conf.FP[i].tips;
-		fpval  = dm.conf.EP[this.eqptype+'_'+this.eqplvl].fp[i];
+		fpval  = conf[this.eqptype+'_'+this.eqplvl].fp[i];
 		info = new lime.Label().setFontColor('#FFF').setFontSize(20).setPosition(-10, 10);
 		info.setText(fpname + ' +' + fpval);
 		h += info.getSize().height;
@@ -1001,6 +1021,8 @@ dm.Game.prototype.equipInfo = function(){
  dm.Game.prototype.popWindow = function(text){
 	 this.ispoping = true;
 	 goog.events.unlisten(this.board, ['mousedown', 'touchstart'], this.board.pressHandler_);
+	 //goog.events.unlisten(this, ['mousedown', 'touchstart', 'mouseup', 'touchend'], this.pressHandler_, false, this);
+	 goog.events.unlisten(this, ['mousedown', 'touchstart', 'mouseup', 'touchend'], this.pressHandler_);
 
 	 switch(text){
 		 case 'lvl':{
