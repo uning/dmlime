@@ -197,6 +197,7 @@ dm.start = function() {
     dm.Log.init(null, 'fine');
   }
   dm.log = dm.Log;
+  goog['DEBUG'] = true;
   dm.director = new lime.Director(el, dm.WIDTH, dm.HEIGHT);
   dm.director.makeMobileWebAppCapable();
   dm.log.debug('width' + ' ' + el.clientWidth + ' ' + 'height' + ' ' + el.clientHeight + ' ' + 'offsetX' + ' ' + el.offsetLeft + ' ' + 'offsetY' + ' ' + el.offsetTop);

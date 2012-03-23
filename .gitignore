@@ -6,7 +6,10 @@ assets/*
 t*
 *.coffee
 *.bakdd
+<<<<<<< HEAD
 conf/*
 bootstrap*
 dm
 log/*
+=======
+>>>>>>> 0f67180e6133162bae8470661066740eb7ae7e52

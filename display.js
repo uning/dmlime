@@ -23,18 +23,13 @@ dm.Display = {
 	gem:{
 		size:100
 	},
-
-
-	exp:{max:50, inc:5},
-	mana:{max:50, inc:5},
-
 	init:function(){
 		this.background = {pos:{x:this.framework.com.width/2, y:this.framework.com.height/2}, img:'background.png'}
 		//panel
-		this.score = {pos:{x:147, y:-433}, fontsize:25}
-		this.hp = {pos:{x:244, y:444}, fontsize:25, fontcolor:'#2482ff'}
-		this.mana = {pos:{x:-137, y:-457}, size:{w:120,h:11}, img:'mana_bar.png'}
-		this.exp = {pos:{x:this.mana.pos.x, y:-429}, size:this.mana.size, img:'exp_bar.png'}
+		this.score = {pos:{x:147, y:-440}, fontsize:30}
+		this.hp = {pos:{x:244, y:444}, fontsize:30}
+		this.mana = {pos:{x:-134, y:-458}, size:{w:192,h:11}}
+		this.exp = {pos:{x:this.mana.pos.x, y:-430}, size:this.mana.size}
 		this.player = {pos:{x:-250, y:-400}, size:{w:75, h:160}, img:{m:'boy.png', f:'girl.png'}}
 		this.enemy = {pos:{x:285, y:-400}, size:{w:108, h:158}}
 		this.box = {pos:{x:10, y:-393}, size:{w:90, h:80}, img:'box.png'}
@@ -44,19 +39,20 @@ dm.Display = {
 		this.weapon = {pos:{x:-170, y:-350}, size:{w:64, h:64}, url:this.url+'equips/0_'}
 		this.shield = {pos:{x:-170+85, y:-350}, size:this.weapon.size, url:this.url+'equips/1_'}
 
-		this.defense = {pos:{x:-77, y:345}, fontsize:35, fontcolor:"#693807"}
-		this.attack = {pos:{x:46, y:345}, fontsize:this.defense.fontsize, fontcolor:this.defense.fontcolor}
-		this.gold = {pos:{x:152, y:345}, fontsize:this.defense.fontsize, fontcolor:this.defense.fontcolor}
-		this.lvl = {pos:{x:-310, y:-325}, fontsize:25}
-		this.turn = {pos:{x:317, y:360}, fontsize:this.lvl.fontsize}
+		this.defense = {pos:{x:-75, y:345}, fontsize:35}
+		this.attack = {pos:{x:50, y:345}, fontsize:this.defense.fontsize}
+		this.gold = {pos:{x:152, y:345}, fontsize:this.defense.fontsize}
+		this.lvl = {pos:{x:-310, y:-330}, fontsize:30}
+		this.turn = {pos:{x:317, y:353}, fontsize:this.lvl.fontsize}
 
 		this.skillslot = {
 			0:{pos:{x:-220, y:420}},
 			1:{pos:{x:-104, y:420}},
-			2:{pos:{x:13, y:420}},
+			2:{pos:{x:14, y:420}},
 			3:{pos:{x:128, y:420}},
 			size:{w:90, h:85}
 		}
+
 
 		//charTip
 		this.charTip = {

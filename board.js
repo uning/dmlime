@@ -189,8 +189,6 @@ dm.Board.prototype.checkSolutions = function() {
 	this.playerAction();
 	this.monsterAttack();
 	this.checkEnd();
-
-	this.isMoving_ = 0;
 	
 	return true;
 };
@@ -721,6 +719,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		this.selectedGems = [];
 		this.lineLayer.removeAllChildren();
 		//dm.log.fine('pressHandler_ start pause:'+e.type);
+		dm.log.fine('pressHandler_ start pause:'+e.type);
 		lime.scheduleManager.changeDirectorActivity(dm.directory,false);
         e.swallow(['mouseup','mousemove','touchmove','mouseover', 'touchend','touchcancel','gestureend','gesturechange'], dm.Board.prototype.pressHandler_);
     }
