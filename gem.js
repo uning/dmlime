@@ -65,10 +65,21 @@ dm.Gem.prototype.canConnect = function(g) {
  */
 dm.Gem.random = function(w, h, index) {
 	//简单随机出
+	//dm.GEMTYPES = ['monster','hp','mana','sword','gold'];
+	var conf = {0:25, 1:45, 2:55, 3:80, 4:100};
+	var prob = Math.random()*100;
+	var i,id;
+	for(i in conf){
+		if(prob < conf[i]){
+			id = parseInt(i);
+			break;
+		}
+	}
+	
 	//
     var gem = new dm.Gem();
 	if(typeof(index) === "undefined" || index == -1){
-		var id = Math.floor(Math.random() * dm.GEMTYPES.length);
+		//id = Math.floor(Math.random() * dm.GEMTYPES.length);
 		gem.index = id; 
 		gem.type = dm.GEMTYPES[id];
 	}else{
@@ -77,7 +88,6 @@ dm.Gem.random = function(w, h, index) {
 	}
 	gem.setSize(w,h);
 
-    //gem.circle.setFill('assets/ball_' + id + '.png');
 	gem.fillImage();
 
     return gem;

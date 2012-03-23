@@ -6,6 +6,7 @@ goog.require('dm.conf.SLD');
 goog.require('dm.conf.SK');
 goog.require('dm.conf.Eqpup');
 goog.require('dm.conf.Exp');
+goog.require('dm.conf.Score');
 
 /**
  * Single User
@@ -63,7 +64,7 @@ dm.User.prototype.getFP = function(name){
 	//二级属性到一级属性转换
 	for( i in sps){
 		v = dm.conf.SP[i] && dm.conf.SP[i].func && dm.conf.SP[i].func[name]  || 0;
-		ret += v * sps[i];
+		ret += Math.round(v * sps[i] * 100)/100;
 	}
 	ret += parseInt(dm.conf.FP[name] && dm.conf.FP[name].def) || 0;
 	return ret;
@@ -167,7 +168,7 @@ dm.User.prototype.buyItem = function(type, lvl){
 		slot = this.game.disp.shield;
 		conf = dm.conf.SLD;
 	}
-	slot.setFill(dm.IconManager.getImg('dmdata/dmimg/equip/'+type+'_'+lvl+'.png'))
+	slot.setFill(dm.IconManager.getImg('dmdata/dmimg/equip/'+type+'_'+Math.floor(lvl/5+1)+'.png'))
 	//bg.appendChild(icon);
 	this.data.equips[type] = conf[type+'_'+lvl] || {};
 	this.popuFP();
@@ -281,10 +282,10 @@ dm.User.prototype.lvlUp=function(){
 	this.data.lvl += 1;
 	this.game.disp.lvl.setText(this.data.lvl);
 	switch(this.data.lvl){
-		case 2:
-		case 4:
-		case 7:
-		case 10:{
+		case 3:
+		case 6:
+		case 9:
+		case 12:{
 			this.game.pop.skill++;
 			break;
 		}

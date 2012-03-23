@@ -87,7 +87,7 @@ dm.Game.prototype.createPanel = function(){
 	this.disp.skillslot = {};
 	for( i=0; i<4; i++){
 		slot = new lime.Sprite().setSize(dp.skillslot.size.w, dp.skillslot.size.h)
-		.setPosition(dp.skillslot[i].pos.x, dp.skillslot[i].pos.y).setFill(0, 0, 0, 0.3);
+		.setPosition(dp.skillslot[i].pos.x, dp.skillslot[i].pos.y);//.setFill(0, 0, 0, 0.3);
 		this.disp.skillslot[i] = slot;
 		this.backGround.appendChild(slot);
 	}
@@ -805,7 +805,7 @@ dm.Game.prototype.skillStudy = function(){
 	}
 	*/
 	//test
-	//sk_key[0] = 'sk15'
+	//sk_key[0] = 'sk19'
 
 	for(i in sk_key){
 		icon = new lime.Sprite().setSize(90, 85).setPosition(-145 + i*140, -125);
@@ -853,16 +853,18 @@ dm.Game.prototype.skillStudy = function(){
  * 使用技能
  */
 dm.Game.prototype.skillUse = function(sk){
+	var dp = dm.Display;
 	var user = this.user;
 	goog.events.unlisten(this.board, ['mousedown', 'touchstart'], this.board.pressHandler_);
 	goog.events.unlisten(this, ['mousedown', 'touchstart', 'mouseup', 'touchstart'], this.pressHandler_);
-	var dialog = new lime.Sprite().setSize(473, 416).setPosition(720/2, 1004/2);
+	var dialog = new lime.Sprite().setSize(dp.skpop.use.size.w, dp.skpop.use.size.h).setPosition(dp.skpop.use.pos.x, dp.skpop.use.pos.y);
 	this.appendChild(dialog);
 	var textarea = new lime.RoundedRect().setSize(390, 150).setPosition(0, 35).setFill(0,0,0,.3);
 	dialog.appendChild(textarea);
-	dialog.setFill(dm.IconManager.getImg("dmdata/dmimg/skilluse.png"));
-	var btn_use = new lime.Sprite().setSize(87, 33).setPosition(-130, 150);
-	btn_use.setFill(dm.IconManager.getImg("dmdata/dmimg/use.png"));
+	dialog.setFill(dm.IconManager.getImg(dp.skpop.use.img));
+	var btn_use = new lime.Sprite().setSize(dp.skpop.use.btn_use.size.w, dp.skpop.use.btn_use.size.h)
+	.setPosition(dp.skpop.use.btn_use.pos.x, dp.skpop.use.btn_use.pos.y);
+	btn_use.setFill(dm.IconManager.getImg(dp.skpop.use.btn_use.img));
 	dialog.appendChild(btn_use);
 
 	var icon = new lime.Sprite().setSize(90, 85).setPosition(-5, -125);
@@ -888,7 +890,9 @@ dm.Game.prototype.skillUse = function(sk){
 		action.use(this.sk.no);
 	});
 
-	var btn_cancel = new lime.Sprite().setSize(87, 33).setPosition(120, 150).setFill(dm.IconManager.getImg("dmdata/dmimg/cancel.png"));
+	var btn_cancel = new lime.Sprite().setSize(dp.skpop.use.btn_cancel.size.w, dp.skpop.use.btn_cancel.size.h)
+	.setPosition(dp.skpop.use.btn_cancel.pos.x, dp.skpop.use.btn_cancel.pos.y)
+	.setFill(dm.IconManager.getImg(dp.skpop.use.btn_cancel.img));
 	dialog.appendChild(btn_cancel);
 	goog.events.listen(btn_cancel, ['mousedown', 'touchstart'], function() {
 		game = this.getParent().getParent();
@@ -1001,7 +1005,7 @@ dm.Game.prototype.itemBuy = function(){
 		equip.btn = btn_buy;
 		equip.eqplvl = user.data.equips[i] && parseInt(user.data.equips[i].lvlneed)+1 || 1;
 		equip.eqptype = i;
-		equip.setFill(dm.IconManager.getImg('dmdata/dmimg/equip/'+ i +'_'+ equip.eqplvl +'.png'));
+		equip.setFill(dm.IconManager.getImg('dmdata/dmimg/equip/'+ i +'_'+ Math.floor(equip.eqplvl/5+1) +'.png'));
 		goog.events.listen(equip, ['mousedown', 'touchstart'], this.equipInfo);
 		dialog.appendChild(equip);
 	}
@@ -1048,7 +1052,7 @@ dm.Game.prototype.equipInfo = function(){
 	for(i in conf[this.eqptype+'_'+this.eqplvl].func){
 		fpname = dm.conf.FP[i].tips;
 		fpval  = conf[this.eqptype+'_'+this.eqplvl].fp[i];
-		info = new lime.Label().setFontColor('#FFF').setFontSize(20).setPosition(-10, 10);
+		info = new lime.Label().setFontSize(30).setPosition(-10, 10);
 		info.setText(fpname + ' +' + fpval);
 		h += info.getSize().height;
 		this.textarea.appendChild(info);

@@ -12,6 +12,7 @@ goog.require('dm.MultiMove');
 goog.require('dm.Log');
 goog.require('dm.Skill');
 goog.require('dm.Monster');
+goog.require('dm.conf.Score');
 
 /**
  * Board object. Manages the square area with bubbles.
@@ -189,6 +190,8 @@ dm.Board.prototype.checkSolutions = function() {
 	this.playerAction();
 	this.monsterAttack();
 	this.checkEnd();
+
+	this.isMoving_ = 0;
 	
 	return true;
 };
@@ -235,6 +238,7 @@ dm.Board.prototype.playerAttack = function(s){
 					g.monster.hp = 0;
 					g.keep = false;
 					g.monster.onDeath(true);
+
 					//this.game.updateData('exp', this.randExtra(fp.a17,fp.a18,fp.a19,fp.a20), 'add');
 				}else{
 					g.monster.canAttack = false; //不会攻击
@@ -402,6 +406,32 @@ dm.Board.prototype.playerAction = function(){
 	if(!data['noDmg']){
 		this.game.updateData('hp', -fireDmg, 'add');//火焰伤害
 	}
+
+	var count=0, score=0 ;
+	for(i in s){
+		if(s[i].keep == false){
+			switch(s[i].type){
+				case 'monster':{
+					count++;
+					score += parseInt(s[i].monster.bounce.exp);
+					break;
+				}
+				case 'hp':
+				case 'mana':
+				case 'sword':
+				case 'gold':{
+					count++;
+					score += parseInt(dm.conf.Score[s[i]['type']]['num']);//加5分
+					break;
+				}
+			}
+		}
+		if(count > 5){
+			score = Math.floor(score*1.2);
+		}
+	}
+	this.game.setScore(score);
+	
 }
 
 /**
@@ -410,13 +440,14 @@ dm.Board.prototype.playerAction = function(){
 dm.Board.prototype.checkEnd = function(){
     var s = this.selectedGems;	
 	var i;
+	var fp = this.game.user.fp
 	var data = this.game.data;
 	var buff = data['buff'];
 	var sk_action = new dm.Skill(this.game);
 
 	//回合结束其他动作
 	this.poisonMonsters(s); //其他怪物的毒伤害等
-	this.game.setScore(s.length * (s.length - 2));
+	//this.game.setScore(s.length * (s.length - 2));
 
 	//回合末技能生效
 	for(i in buff){
@@ -719,7 +750,6 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		this.selectedGems = [];
 		this.lineLayer.removeAllChildren();
 		//dm.log.fine('pressHandler_ start pause:'+e.type);
-		dm.log.fine('pressHandler_ start pause:'+e.type);
 		lime.scheduleManager.changeDirectorActivity(dm.directory,false);
         e.swallow(['mouseup','mousemove','touchmove','mouseover', 'touchend','touchcancel','gestureend','gesturechange'], dm.Board.prototype.pressHandler_);
     }
@@ -838,9 +868,7 @@ dm.Board.prototype.getDamage = function(){
 		 }
 		 case 'mana':
 			 size = game.disp.mana.getSize();
-			 game.disp.mana_mask.setSize(size.width*game.data.mana/10, size.height)
-			 //game.show_vars['mana']._pg.setProgress(game.data['mana']/game.user.fp.a5);
-			 //game.show_vars['mana']._lct.setText(game.data['mana']+'/'+game.user.data.fp.a5);
+			 game.disp.mana_mask.setSize(size.width*game.data.mana/game.user.data.fp.a5, size.height)
 			 break;
 	 }
 

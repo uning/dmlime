@@ -14,10 +14,10 @@ dm.Skill.prototype.use = function(id){
 	var sk =  this.sk_conf['sk'+id];
 	//使用技能
 	if(this.game.data.mana >= sk.mana){
-		sk.mana != -1 && this.game.updateData('mana', sk.mana);
 		if(this.game.data.skillCD[id] > 0){
 			alert('技能冷却中, 还有'+this.game.data.skillCD[id]+'轮');
 		}else{
+			sk.mana != -1 && this.game.updateData('mana', -parseInt(sk.mana), 'add');
 			this.game.data.skillCD[id] = sk.cd;
 			this.game.data.buff[id] = parseInt(sk.turn); //持续时间
 			if(parseInt(sk.delay) != 2){ //立即施展技能
@@ -65,8 +65,8 @@ dm.Skill.prototype.action = function(id, param){ //各个技能的作用效果
 		case '7':{
 			//连锁闪电
 			this.game.updateData('attack_magic', this.game.data['mana']);
-			this.game.updateData('mana', 0);
 			this.board.findMonster(this.magicAttack, this.game);
+			this.game.updateData('mana', 0);
 
 		}
 		break;
@@ -208,9 +208,9 @@ dm.Skill.prototype.reduceHp = function(ratio){
 		  g.keep = true;
 	  }else{
 		  g.keep = false;
-		  context.updateData('exp', 1, 'add');
+		  g.monster.onDeath(true);
 	  }
-	  g.monster.hplabel.setText(g.monster.hp);
+	  g.monster.changeDisplay('hp');
   }, this.game, ratio);
 }
 
@@ -292,6 +292,12 @@ dm.Skill.prototype.reduceHp = function(ratio){
 	   //先删除显示层元素
 	   this.board.clearGem(true);
 	   var c, r, copy, gem;
+
+	   this.board.mm = new lime.animation.Spawn(
+		   new lime.animation.ScaleTo(1)
+		   ,new lime.animation.FadeTo(1).setDuration(.8)
+	   ).enableOptimizations();
+
 	   for (c = 0; c < this.board.cols; c++) {
 		   if ( !this.board.gems[c] ) 
 			   this.board.gems[c] = [];
@@ -307,13 +313,17 @@ dm.Skill.prototype.reduceHp = function(ratio){
 			   }
 			   gem.r = r;
 			   gem.c = c;
-			   gem.setPosition((c + .5) * this.board.GAP - 300 , (-i + .5) * this.board.GAP -300);
+			   gem.setPosition((c + .5) * this.board.GAP - this.board.SIZE/2 , this.board.SIZE/2 - (r + .5) * this.board.GAP);
+			   gem.setScale(0.5);
+			   gem.setOpacity(0);
+			   this.board.mm.addTarget(gem);
 			   //gem.setSize(this.GAP, this.GAP);
 			   this.board.gems[c].push(gem);
 			   this.board.layers[c].appendChild(gem);
 		   }
 	   }
-	   this.board.moveGems();
+	   this.board.mm.play();
+	   //this.board.moveGems();
    }
 
 
