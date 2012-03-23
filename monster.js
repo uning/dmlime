@@ -19,34 +19,58 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	//基础属性
 	//this.p = p;//gem
 	p = this.parentGem;
-	this.att_max = 1 + Math.floor(turn/40); 
-	this.hp_max = Math.floor(turn/30)+ 3;
-	this.def_max = Math.floor(turn/40);
+
+	this.att_max = Math.floor(turn/25); 
+	this.hp_max =  Math.floor(turn/50)*2;
+	this.def_max = Math.floor(turn/25);
 
 	this.aliveturn = 0;
 
-	var mon_arr = this.game.data['specialMon'];
 	//特殊怪物?
 	this.id = mon_id;
+	var turn = this.game.data.turn;
+	var sp = this.game.data.specialMon;
+	var i, max = 0;
+
 	if(!this.id){
-		//if(Math.random()*100 > 80){//
-		if(this.game.user.data.lvl > 3 && Math.random()*100 > 90){
+		if(turn >= this.conf[1].turn && Math.random()*100 > 90){//达到出现特殊怪物的条件
+			//已经出现的怪物
+			//可出现怪物
+			for(i in this.conf){
+				i>0 && turn >= this.conf[i].turn && (max = Math.max(max, parseInt(i)));
+			}
+			var avaliable = [];
+			for(i=1; i<=max; i++){
+				if(!sp[i]){ 
+					//可选
+					avaliable.push(i);
+				}
+			}
 
-			var index = Math.round(Math.random()*(mon_arr.length-1));
-			this.id = this.game.data.specialMon.splice(index, 1);
-			this.id = this.id[0];
-
+			if(avaliable.length > 0){
+				this.id = avaliable[Math.floor(Math.random()*avaliable.length)];
+				//test
+				//this.id = 6;
+				sp[this.id] = this.id;
+			}else{
+				this.id = 0;
+			}
 			//test
-			//this.id = 17;
+			//this.id = 1;
 		}else{
 			this.id = 0;
 		}
 	}
 
+	/*
 	if(this.id == 19){//克隆玩家属性
 		this.clonePlayer();
 	}
 	if(this.id == 15){//会复活的怪物，需要跟金币一起才能消除
+		this.revive_timeout = -1;
+	}
+	*/
+	if(this.id == 5){//会复活的怪物，旁边不能有红心，否则复活
 		this.revive_timeout = -1;
 	}
 
@@ -77,15 +101,20 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	//显示相关，标签
 	var name = config.name;
 	var tips = config.tips;
+	/*
 	var size = p.getSize(), 
-
 	h=size.height, 
 	w=size.width;
 	p.index = 0;
 	p.fillImage(w, h);
+	*/
+	p.fillImage(config.icon)
+
+	/*
 	this.attlabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.att);
 	this.hplabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#f00').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.hp);
 	this.deflabel = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#00f').setFontSize(30).setAnchorPoint(1, 0.5).setText(this.def);
+	*/
 
 	this.killed = new lime.Sprite().setSize(this.parentGem.getSize()).setFill(new dm.IconManager.getImg("dmdata/dmimg/killed.png"));
 }
@@ -188,21 +217,25 @@ dm.Monster.prototype.onDeath = function(bounce){
 		this.game.updateData('killspecial', 1, 'add');
 	}
 
+	this.game.disp.kill.setText(parseInt(this.game.disp.kill.getText())+1)
+
 	if(this.id != 0){
-		this.game.data.specialMon.push(this.id);  
+		delete this.game.data.specialMon[this.id];  
 		//怪物技能影响复原
 		this.endSkill();
-		//获得奖励
-		if(bounce){
-			this.addBounce();
-		}
+	}
+	//获得奖励
+	if(bounce && !this.parentGem.keep){
+		this.addBounce();
 	}
 }
 /** 
  * 回合开始的动作
  */
  dm.Monster.prototype.startSkill = function(){
-	this.useSkill();
+	 if(this.id && this.delay == 0){
+		 this.useSkill();
+	 }
  }
 
 /**
@@ -210,15 +243,15 @@ dm.Monster.prototype.onDeath = function(bounce){
  */
 dm.Monster.prototype.endTurn = function(monster){
 	if(monster){
-		monster.incAliveTurn();
-		if(monster.delay == 1){
+		if(monster.aliveturn && monster.id && monster.delay == 1){
 			monster.useSkill();
 		}
+		monster.incAliveTurn();
 	}else{
-		this.incAliveTurn();
-		if(this.delay == 1){
+		if(this.aliveturn && this.id && this.delay == 1){
 			this.useSkill();
 		}
+		this.incAliveTurn();
 	}
 }
 
@@ -260,12 +293,13 @@ dm.Monster.prototype.disableConn = function(number){
 /**
  * 随机将某一个gem(除了monster以外)变成broken状态，无法发挥作用
  */
- dm.Monster.prototype.breakGem = function(){
+ dm.Monster.prototype.breakGem = function(type){
 	 var c, r, s=[];
 	 for (c = 0; c < this.game.board.cols; c++) {
 		 for (r = 0; r < this.game.board.rows; r++) {
 			 g = this.game.board.gems[c][r];
-			 if(g.type != 'monster' && g.isBroken == false){
+			 //if(g.type != 'monster' && g.isBroken == false){
+			 if(g.type == type && g.isBroken == false){
 				 s.push(g);
 			 }
 		 }
@@ -399,9 +433,34 @@ dm.Monster.prototype.throwMonster = function(){
 
 
 /**
- * 宝石怪物，死亡后需要和金币一起消除才能消灭，否则下一回合复活
+ * 死亡时旁边不能有红心，否则立即复活
  * 用技能杀死的不会复活
  */
+dm.Monster.prototype.monRevive = function(){
+	var p = this.parentGem;
+	var gems = this.game.board.gems;
+	var i, j, c, r;
+	for(i=-1;i<2;i++){
+		for(j=-1;j<2;j++){
+			c = i+p.c;
+			r = j+p.r;
+			if(c >= 0 && r >= 0 && c < 6 && r < 6){
+				if(gems[c][r].type == 'hp'){
+					this.att = this.att_max
+					this.def = this.def_max;
+					this.hp  = this.hp_max;
+					this.genImg();
+					p.keep = true;
+					return;
+				}
+			}
+		}
+	}
+}
+/**
+ * 宝石怪物，死亡后需要和金币一起消除才能消灭，否则下一回合复活
+ * 用技能杀死的不会复活
+ *
 dm.Monster.prototype.monRevive = function(){
 	if(this.revive_timeout != -1){
 		if(this.revive_timeout == 0){
@@ -415,6 +474,7 @@ dm.Monster.prototype.monRevive = function(){
 		}
 	}
 }
+*/
 
 
 /**
@@ -465,34 +525,62 @@ dm.Monster.prototype.monRevive = function(){
 dm.Monster.prototype.useSkill = function(){
 	switch(this.skill){
 		case '1':{
+			//每回合损失2金币
+			this.game.updateData('gold', -2, 'add');
+			
+			//自杀
+			/*
 			if(this.suicide(5)){
 				var nobounce = false;
 				this.onDeath(nobounce);
 			}
+			*/
 			break;
 		}
 		case '2':{
+			//附加毒伤害，必须消除红心来治疗
+			this.poisonAttack();
+
+			/*
 			this.game.updateData('canCD', 0);
+			*/
 			break;
 		}
 		case '3':{
+			//怪物存在时，CD不会减少
+			/*
 			this.game.updateData('gold', -2, 'add');
+			*/
+
+			this.game.updateData('canCD', false);
 			break;
 		}
 		case '4':{
+			//随机破坏一个武器图标
+			this.breakGem('sword');
+			/*
 			this.disableConn();
+			*/
 			break;
 		}
 		case '5':{
+			//杀死时候旁边不能有红心，否则满血复活
+			//死亡时使用技能
+		
+			/*
 			this.breakGem();
+			*/
 			break;
 		}
 		case '6':{
-			this.changeMonster();
+			//存在时不能伤害别的 木乃伊
+			this.game.updateData('canDamageMon', false);
+			//this.changeMonster();
 			break;
 		}
 		case '7':{
-			this.cure();
+			//board中计算，reflectionDmg
+			//this.cure();
 			break;
 		}
 		case '8':{
@@ -545,6 +633,7 @@ dm.Monster.prototype.useSkill = function(){
 		}
 		case '18':{
 			//直接在board.js中完成了
+			//反弹伤害的怪物，reflectionDmg
 			break;
 		}
 		case '19':{
@@ -567,11 +656,18 @@ dm.Monster.prototype.endSkill = function(){
 	var data = this.game.data;
 	var i;
 	switch(this.skill){
+		/*
 		case '2':{
 			this.game.updateData('canCD', 1);
 			break;
 		}
+		*/
+		case '3':{
+			this.game.updateData('canCD', true);
+			break;
+		}
 		case '4':{
+			/*
 			if(data['disconnect']){
 				for(i in data['disconnect']){
 					data['disconnect'][i].canSelect = true;
@@ -579,12 +675,15 @@ dm.Monster.prototype.endSkill = function(){
 				}
 			}
 			data['disconnect'] = [];
+			*/
 			break;
 		}
 		case '5':{
+			this.monRevive();
 			break;
 		}
 		case '6':{
+			this.game.updateData('canDamageMon', true);
 			break;
 		}
 		case '7':{

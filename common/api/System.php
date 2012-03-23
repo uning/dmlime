@@ -14,18 +14,10 @@
 
 
 class System{
-	protected $_conn;
-	protected $_db;
-	protected $_collection;
-	function __construct($host = 'localhost:35050', $db = 'test', $collection = 'dm'){
-		$this->_conn = new Mongo($host);
-		$this->_db = $this->_conn->$db;
-		$this->_collection = $this->_db->$collection;
-	}
-
 
 	/**
 	 * 登录后生成，cookie，加密保存账号密码信息
+	 *
 	 *
 	 * @param $id     用户id，邮件等等
 	 * @param $pass   密码
@@ -40,36 +32,8 @@ class System{
 		$create = getParam($params, 'create', false);
 		$auto    =   getParam($params,'auto', false, true);
 
-		$coll = $this->_collection;
-		$data = $coll->findOne(array("pid"=>$pid, "pass"=>$pass));
-		if(!isset($data)){
-			if($create){
-				$uid = $this->genUid();
-				if($coll->save(array("_id"=>$uid, "pid"=>$pid, "passwd"=>$pass, "email"=>$email))){
-					$ret['d'] = array("_id"=>$uid, "pid"=>$pid, "email"=>$email);
-					$ret['s'] = 'OK';
-					return $ret;
-				}
-				$ret['s'] = 'KO';
-				return $ret;
-			}else{
-				echo "<script type='text/javascript'>location.href='register.php'</script>";
-			//登陆错误
-			}
-		}else{
-			//登陆成功
-			echo "log success!";
-		}
-		/*
-		if($id){
-			 $isnew = false;
-			 $uid = model_Genid::getUid($id,$isnew);
-			 $um = new model_User($uid);
-			 if($isnew){
-			 }
-		}
-		 */
 	}
+
 
 	public function checkName($params){
 		$pid = getParam($params, 'pid', true);

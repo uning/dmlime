@@ -4,8 +4,8 @@ goog.require('dm.conf.SP');
 goog.require('dm.conf.WP');
 goog.require('dm.conf.SLD');
 goog.require('dm.conf.SK');
-
-
+goog.require('dm.conf.Eqpup');
+goog.require('dm.conf.Exp');
 
 /**
  * Single User
@@ -15,7 +15,7 @@ dm.User = function(uid, game){
   //从服务器获取自身信息
 
   this.data = {};
-  this.data.lvl = 0;
+  this.data.lvl = 1;
   this.data.skills = {};
   this.data.equips ={};//0:head,1:body,2:cape,3:jewel,4:武器
   this.data.eqp_add = {};//存装备的附加属性
@@ -24,8 +24,8 @@ dm.User = function(uid, game){
   this.data.attr_def = dm.conf.SLD.defense.attr;
   this.data.sp = {};
   this.data.fp = {};//计算结果
-  this.popuFP();
   this.popuSP();
+  this.popuFP();
 
 }
 
@@ -279,7 +279,20 @@ dm.User.prototype.lvlUp=function(){
 	}
 	this.popuFP();
 	this.data.lvl += 1;
-	this.game.disp.lvl.setText("lv."+this.data.lvl);
+	this.game.disp.lvl.setText(this.data.lvl);
+	switch(this.data.lvl){
+		case 2:
+		case 4:
+		case 7:
+		case 10:{
+			this.game.pop.skill++;
+			break;
+		}
+	}
+	if(this.data.lvl > 10 && !this.data.skills[3]){
+		//没有学满4个技能
+		this.game.pop.skill++;
+	}
 	//this.game.data['exp'] -= 3;
 	
 }
@@ -289,7 +302,7 @@ dm.User.prototype.lvlUp=function(){
 //param obj -- 要查找键值对的对象
 //ret -- 返回 array
 //
-dm.User.prototype.findKey=function(array){
+dm.User.findKey=function(array){
 	array = array || {};
 	if(!array)
 		return 0;
@@ -302,7 +315,7 @@ dm.User.prototype.findKey=function(array){
 }
 
 
-dm.User.prototype.randSel = function(arr, num){
+dm.User.randSel = function(arr, num){
 	if(!arr)
 		return 0;
 	var i,r,sel=[];
@@ -312,4 +325,33 @@ dm.User.prototype.randSel = function(arr, num){
 		arr.splice(r,1);
 	}
 	return sel;
+}
+
+/**
+ * 找出两个用于学习的技能
+ */
+dm.User.prototype.findSkill = function(){
+	var conf = dm.conf.SK;
+	var i;
+	var sk=new Array(5);
+	for(i in conf){
+		if(conf[i].lvl <= this.data.lvl && !this.data.skills[i]){
+			//找出所有满足条件的
+			!sk[conf[i]['class']] && (sk[conf[i]['class']] = []);
+			sk[conf[i]['class']].push(i);
+		}
+	}
+	var cansel = [];
+	for(i in sk){
+		if(sk[i].length){
+			cansel.push(i);
+		}
+	}
+
+	var choose = dm.User.randSel(cansel, 2);
+	var ret = [dm.User.randSel(sk[choose[0]], 1), dm.User.randSel(sk[choose[1]], 1)]
+	ret[0] = ret[0][0];
+	ret[1] = ret[1][0];
+	return ret;
+
 }

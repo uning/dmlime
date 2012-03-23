@@ -115,7 +115,7 @@ dm.Skill.prototype.action = function(id, param){ //各个技能的作用效果
 		break;
 		case '15':{
 			//禁魔，敌人无法使用特殊技能
-			this.game.updateData('disableSkill', 1);
+			this.game.updateData('disableSkill', true);
 
 		}
 		break;
@@ -182,7 +182,7 @@ dm.Skill.prototype.actionEnd = function(id, param){ //技能作用完毕的清�
 		}
 		break;
 		case '15':{ //敌人无法使用特殊技能
-			this.game.updateData('disableSkill', 0);
+			this.game.updateData('disableSkill', false);
 		}
 		break;
 		/*

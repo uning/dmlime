@@ -114,6 +114,7 @@ dm.Game.prototype.showData = function(){
 	var dp = dm.Display
 	this.disp.score = new lime.Label().setPosition(dp.score.pos.x, dp.score.pos.y).setFontSize(dp.score.fontsize).setText(0)
 	this.disp.hp = new lime.Label().setPosition(dp.hp.pos.x, dp.hp.pos.y).setFontSize(dp.hp.fontsize).setText(this.data['hp']+'/'+this.user.data.fp.a6)
+	.setFontWeight(800)
 
 	this.disp.mana = new lime.Sprite().setPosition(dp.mana.pos.x, dp.mana.pos.y).setSize(dp.mana.size.w, dp.mana.size.h).setFill(dp.url + dp.mana.img)
 	this.disp.mana_mask = new lime.Sprite().setAnchorPoint(0, .5).setPosition(- dp.mana.size.w/2, 0)//.setSize(dp.mana.size.w , dp.mana.size.h)
@@ -156,9 +157,10 @@ dm.Game.prototype.initData = function(size, user){
 	this.data.mana  = 0;//this.user.data.fp.a5;
 	this.data.def   = this.user.data.fp.a3;
 	this.data.def_extra = 0; //额外护甲,技能增加的额外生命、护甲、魔法盾，都可看做是额外护甲形式
-	this.data.lvl   = 0;
 	this.data.exp   = 0;
+	this.data.exp_thislvl= 0;
 	this.data.gold  = 0;
+	this.data.buyCount = 0;
 	//this.data.skillexp = 0;
     this.data.points = 0;
 	//记录游戏buff
@@ -196,14 +198,18 @@ dm.Game.prototype.initData = function(size, user){
 	this.data.extAvoid  = 0
 	this.data.reduceDmg = 0
 	this.data.noDmg = 0;
-	this.data.canCD = 1;
+	this.data.canCD = true;
 	//
 	//已经存在的特殊怪物
+	this.data.specialMon = {};
+	/*
 	this.data.specialMon = [];
-	for(var i=0;i<20;i++){
+	//for(var i=0;i<20;i++){
+	for(var i=0;i<7;i++){
 		//将特殊怪物存入一个数组，同一个特殊怪物，只能出现一次
 		this.data.specialMon[i] = i+1;
 	}
+	*/
 	//技能CD
 	this.data.skillCD = {};
 
@@ -385,7 +391,12 @@ dm.Game.prototype.mainShow = function(game){
  dm.Game.prototype.updateData = function(key, value, method){
 	 var fp = this.user.data.fp;
 	 var data = this.data;
+	 var udata = this.user.data;
+	 var i;
 	 data[key] = data[key] || 0;
+
+	 var exp_conf = dm.conf.Exp;
+	 var eqp_conf = dm.conf.Eqpup;
 
 	 if(method == 'add'){
 		 data[key] += value;
@@ -397,33 +408,40 @@ dm.Game.prototype.mainShow = function(game){
 	 }
 	 switch(key){
 		 case 'exp':{
-			 while(data['exp'] >= 5){
-				 data['exp'] -= 5;
-				 //this.pop.lvl++;
+			 while(data['exp'] > exp_conf[udata.lvl + 1 + this.pop.lvl].total_exp){
+				 this.pop.lvl++;
 			 }
+			 /*
+			 data['exp_thislvl'] = data['exp'] - exp_conf[udata.lvl].total_exp;
+			 while(data['exp_thislvl'] >= exp_conf[udata.lvl + this.pop.lvl].exp){
+				 data['exp_thislvl'] -= exp_conf[udata.lvl + this.pop.lvl].exp;
+				 this.pop.lvl++;
+			 }
+			 */
 			 break;
 		 }
 		 case 'mana':{
-			 //data['skillexp'] += Math.max(0, data['mana'] - fp.a5);
 			 data['mana'] = Math.min(fp.a5, data['mana']);
+			 /*
 			 while(data['mana'] >= 10){
 				 data['mana'] -= 10;
-				 this.pop.skill += 1;
+				 //this.pop.skill += 1;
+			 }
+			 */
+			 break;
+		 }
+		 case 'gold':{
+			 while(data['gold'] >= eqp_conf[this.data.buyCount + this.pop.shop].equ_gold){
+				 data['gold'] -= eqp_conf[this.data.buyCount + this.pop.shop].equ_gold;
+				 this.pop.shop += 1;
+				 this.data.buyCount++;
 			 }
 			 break;
-		}
-		case 'gold':{
-			while(data['gold'] >= 3){
-				data['gold'] -= 3;
-
-				this.pop.shop += 1;
-			}
-			break;
-		}
-		case 'hp':{
-			data['hp'] = Math.min(data['hp'], fp.a6);
-			break;
-		}
+		 }
+		 case 'hp':{
+			 data['hp'] = Math.min(data['hp'], fp.a6);
+			 break;
+		 }
 	 }
 	 this.board.changeProg(this, key);
  }
@@ -671,10 +689,6 @@ dm.Game.prototype.updateScore = function() {
  */
 dm.Game.prototype.setScore = function(p) {
     this.data.points += p;
-    this.curTime += p;
-    if (this.curTime > this.maxTime) this.curTime = this.maxTime;
-    if (this.time_left)
-    this.time_left.setProgress(this.curTime / this.maxTime);
 };
 
 
@@ -764,21 +778,34 @@ dm.Game.prototype.skillStudy = function(){
 	dialog.setFill(dm.IconManager.getImg("dmdata/dmimg/skilldialog.png"));
 
 	var icon;
-	var btn_study = new lime.Sprite().setSize(87, 33).setPosition(0, 150);
+
+	/*
+	var btn_use = new lime.Sprite().setSize(87, 33).setPosition(-130, 150);
+	btn_use.setFill(dm.IconManager.getImg("dmdata/dmimg/use.png"));
+	dialog.appendChild(btn_use);
+	*/
+
+	var btn_study = new lime.Sprite().setSize(87, 33).setPosition(-130, 150);
 	btn_study.setFill(dm.IconManager.getImg("dmdata/dmimg/study.png"));
 	dialog.appendChild(btn_study);
 	var sn=0, sk_key;
 
+	//test 
+
+	sk_key = this.user.findSkill()
+	//
+	/*
 	for(i in this.user.data.skills){
 		sn++;
 	}
 	if(sn < 4){ //可以随机新技能
-		sk_key = user.randSel(user.findKey(dm.conf.SK), 2); //随机两个技能，选择学习或者升级
+		sk_key = dm.User.randSel(dm.User.findKey(dm.conf.SK), 2); //随机两个技能，选择学习或者升级
 	}else if(sn == 4){
-		sk_key = user.randSel(user.findKey(user.data.skills), 2);
+		sk_key = dm.User.randSel(dm.User.findKey(user.data.skills), 2);
 	}
+	*/
 	//test
-	sk_key[0] = 'sk7'
+	//sk_key[0] = 'sk15'
 
 	for(i in sk_key){
 		icon = new lime.Sprite().setSize(90, 85).setPosition(-145 + i*140, -125);
@@ -790,6 +817,19 @@ dm.Game.prototype.skillStudy = function(){
 		dialog.appendChild(textarea);
 		goog.events.listen(icon, ['mousedown', 'touchstart'], this.skillInfoShow);
 	}
+
+	var btn_cancel = new lime.Sprite().setSize(87, 33).setPosition(120, 150).setFill(dm.IconManager.getImg("dmdata/dmimg/cancel.png"));
+	dialog.appendChild(btn_cancel);
+	goog.events.listen(btn_cancel, ['mousedown', 'touchstart'], function() {
+		game = this.getParent().getParent();
+		board = game.board;
+		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+		goog.events.listen(game, ['mousedown', 'touchstart', 'mouseup', 'touchend'], game.pressHandler_);
+		game.removeChild(this.getParent());
+		var rubbish = this.getParent();
+		rubbish = null;
+		game.ispoping = false;
+	});
 
 	goog.events.listen(btn_study, ['mousedown', 'touchstart'], function(){
 		game = this.getParent().getParent();
@@ -923,6 +963,7 @@ dm.Game.prototype.lvlup = function(){
 		game.user.lvlUp();
 
 		goog.events.listen(board, ['mousedown', 'touchstart'], board.pressHandler_);
+		goog.events.listen(game, ['mousedown', 'touchstart', 'mouseup', 'touchend'], game.pressHandler_);
 		board.show_att = board.getBaseAttack() + game.data['attack_addtion'];
 		board.show_dmg = board.getDamage();
 		game.disp.attack.setText(board.show_att);

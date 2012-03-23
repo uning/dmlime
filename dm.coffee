@@ -23,6 +23,9 @@ goog.require 'goog.net.XhrIo'
 goog.require 'goog.json'
 goog.require 'dm.Log'
 
+goog.require 'dm.Loader'
+goog.require 'dm.LDB'
+
 
 #constant iPad size
 dm.WIDTH = 720
@@ -43,6 +46,8 @@ dm.LVLCONF = [
 	,{gold:1000,defense:10000,hp:30,attack:3,wattack:1}
 ]
 
+dm.SERVER='http://dm.playcrab.com/'
+dm.SERVER='./'
 dm.APIURL='api.php'
 
 #返回json数据
@@ -149,9 +154,37 @@ dm.loadHelpScene = ->
 dm.builtWithLime = (scene) ->
 	return
 
+###
+#
+# 检查版本
+###
+dm.checkVersion = ->
+	#
+	dm.LDB.get('uuid'
+	,(uuid)->
+		if not uuid
+			uuid = dm.LDB.lc().uuid()
+			dm.isnewuser = true
+		dm.uuid = uuid
+		dm.LDB.save('uuid',uuid)
+		l = new dm.Loader()
+		l.add({type:'js',src:dm.SERVER+'vc.php?uuid='+uuid})
+		l.itemLoad = (succ)->
+			if succ
+				_VER = window._VER
+				_VER and _VER.action()
+		l.load()
+	)
+
+
+
+
+
+
 
 # entrypoint
 dm.start = ->
+	dm.checkVersion()
 	# Set up a logger to track responses
 	el = document.getElementById 'gamearea'
 	el or= document.body

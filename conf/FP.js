@@ -2,7 +2,7 @@ goog.provide('dm.conf.FP');
 	dm.conf.FP = {
     "a1": {
         "id": "a1",
-        "def": "3",
+        "def": "0",
         "inc": "0",
         "min": "0",
         "max": "-1",
@@ -22,7 +22,7 @@ goog.provide('dm.conf.FP');
     },
     "a3": {
         "id": "a3",
-        "def": "1",
+        "def": "0",
         "inc": "0",
         "min": "0",
         "max": "-1",
@@ -41,7 +41,7 @@ goog.provide('dm.conf.FP');
     },
     "a5": {
         "id": "a5",
-        "def": "10",
+        "def": "9",
         "inc": "1",
         "min": "0",
         "max": "-1",
@@ -50,7 +50,7 @@ goog.provide('dm.conf.FP');
     },
     "a6": {
         "id": "a6",
-        "def": "100",
+        "def": "45",
         "inc": "5",
         "min": "0",
         "max": "-1",

@@ -12,7 +12,7 @@
  */
 
 $files= array('first_property.csv'=>'FP', 'second_property.csv'=>'SP', 'equips_bow.csv'=>'WP', 'equips_wrist.csv'=>'SLD', 
-'skill.csv'=>'SK', 'monster.csv'=>'MS');
+'skill.csv'=>'SK', 'monster.csv'=>'MS', 'experience.csv'=>'Exp', 'equipment_update.csv'=>'Eqpup');
 
 //
 $conf_dir = __DIR__.'/dmdata/';

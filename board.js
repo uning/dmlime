@@ -183,16 +183,13 @@ dm.Board.prototype.randExtra = function(basev,randratio,baseadd,ratio) {
  */
 dm.Board.prototype.checkSolutions = function() {
 	this.isMoving_ = 1;
-	this.genType = -1;
-	
-
+	//this.genType = -1;
 
 	this.checkStart();
 	this.playerAction();
 	this.monsterAttack();
 	this.checkEnd();
-	this.game.disp.kill.setText((this.game.data.killcommon + this.game.data.killspecial) || 0)
-	
+
 	this.isMoving_ = 0;
 	
 	return true;
@@ -221,7 +218,7 @@ dm.Board.prototype.playerAttack = function(s){
 	for(i = 0; i < s.length; i++){
 		g = s[i];
 		type = g.type;
-		if(type == 'monster' && (data['canDamageMon'] || g.monster.id == 16)){//可以对怪物造成伤害
+		if(type == 'monster' && (data['canDamageMon'] || g.monster.id != 0)){//可以对非普通怪物造成伤害
 			var mon_def_real = Math.round(g.monster.def*(100-fp.a31)/100); //实际防御值 = 防御数值 - 忽略掉的防御值
 			if(Math.random()*100 < fp.a37){//双倍伤害
 				attack_real = attack * 2;
@@ -232,15 +229,15 @@ dm.Board.prototype.playerAttack = function(s){
 				attack_real = Math.round(attack_real*0.5);
 			}
 			if(attack_real >= g.monster.hp + mon_def_real){
-				if(g.monster.id == 18){//反弹伤害的怪物
-					reflectionDmg += g.monster.hp;
+				if(g.monster.id == 7){//反弹50%伤害的怪物
+					reflectionDmg += Math.ceil(g.monster.hp/2);
 				}
 				leech = g.monster.hp*fp.a36/100; //生命偷取
 				if(g.monster.id != 15){ //不是宝石骷髅
 					g.monster.hp = 0;
 					g.keep = false;
 					g.monster.onDeath(true);
-					this.game.updateData('exp', this.randExtra(fp.a17,fp.a18,fp.a19,fp.a20), 'add');
+					//this.game.updateData('exp', this.randExtra(fp.a17,fp.a18,fp.a19,fp.a20), 'add');
 				}else{
 					g.monster.canAttack = false; //不会攻击
 					g.monster.revive_timeout = 1; //开始复活倒计时
@@ -250,8 +247,8 @@ dm.Board.prototype.playerAttack = function(s){
 			}else{
 				if(attack_real > mon_def_real){
 					g.monster.hp = g.monster.hp + mon_def_real - attack_real;
-					if(g.monster.id == 18){//反弹伤害的怪物
-						reflectionDmg += attack_real - mon_def_real;
+					if(g.monster.id == 7){//反弹50%伤害的怪物
+						reflectionDmg += Math.ceil(attack_real - mon_def_real);
 					}
 					leech = attack_real*fp.a36/100;
 				}
@@ -377,6 +374,12 @@ dm.Board.prototype.gainGems = function(s){
  */
 dm.Board.prototype.checkStart = function(){
 	this.unStoneMonsters(); //上一轮被石化的怪物恢复
+	if(!this.game.data.disableSkill){
+		var mon_arr = this.findMonster();
+		for(i in mon_arr){
+			mon_arr[i].monster.startSkill();
+		}
+	}
 }
 
 /**
@@ -459,7 +462,7 @@ dm.Board.prototype.checkEnd = function(){
 	if(!data['disableSkill']){ //怪物可以使用技能
 		var mon_arr = this.findMonster();
 		for(i in mon_arr){
-			mon_arr[i].monster.startSkill();
+			mon_arr[i].monster.endTurn();
 		}
 	}
 
@@ -497,7 +500,7 @@ dm.Board.prototype.recover = function(){
 	for(element in line){
 		if(line[element].type == 'monster'){
 			monster = line[element].monster;
-			if(this.show_att *(this.game.data['dmgRatio'] || 1) >= monster.hp + monster.def){
+			if(this.show_att *(this.game.data['dmgRatio'] || 1) >= monster.hp + monster.def && (this.game.data.canDamageMon || monster.id != 0)){
 				//杀死怪物了
 				monster.setKilled();
 				//reduceDmg += monster.att //死亡怪物不再造成伤害，从总显示数值中去掉。
@@ -553,7 +556,7 @@ dm.Board.prototype.addSelGem = function(g,trypos) {
 	}
 	if(g){
 		g.select();
-		dm.log.fine('addSelGem',g.r,g.c)
+		//dm.log.fine('addSelGem',g.r,g.c)
 		//实时计算伤害：
 		if(g.type == 'sword' && !g.isBroken){
 			this.show_att += this.fp.a2;
@@ -622,14 +625,14 @@ dm.Board.prototype.selSense_= function (lastg,pos){
  */
 dm.Board.prototype.pressHandler_ = function(e) {
     // no touching allowed when still moving
-	dm.log.fine(e.type);
+	//dm.log.fine(e.type);
     if (this.isMoving_) {
-		dm.log.fine('pressHandler_ : isMoving_');
+		//dm.log.fine('pressHandler_ : isMoving_');
 		return;
 	}
 	if((e.type =='mousemove' || e.type == 'touchmove' || e.type == 'gesturechange')){
 		if(! this.doing_ ){
-			dm.log.fine('pressHandler_ : not doing ');
+			//dm.log.fine('pressHandler_ : not doing ');
 			return;
 		}
 
@@ -644,7 +647,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		for( i = 0 ;i < this.selectedGems.length ; i ++){
 			this.selectedGems[i].deselect();
 			this.selectedGems[i].unsetSpecial();
-			if(this.selectedGems[i].type == 'sword'){
+			if(this.selectedGems[i].type == 'sword' && !this.selectedGems[i].isBroken){
 				this.show_att -= this.fp.a2;
 				this.game.disp.attack.setText(this.show_att);					
 			}
@@ -676,12 +679,12 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		y_valid = pos.y - this.GAP*(this.rows - 1 - r);
 
 	if(c >= this.cols || c < 0 || r < 0 || r >= this.rows ){
-		dm.log.fine('pressHandler_: outboard return '+e.type);
+		//dm.log.fine('pressHandler_: outboard return '+e.type);
 		return;
 	}
 	if(x_valid < valid_min || x_valid > valid_max || y_valid < valid_min || y_valid > valid_max){
 		this.touchPos = pos 
-		dm.log.fine('pressHandler_: not on focus gem '+e.type);
+		//dm.log.fine('pressHandler_: not on focus gem '+e.type);
 		return;
 	}
     var g = this.gems[c][r];
@@ -690,7 +693,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	if(this.selectedGems.length > 0)
 		lastg = this.selectedGems[this.selectedGems.length - 1];
 	if(lastg  === g){
-		dm.log.fine('choose last ret');
+		//dm.log.fine('choose last ret');
 		return ; //
 	}
 
@@ -706,7 +709,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		if(selid > -1){
 				this.cancelSelGem(selid);
 				this.checkLine(this.selectedGems);
-				dm.log.fine('pressHandler_: cancel to' + selid )
+				//dm.log.fine('pressHandler_: cancel to' + selid )
 				return;
 		}
 	}
@@ -717,7 +720,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		this.doing_ = true;
 		this.selectedGems = [];
 		this.lineLayer.removeAllChildren();
-		dm.log.fine('pressHandler_ start pause:'+e.type);
+		//dm.log.fine('pressHandler_ start pause:'+e.type);
 		lime.scheduleManager.changeDirectorActivity(dm.directory,false);
         e.swallow(['mouseup','mousemove','touchmove','mouseover', 'touchend','touchcancel','gestureend','gesturechange'], dm.Board.prototype.pressHandler_);
     }
@@ -741,9 +744,9 @@ dm.Board.prototype.pressHandler_ = function(e) {
 						this.addSelGem(g3);
 						lastg = g3;
 						this.checkLine(this.selectedGems);
-						dm.log.fine('line add ',g3.r,g3.c)
+						//dm.log.fine('line add ',g3.r,g3.c)
 					}else{
-						dm.log.fine('g3 not add ',g3.r,g3.c)
+						//dm.log.fine('g3 not add ',g3.r,g3.c)
 					}
 					//ret.push([g1.r + Math.round((i - g1.c)*r/c),i] )
 				}else
@@ -758,10 +761,10 @@ dm.Board.prototype.pressHandler_ = function(e) {
 					if(lastg.canConnect(g3)){
 						this.addSelGem(g3);
 						this.checkLine(this.selectedGems);
-						dm.log.fine('line add ',g3.r,g3.c)
+						//dm.log.fine('line add ',g3.r,g3.c)
 						lastg = g3;
 					}else{
-						dm.log.fine('g3 not add ',g3.r,g3.c)
+						//dm.log.fine('g3 not add ',g3.r,g3.c)
 					}
 					//ret.push([i,g1.c + Math.round((i - g1.r)*c/r)] )
 				}else
@@ -769,7 +772,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 
 			}
 		}
-		dm.log.fine('not connect : ',g1.r,g1.c,g2.r,g.c);
+		//dm.log.fine('not connect : ',g1.r,g1.c,g2.r,g.c);
 		return;
 	}
 	//this.lastPos = e.poistion;
@@ -810,11 +813,16 @@ dm.Board.prototype.getDamage = function(){
  //传入game对象，要设定的类型
  //更新显示数值
  dm.Board.prototype.changeProg = function(game,type){
-	 var size;
+	 var size, max, current;
 	 switch(type){
 		 case 'exp':{
 			 size = game.disp.exp.getSize();
-			 game.disp.exp_mask.setSize(size.width*game.data.exp/5, size.height)
+			 max = parseInt(dm.conf.Exp[game.user.data.lvl+game.pop.lvl].exp);
+			 current = game.data.exp - dm.conf.Exp[game.user.data.lvl+game.pop.lvl].total_exp;
+			 if(current == max){
+				 current = 0;
+			 }
+			 game.disp.exp_mask.setSize(size.width*current/max, size.height);
 			 break;
 		 }
 		 case 'gold':{

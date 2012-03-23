@@ -37,14 +37,15 @@ dm.Gem = function() {
 	
 };
 goog.inherits(dm.Gem, lime.Sprite);
+//dm.GEMTYPES = ['monster','hp','mana','sword','gold'];
  
 dm.Gem.prototype.ICONS = {
 	'size':100
-	,'hp':'hp.png'
 	,'monster':'monster.png'
-	,'gold':'gold.png'
+	,'hp':'hp.png'
 	,'mana':'mana.png'
 	,'sword':'bow.png'
+	,'gold':'gold.png'
 };
 
 
@@ -77,13 +78,17 @@ dm.Gem.random = function(w, h, index) {
 	gem.setSize(w,h);
 
     //gem.circle.setFill('assets/ball_' + id + '.png');
-	gem.fillImage(w,h);
+	gem.fillImage();
 
     return gem;
 };
 
-dm.Gem.prototype.fillImage = function(w,h){
-	 this.setFill(dm.IconManager.getImg('dmdata/dmimg/'+ this.ICONS[this.type]));//scale));
+dm.Gem.prototype.fillImage = function(img){
+	if(!img){
+		this.setFill(dm.IconManager.getImg('dmdata/dmimg/'+ this.ICONS[this.type]));//scale));
+	}else{
+		this.setFill(dm.IconManager.getImg('dmdata/dmimg/monster/'+ img + '.png'));//scale));
+	}
 }
 
 /**

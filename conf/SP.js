@@ -6,7 +6,7 @@ goog.provide('dm.conf.SP');
             "a1": "1",
             "a37": "0.2"
         },
-        "def": "0",
+        "def": "1",
         "inc": "1",
         "name": "力量",
         "showfps": {
@@ -21,7 +21,7 @@ goog.provide('dm.conf.SP');
             "a3": "1",
             "a38": "0.2"
         },
-        "def": "0",
+        "def": "1",
         "inc": "1",
         "name": "灵巧",
         "showfps": {
@@ -36,7 +36,7 @@ goog.provide('dm.conf.SP');
             "a6": "5",
             "a5": "1"
         },
-        "def": "0",
+        "def": "1",
         "inc": "1",
         "name": "耐力",
         "showfps": {
@@ -57,7 +57,7 @@ goog.provide('dm.conf.SP');
             "a22": "1",
             "a24": "5"
         },
-        "def": "0",
+        "def": "1",
         "inc": "1",
         "name": "幸运",
         "showfps": {
