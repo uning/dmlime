@@ -56,7 +56,7 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 				this.id = 0;
 			}
 			//test
-			//this.id = 1;
+			//this.id = 5;
 		}else{
 			this.id = 0;
 		}
@@ -343,7 +343,7 @@ dm.Monster.prototype.cure = function(){
 		gem = type_arr['monster'][i];
 		gem.monster.hp += Math.ceil(gem.monster.hp*0.1); //治疗10%；
 		gem.monster.hp  = Math.min(gem.monster.hp, gem.monster.hp_max);
-		gem.monster.hplabel.setText(gem.monster.hp);
+		//gem.monster.hplabel.setText(gem.monster.hp);
 		gem.monster.changeDisplay('hp');
 	}
 }

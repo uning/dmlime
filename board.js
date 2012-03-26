@@ -190,7 +190,6 @@ dm.Board.prototype.checkSolutions = function() {
 	this.playerAction();
 	this.monsterAttack();
 	this.checkEnd();
-
 	this.isMoving_ = 0;
 	
 	return true;
@@ -407,7 +406,7 @@ dm.Board.prototype.playerAction = function(){
 		this.game.updateData('hp', -fireDmg, 'add');//火焰伤害
 	}
 
-	var count=0, score=0 ;
+	var count=0, score=0;
 	for(i in s){
 		if(s[i].keep == false){
 			switch(s[i].type){
@@ -421,18 +420,36 @@ dm.Board.prototype.playerAction = function(){
 				case 'sword':
 				case 'gold':{
 					count++;
-					score += parseInt(dm.conf.Score[s[i]['type']]['num']);//加5分
+					score += parseInt(dm.conf.Score[s[i]['type']]['num']);//加分
 					break;
 				}
 			}
 		}
-		if(count > 5){
-			score = Math.floor(score*1.2);
+	}
+	count > 5 && (score = Math.ceil(score*(1+(count-5)*0.1)));
+	
+
+	//添加积分翻倍。一次性消除所有图标(不包括怪物)
+	var type = s[0].type;
+	count = 0;
+	if(type != 'monster' && type != 'sword'){
+		if(s.length == this.type_arr[type].length){
+			s.length >= 5 && (score *= 2);
+		}
+	}else{
+		for(i in s){
+			s[i].type == 'sword' && count++;
+		}
+		if(count == this.type_arr['sword'].length){
+			count >= 5 && (score *= 2);
 		}
 	}
 	this.game.setScore(score);
 	
 }
+
+/**
+ * 如果一次性消除某一类图标
 
 /**
  *玩家回合完成，怪物回合开始
@@ -672,6 +689,10 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		dm.log.fine('pressHandler_: end ,event restart  '+e.type);
 		lime.scheduleManager.changeDirectorActivity(dm.directory,true);
 
+		this.monsterTip = false;
+		this.game.removeChild(this.monTipDialog);
+		this.monTipDialog = null;
+
 		this.doing_ = false;
 		for( i = 0 ;i < this.selectedGems.length ; i ++){
 			this.selectedGems[i].deselect();
@@ -743,9 +764,6 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		}
 	}
     if (e.type == 'mousedown' || e.type == 'touchstart' || e.type =='gesturestart') {
-		for( i = 0 ;i < this.selectedGems.length ; i ++){
-			this.selectedGems[i].deselect();
-		}
 		this.doing_ = true;
 		this.selectedGems = [];
 		this.lineLayer.removeAllChildren();
@@ -807,8 +825,23 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	//this.lastPos = e.poistion;
 	this.addSelGem(g);	
 	this.checkLine(this.selectedGems);
+	if(this.selectedGems.length == 1 && this.selectedGems[0].type == 'monster'){
+		this.monsterTip = true;
+		this.monTipPos = e.position;
+		lime.scheduleManager.callAfter(this.genMonsterTip, this, 900);
+	}else{
+		this.monsterTip = false;
+	}
 };
 
+dm.Board.prototype.genMonsterTip = function(){
+	var pos = this.monTipPos;
+	if(this.monsterTip){
+		this.monTipDialog = new lime.Sprite().setSize(126, 60).setPosition(pos.x+60, pos.y+170).setFill('dmdata/dmimg/killtip.png');
+		this.game.appendChild(this.monTipDialog);
+		//alert('wow!');
+	}
+}
 
 /*
  * 计算当前怪物伤害
@@ -972,10 +1005,11 @@ dm.Board.prototype.getDamage = function(){
 		 for (r = 0; r < cc.length; r++) {
 			 g = cc[r];
 			 if( g && g.keep == false){
+				 /*
 				 if(g.type == 'monster'){
-					 g.monster.endSkill();
+					 //g.monster.endSkill();
 				 }
-
+				 */
 				 g.getParent().removeChild(g);
 				 goog.array.remove(cc, g);
 				 r--;
@@ -995,12 +1029,19 @@ dm.Board.prototype.getDamage = function(){
   */
  dm.Board.prototype.loadGems = function(gems){
 	 var c, r, i;
+
+	 this.mm = new lime.animation.Spawn(
+		 new lime.animation.ScaleTo(1)
+		 ,new lime.animation.FadeTo(1).setDuration(.8)
+	 ).enableOptimizations();
+
 	 for (c = 0; c < this.cols; c++) {
 		 for (r = 0; r < this.rows; r++) {
 			 this.gems[c][r].getParent().removeChild(this.gems[c][r]);
 		 }
 		 this.gems[c] = [];
 	 }
+
 	 for (c = 0; c < this.cols; c++) {
 		 if (!this.gems[c]) this.gems[c] = [];
 		 i = 0;
@@ -1020,15 +1061,18 @@ dm.Board.prototype.getDamage = function(){
 				 for(prop in old.monster){
 					 gem.monster[prop] = old.monster[prop];
 				 }
-
-				 gem.monster.changeDisp('hp');
-				 gem.monster.changeDisp('def');
-				 gem.monster.changeDisp('att');
+				 gem.monster.changeDisplay('hp');
+				 gem.monster.changeDisplay('def');
+				 gem.monster.changeDisplay('att');
 			 }
 			 gem.r = r;
 			 gem.c = c;
-			 gem.setPosition((c + .5) * this.GAP, (-i + .5) * this.GAP);
-
+             pos = new goog.math.Coordinate((c + .5) * this.GAP - this.SIZE/2, this.getSize().height - (r + .5) * this.GAP -this.SIZE/2);
+			 //gem.setPosition((c + .5) * this.GAP, (-i + .5) * this.GAP);
+			 gem.setPosition(pos);
+			 gem.setScale(0.5);
+			 gem.setOpacity(0);
+			 this.mm.addTarget(gem);
 			 this.gems[c].push(gem);
 			 this.layers[c].appendChild(gem);
 		 }
@@ -1040,6 +1084,7 @@ dm.Board.prototype.getDamage = function(){
 		 this.game.disp.attack.setText(this.show_att);
 	 }
 	 this.findGemsType();
+	 return this.mm.play();
  }
 
 /**

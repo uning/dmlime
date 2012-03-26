@@ -13,10 +13,11 @@ dm.LDB = {
 		cb = cb || function(){};
 		this.lc().save({key:key,'v':v},cb);
 	}
-	,get:function(key,cb){
+	,get:function(key,cb,context){
 		cb = cb || function(){};
 		this.lc().get(key,function(o){
-			cb(o&&o.v);
+			//cb(o&&o.v);
+			cb.call(context, o&&o.v);
 		})
 	}
 	,del:function(key,cb){

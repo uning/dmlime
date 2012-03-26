@@ -1,6 +1,7 @@
 goog.provide('dm.Game');
 goog.require('dm.Display');
 goog.require('dm.Progress');
+goog.require('dm.LDB');
 goog.require('lime.CanvasContext');
 goog.require('lime.animation.RotateBy');
 goog.require('lime.animation.MoveBy');
@@ -41,6 +42,8 @@ dm.Game = function(size,user){
 		this.disp.weapon_bg.runAction(rotate);
 		}, this, 200);
 		*/
+	//dm.LDB.save('name','wangkun');
+	//dm.LDB.get('name',function(str){alert(str)});
 };
 goog.inherits(dm.Game, lime.Scene);
 
@@ -277,6 +280,8 @@ dm.Game.prototype.pressHandler_ = function(e){
 	if(inArea(cpoint, csize)){
 		if( e.type == 'touchstart' || e.type == 'mousedown'){
 			this.showKilled();
+			this.saveData();
+			this.loadGame();
 		}else if(e.type == 'touchend' || e.type == 'mouseup'){
 			this.backGround.removeChild(this.disp.killedTip);
 			this.disp.killedTip = null;
@@ -312,12 +317,6 @@ dm.Game.prototype.showStat = function(){
 }
 
 dm.Game.prototype.showKilled = function(){
-	/*
-	var loc = {
-		common:{x:35, y:-16, value:this.data.killcommon || 0},
-		special:{x:35, y:7, value:this.data.killspecial || 0}
-	}
-	*/
 	var i, j, value, label, killedTip;
 	this.disp.killedTip = new lime.Sprite().setSize(this.dp.killtip.w, this.dp.killtip.h)
 	.setFill(this.dp.url + this.dp.killtip.img).setPosition(this.dp.killtip.pos.x, this.dp.killtip.pos.y);
@@ -411,23 +410,10 @@ dm.Game.prototype.mainShow = function(game){
 			 while(data['exp'] > exp_conf[udata.lvl + 1 + this.pop.lvl].total_exp){
 				 this.pop.lvl++;
 			 }
-			 /*
-			 data['exp_thislvl'] = data['exp'] - exp_conf[udata.lvl].total_exp;
-			 while(data['exp_thislvl'] >= exp_conf[udata.lvl + this.pop.lvl].exp){
-				 data['exp_thislvl'] -= exp_conf[udata.lvl + this.pop.lvl].exp;
-				 this.pop.lvl++;
-			 }
-			 */
 			 break;
 		 }
 		 case 'mana':{
 			 data['mana'] = Math.min(fp.a5, data['mana']);
-			 /*
-			 while(data['mana'] >= 10){
-				 data['mana'] -= 10;
-				 //this.pop.skill += 1;
-			 }
-			 */
 			 break;
 		 }
 		 case 'gold':{
@@ -480,22 +466,30 @@ dm.Game.prototype.mainShow = function(game){
 	 savedata['gems'] = this.saveAllGems();
 	 //处理gems
 	 var json_data = JSON.stringify(savedata);
-	 dm.api('System.save',{"id":"wangkun", "data":json_data});
-
-	 return JSON.stringify(savedata); 
+	 //dm.api('System.save',{"id":"wangkun", "data":json_data});
+	 this.database = dm.LDB;
+	 //this.database._lc = 'wangkun';//用id来区分每个用户
+	 this.database.save('data', savedata);
+	 return json_data;
  }
 
  dm.Game.prototype.loadGame = function(){
+	 /*
 	 var game = this;
 	 dm.api('System.read',{"id":"wangkun"}, function(obj){game.parseData(obj.d)});
+	 */
+	 this.database.get('data',function(data){
+		 this.parseData(data);
+	 }, this);
+	 
  }
 
  /**
   * 解析储存的游戏数据
   */
-  dm.Game.prototype.parseData = function(savedata){
+  dm.Game.prototype.parseData = function(sdata){
 
-	  var sdata = JSON.parse(savedata);
+	  //var sdata = JSON.parse(savedata);
 	  var json;
 	  //var sdata;
 	  var gdata = sdata['gamedata'];
@@ -519,18 +513,23 @@ dm.Game.prototype.mainShow = function(game){
 	  //根据装备的id附加装备
 	  this.user.data["equips"] = {};
 
-	  var eqplvl, eqptype;
+	  var eqplvl, conf;
 	  for(i in udata["equips"]){
-		  eqplvl = parseInt(udata["equips"][i]);
-		  eqptype = i;
-		  this.user.data.equips[i] = dm.conf.EP[i+'_'+udata["equips"][i]] || {};
-
-		  icon = dm.IconManager.getFileIcon('assets/icons.png', ((eqplvl-1)%20)*50, eqptype*4*50, 2, 2, 1);
-		  this.user.data.equips[i].icon = icon;
+		  if(i == 0){
+			  slot = this.disp.weapon;
+			  conf = dm.conf.WP;
+		  }else if(i == 1){
+			  slot = this.disp.shield;
+			  conf = dm.conf.SLD;
+		  }
+		  eqplvl = udata["equips"][i];
+		  //eqptype = i;
+		  this.user.data.equips[i] = conf[i+'_'+eqplvl] || {};
+		  slot.setFill(dm.IconManager.getImg('dmdata/dmimg/equip/'+i+'_'+Math.floor(eqplvl/5+1)+'.png'))
 	  }
 
 	  //改变技能槽
-	  this.changeSkillSlot();
+	  //this.changeSkillSlot();
 
 	  //改变状态属性:gold ,exp, mana, hp;
 	  //
@@ -540,13 +539,11 @@ dm.Game.prototype.mainShow = function(game){
 	  this.updateData('hp', 0, "add");
 
 	  //重新生成gems
-	  this.board.loadGems(gems);
-	  var action = this.board.moveGems();
+	  var action = this.board.loadGems(gems);
 	  goog.events.listen(
 		  action, lime.animation.Event.STOP, function(){
 		  this.board.setAllSpecial();
-	  },false ,this
-	  );
+	  },false ,this);
   }
 
 /**
@@ -584,10 +581,11 @@ dm.Game.prototype.mainShow = function(game){
 		 data["monster"] = {};
 		 data["monster"]["id"] = gem.monster.id;
 		 data["monster"]["hp"] = gem.monster.hp;
-		 data["monster"]["hp_left"] = gem.monster.hp_left;
+		 data["monster"]["hp_max"] = gem.monster.hp_left;
 		 data["monster"]["def"] = gem.monster.def;
-		 data["monster"]["def_left"] = gem.monster.def_left;
-		 data["monster"]["attack"] = gem.monster.attack ;
+		 data["monster"]["def_max"] = gem.monster.def_left;
+		 data["monster"]["att"] = gem.monster.attack ;
+		 data["monster"]["att_max"] = gem.monster.attack ;
 		 data["monster"]["aliveturn"] = gem.monster.aliveturn;
 
 		 gem.monster.poison && (data["monster"]["poison"] = gem.monster.poison);
