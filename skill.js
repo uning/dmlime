@@ -11,13 +11,31 @@ dm.Skill = function(game){
  * 使用技能，有buff效果的，设置持续轮数，对于非即时产生效果的技能，在回合中才发生作用
  */
 dm.Skill.prototype.use = function(id){
-	var sk =  this.sk_conf['sk'+id];
+	var sk = this.sk_conf['sk'+id];
 	//使用技能
 	if(this.game.data.mana >= sk.mana){
 		if(this.game.data.skillCD[id] > 0){
-			alert('技能冷却中, 还有'+this.game.data.skillCD[id]+'轮');
+			//alert('技能冷却中, 还有'+this.game.data.skillCD[id]+'轮');
 		}else{
 			sk.mana != -1 && this.game.updateData('mana', -parseInt(sk.mana), 'add');
+			var i, sid;
+			for(i in this.game.disp.skillslot){
+				if(this.game.disp.skillslot[i].no == id){
+					sid = parseInt(i);
+				}
+			}
+			//加遮罩
+			this.game.disp.skmask = this.game.disp.skmask || new Array(4);
+			var dp = dm.Display;
+			dp.init();
+			if(!this.game.disp.skmask[sid]){
+				this.game.disp.skmask[sid] = new lime.Sprite().setSize(dp.skillslot.size.w, dp.skillslot.size.h)
+				.setPosition(dp.skillslot[sid].pos.x, dp.skillslot[sid].pos.y+dp.skillslot.size.h/2).setFill(0,0,0,.7).setAnchorPoint(0.5,1)
+				this.game.backGround.appendChild(this.game.disp.skmask[sid]);
+			}else{
+				this.game.disp.skmask[sid].setSize(dp.skillslot.size.w, dp.skillslot.size.h);
+			}
+			//
 			this.game.data.skillCD[id] = sk.cd;
 			this.game.data.buff[id] = parseInt(sk.turn); //持续时间
 			if(parseInt(sk.delay) != 2){ //立即施展技能
@@ -37,11 +55,11 @@ dm.Skill.prototype.use = function(id){
 dm.Skill.prototype.action = function(id, param){ //各个技能的作用效果
 	switch(id){
 		case '1':{ //加血(持续)
-			this.game.updateData('hp', Math.min(Math.round(this.game.data.hp*1.1), this.user.data.fp.a6));
+			this.game.updateData('hp', Math.min(Math.round(this.user.data.fp.a6*1.1), this.user.data.fp.a6));
 		}
 		break;
 		case '2':{ //
-			this.game.updateData('hp', Math.min(Math.round(this.game.data.hp*1.3), this.user.data.fp.a6));
+			this.game.updateData('hp', Math.min(Math.round(this.user.data.fp.a6*1.3), this.user.data.fp.a6));
 		}
 		break;
 		case '3':{ //法力转换为生命

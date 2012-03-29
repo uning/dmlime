@@ -19,16 +19,38 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	//基础属性
 	//this.p = p;//gem
 	p = this.parentGem;
+	var udata = this.game.user.data
+	var data = this.game.data
+	var ad, h, turn = data.turn;//攻防血
 
+	if(turn >= 40){
+		ad = Math.round(Math.random()*4+4);
+		this.hp_max = Math.round(Math.random()*3);
+	}else if(turn >=100){
+		ad = Math.round(Math.random()*3+4);
+		this.hp_max = Math.round(Math.random()*3+2);
+	}else if(turn >=200){
+		ad = Math.round(Math.random()*2+4);
+		this.hp_max = Math.round(Math.random()*4+3);
+	}
+	this.att_max = Math.ceil(udata.fp.a3/ad) || 0;   
+	this.def_max = Math.ceil(udata.fp.a1/ad) || 0;   
+	this.hp_max = this.hp_max || 0;
+	/*
+	 *
+	 */
+	
+/*
 	this.att_max = Math.floor(turn/25); 
 	this.hp_max =  Math.floor(turn/50)*2;
 	this.def_max = Math.floor(turn/25);
+	*/
 
 	this.aliveturn = 0;
 
 	//特殊怪物?
 	this.id = mon_id;
-	var turn = this.game.data.turn;
+	//var turn = this.game.data.turn;
 	var sp = this.game.data.specialMon;
 	var i, max = 0;
 

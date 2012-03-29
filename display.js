@@ -32,7 +32,7 @@ dm.Display = {
 		this.background = {pos:{x:this.framework.com.width/2, y:this.framework.com.height/2}, img:'background.png'}
 		//panel
 		this.score = {pos:{x:147, y:-433}, fontsize:25}
-		this.hp = {pos:{x:244, y:444}, fontsize:25, fontcolor:'#2482ff'}
+		this.hp = {pos:{x:240, y:444}, fontsize:25, fontcolor:'#2482ff'}
 		this.mana = {pos:{x:-137, y:-457}, size:{w:120,h:11}, img:'mana_bar.png'}
 		this.exp = {pos:{x:this.mana.pos.x, y:-429}, size:this.mana.size, img:'exp_bar.png'}
 		this.player = {pos:{x:-250, y:-400}, size:{w:75, h:160}, img:{m:'boy.png', f:'girl.png'}}

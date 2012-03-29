@@ -43,6 +43,10 @@ goog.require('goog.json');
 
 goog.require('dm.Log');
 
+goog.require('dm.Loader');
+
+goog.require('dm.LDB');
+
 dm.WIDTH = 720;
 
 dm.HEIGHT = 1004;
@@ -70,6 +74,10 @@ dm.LVLCONF = [
   }
 ];
 
+dm.SERVER = 'http://dm.playcrab.com/';
+
+dm.SERVER = './';
+
 dm.APIURL = 'api.php';
 
 dm.api = function(m, param, callback) {
@@ -88,6 +96,44 @@ dm.api = function(m, param, callback) {
   }), {
     'Content-Type': 'application/json;charset=utf-8'
   });
+};
+
+dm.loadCover = function() {
+  var cover, help, layer, rank, scene, score, start;
+  scene = new lime.Scene;
+  layer = new lime.Layer().setPosition(dm.WIDTH / 2, dm.HEIGHT / 2);
+  cover = new lime.Sprite().setFill('dmdata/dmimg/cover.png');
+  layer.appendChild(cover);
+  /* btns
+  */
+  start = new lime.Sprite().setPosition(100, -230).setFill('dmdata/dmimg/cstart1.png');
+  rank = new lime.Sprite().setPosition(120, -150).setFill('dmdata/dmimg/crank1.png');
+  score = new lime.Sprite().setPosition(140, -70).setFill('dmdata/dmimg/cscore1.png');
+  help = new lime.Sprite().setPosition(160, 10).setFill('dmdata/dmimg/chelp1.png');
+  goog.events.listen(start, ['mousedown', 'touchstart'], function(e) {
+    this.setFill('dmdata/dmimg/cstart3.png');
+    return e.swallow(['mouseup', 'touchend', 'touchcancel'], function() {
+      var fc;
+      this.setFill('dmdata/dmimg/cstart1.png');
+      fc = function() {
+        return dm.newgame(6);
+      };
+      return fc();
+    });
+  });
+  goog.events.listen(help, ['mousedown', 'touchstart'], function(e) {
+    this.setFill('dmdata/dmimg/chelp3.png');
+    return e.swallow(['mouseup', 'touchend', 'touchcancel'], function() {
+      this.setFill('dmdata/dmimg/chelp1.png');
+      return dm.loadHelpScene();
+    });
+  });
+  cover.appendChild(start);
+  cover.appendChild(score);
+  cover.appendChild(rank);
+  cover.appendChild(help);
+  scene.appendChild(layer);
+  return dm.director.replaceScene(scene, lime.transitions.Dissolve);
 };
 
 dm.loadMenu = function() {
@@ -128,12 +174,10 @@ dm.loadMenu = function() {
   goog.events.listen(btn, 'click', function() {
     return dm.newgame(7);
   });
-  btns2.appendChild(btn);
   btn = dm.makeButton('8x8').setPosition(0, 440);
   goog.events.listen(btn, 'click', function() {
     return dm.newgame(8);
   });
-  btns2.appendChild(btn);
   scene.appendChild(layer);
   return dm.director.replaceScene(scene, lime.transitions.Dissolve);
 };
@@ -160,6 +204,36 @@ dm.loadHelpScene = function() {
 };
 
 dm.builtWithLime = function(scene) {};
+
+/*
+#
+# 检查版本
+*/
+
+dm.checkVersion = function() {
+  return dm.LDB.get('uuid', function(uuid) {
+    var l;
+    if (!uuid) {
+      uuid = dm.LDB.lc().uuid();
+      dm.isnewuser = true;
+    }
+    dm.uuid = uuid;
+    dm.LDB.save('uuid', uuid);
+    l = new dm.Loader();
+    l.add({
+      type: 'js',
+      src: dm.SERVER + 'vc.php?uuid=' + uuid
+    });
+    l.itemLoad = function(succ) {
+      var _VER;
+      if (succ) {
+        _VER = window._VER;
+        return _VER && _VER.action();
+      }
+    };
+    return l.load();
+  });
+};
 
 dm.start = function() {
   var el, logdiv;
@@ -197,7 +271,6 @@ dm.start = function() {
     dm.Log.init(null, 'fine');
   }
   dm.log = dm.Log;
-  goog['DEBUG'] = true;
   dm.director = new lime.Director(el, dm.WIDTH, dm.HEIGHT);
   dm.director.makeMobileWebAppCapable();
   dm.log.debug('width' + ' ' + el.clientWidth + ' ' + 'height' + ' ' + el.clientHeight + ' ' + 'offsetX' + ' ' + el.offsetLeft + ' ' + 'offsetY' + ' ' + el.offsetTop);
@@ -205,7 +278,8 @@ dm.start = function() {
     dm.log.debug('goog.global@orientationchange|RESIZE', e);
     return dm.log.debug('width' + ' ' + el.clientWidth + ' ' + 'height' + ' ' + el.clientHeight + ' ' + 'offsetX' + ' ' + el.offsetLeft + ' ' + 'offsetY' + ' ' + el.offsetTop);
   });
-  return dm.loadMenu();
+  dm.loadCover();
+  return dm.checkVersion();
 };
 
 goog.exportSymbol('dm.start', dm.start);

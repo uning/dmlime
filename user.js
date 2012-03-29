@@ -274,7 +274,7 @@ dm.User.prototype.addatt=function(eqpid){
 //人物升级
 dm.User.prototype.lvlUp=function(){
 	
-	var i;
+	var i, count =0;
 	for(i in this.data.sp){
 		this.data.sp[i] += parseInt(dm.conf.SP[i] && dm.conf.SP[i].inc) || 0;
 	}
@@ -283,14 +283,17 @@ dm.User.prototype.lvlUp=function(){
 	this.game.disp.lvl.setText(this.data.lvl);
 	switch(this.data.lvl){
 		case 3:
-		case 6:
-		case 9:
-		case 12:{
+		case 5:
+		case 7:
+		case 9:{
 			this.game.pop.skill++;
 			break;
 		}
 	}
-	if(this.data.lvl > 10 && !this.data.skills[3]){
+	for(i in this.data.skills){
+		count++;
+	}
+	if(this.data.lvl > 10 && count < 4){
 		//没有学满4个技能
 		this.game.pop.skill++;
 	}

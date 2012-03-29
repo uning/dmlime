@@ -184,8 +184,6 @@ dm.Board.prototype.randExtra = function(basev,randratio,baseadd,ratio) {
  */
 dm.Board.prototype.checkSolutions = function() {
 	this.isMoving_ = 1;
-	//this.genType = -1;
-
 	this.checkStart();
 	this.playerAction();
 	this.monsterAttack();
@@ -502,7 +500,20 @@ dm.Board.prototype.checkEnd = function(){
 				data['skillCD'][i]--; 
 			}
 		}
+		var size,max,no;
+		dm.Display.init();
+		for(i in this.game.disp.skmask){
+			if(this.game.disp.skmask[i]){
+				no = this.game.disp.skillslot[i].no;
+				size = dm.Display.skillslot.size;
+				max = dm.conf.SK['sk'+no].cd;
+				max = parseInt(max);
+				now = data['skillCD'][no];
+				this.game.disp.skmask[i].setSize(size.w, size.h*now/max);
+			}
+		}
 	}
+
 
 	this.clearGem();
 	if(!data['disableSkill']){ //怪物可以使用技能
@@ -828,6 +839,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	if(this.selectedGems.length == 1 && this.selectedGems[0].type == 'monster'){
 		this.monsterTip = true;
 		this.monTipPos = e.position;
+		this.monID = this.selectedGems[0].monster.id;
 		lime.scheduleManager.callAfter(this.genMonsterTip, this, 900);
 	}else{
 		this.monsterTip = false;
@@ -837,7 +849,20 @@ dm.Board.prototype.pressHandler_ = function(e) {
 dm.Board.prototype.genMonsterTip = function(){
 	var pos = this.monTipPos;
 	if(this.monsterTip){
-		this.monTipDialog = new lime.Sprite().setSize(126, 60).setPosition(pos.x+60, pos.y+170).setFill('dmdata/dmimg/killtip.png');
+		var id = this.monID;
+		var conf = dm.conf.MS[id];
+		this.monTipDialog = new lime.RoundedRect().setSize(220, 100).setPosition(pos.x+60, pos.y+160).setFill(0,0,0,.7).setRadius(20);
+
+		var name = new lime.Label().setText(conf.name).setFontColor('#a1c02e').setFontSize(25);
+		name.setSize(190, 20).setPosition(0, -30).setFontWeight(700);
+		var desc = new lime.Label().setText(conf.tips).setFontColor('#fff').setFontSize(22);
+		desc.setSize(210, 80).setPosition(0, 30).setFontWeight(600);
+		this.monTipDialog.appendChild(name);
+		this.monTipDialog.appendChild(desc);
+		/*
+		var text = new lime.Label().setText(conf.name+" : "+conf.tips).setFontColor('#fff').setSize(200, 90).setFontSize(23);
+		this.monTipDialog.appendChild(text);
+		*/
 		this.game.appendChild(this.monTipDialog);
 		//alert('wow!');
 	}

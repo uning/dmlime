@@ -31,7 +31,7 @@ goog.require 'dm.LDB'
 dm.WIDTH = 720
 dm.HEIGHT = 1004
 dm.BOARDSIZE = 690
-dm.GEMTYPES = ['monster','hp','mana','sword','gold'];
+dm.GEMTYPES = ['monster','hp','mana','sword','gold']
 #等级到每个属性定义
 dm.LVLCONF = [
 	{gold: 1000
@@ -62,21 +62,62 @@ dm.api  =(m,param,callback) ->
 
 	goog.net.XhrIo.send dm.APIURL+'?m='+m,proc,'POST',goog.json.serialize({m:m,p:param}),{'Content-Type':'application/json;charset=utf-8'}
 
+# game start page
+dm.loadCover = ->
+	scene = new lime.Scene
+	layer = new lime.Layer()
+		.setPosition dm.WIDTH/2, dm.HEIGHT/2
+	cover = new lime.Sprite()
+		.setFill 'dmdata/dmimg/cover.png'
+	layer.appendChild cover
+
+	### btns ###
+	start = new lime.Sprite().setPosition(100, -230).setFill('dmdata/dmimg/cstart1.png')
+	rank = new lime.Sprite().setPosition(120, -150).setFill('dmdata/dmimg/crank1.png')
+	score = new lime.Sprite().setPosition(140, -70).setFill('dmdata/dmimg/cscore1.png')
+	help = new lime.Sprite().setPosition(160, 10).setFill('dmdata/dmimg/chelp1.png')
+
+	goog.events.listen start, ['mousedown', 'touchstart'],
+		(e)->
+			this.setFill('dmdata/dmimg/cstart3.png')
+			e.swallow ['mouseup', 'touchend', 'touchcancel'],
+				()->
+					this.setFill('dmdata/dmimg/cstart1.png')
+					fc = ()->
+							dm.newgame(6)
+					fc()
+					#lime.scheduleManager.callAfter(fc,this, 800)
+
+	goog.events.listen help, ['mousedown','touchstart'],
+		(e)->
+			this.setFill('dmdata/dmimg/chelp3.png')
+			e.swallow ['mouseup', 'touchend', 'touchcancel'],
+				()->
+					this.setFill('dmdata/dmimg/chelp1.png')
+					dm.loadHelpScene()
+
+	cover.appendChild start
+	cover.appendChild score
+	cover.appendChild rank
+	cover.appendChild help
+
+	scene.appendChild layer
+	dm.director.replaceScene scene, lime.transitions.Dissolve
 
 # load menu scene
 dm.loadMenu =  ->
 	scene = new lime.Scene
-	layer = new lime.Layer() 
+	layer = new lime.Layer()
 		.setPosition dm.WIDTH / 2, 0
 
-	btns = new lime.Layer() 
+	btns = new lime.Layer()
 		.setPosition( 0,0)
 	layer.appendChild btns
 	move = new lime.animation.MoveBy(-dm.WIDTH, 0).enableOptimizations()
 	btn = dm.makeButton('开始').setPosition 0, 200
 	goog.events.listen btn, ['click','touchstart'],
 		->
-			dm.log.fine 'game start' 
+			dm.log.fine 'game start'
 			btns.runAction move
 
 	btns.appendChild btn
@@ -115,14 +156,14 @@ dm.loadMenu =  ->
 	goog.events.listen btn, 'click',
 		->
 			dm.newgame 7
-	btns2.appendChild btn
+	#btns2.appendChild btn
 
 	btn = dm.makeButton('8x8') .setPosition 0, 440
 	goog.events.listen btn, 'click',
 		->
 			dm.newgame 8
 
-	btns2.appendChild btn
+	#btns2.appendChild btn
 
 
 	scene.appendChild layer
@@ -184,7 +225,6 @@ dm.checkVersion = ->
 
 # entrypoint
 dm.start = ->
-	dm.checkVersion()
 	# Set up a logger to track responses
 	el = document.getElementById 'gamearea'
 	el or= document.body
@@ -244,7 +284,9 @@ dm.start = ->
 		  dm.log.debug 'goog.global@orientationchange|RESIZE',e
 		  dm.log.debug 'width'+' '+el.clientWidth+' '+'height'+' '+ el.clientHeight+' '+'offsetX'+' ' + el.offsetLeft+' ' + 'offsetY'+' ' + el.offsetTop
 	)
-	dm.loadMenu()
+	#dm.loadMenu()
+	dm.loadCover()
+	dm.checkVersion()
 
 
 #this is required for outside access after code is compiled in ADVANCED_COMPILATIONS mode

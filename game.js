@@ -61,7 +61,6 @@ dm.Game.prototype.createPanel = function(){
 	var ext = '.png';
 
 	//背景图片
-	//this.backGround = new lime.Sprite().setSize(720, 1004).setFill(dm.IconManager.getImg('dmdata/dmimg/background.png'));
 	dp = dm.Display;
 	this.backGround = new lime.Sprite().setSize(dp.framework.com.width, dp.framework.com.height).setFill(dp.url+dp.background.img);
 	this.backGround.setPosition(dp.background.pos.x, dp.background.pos.y);
@@ -202,23 +201,11 @@ dm.Game.prototype.initData = function(size, user){
 	this.data.reduceDmg = 0
 	this.data.noDmg = 0;
 	this.data.canCD = true;
-	//
+
 	//已经存在的特殊怪物
 	this.data.specialMon = {};
-	/*
-	this.data.specialMon = [];
-	//for(var i=0;i<20;i++){
-	for(var i=0;i<7;i++){
-		//将特殊怪物存入一个数组，同一个特殊怪物，只能出现一次
-		this.data.specialMon[i] = i+1;
-	}
-	*/
 	//技能CD
 	this.data.skillCD = {};
-
-	//var testjson = JSON.stringify(this.data);
-	//var testdecode = JSON.parse(testjson);
-
 }
 
 /**
@@ -234,30 +221,14 @@ dm.Game.prototype.pressHandler_ = function(e){
 	function inArea(cp, cs){
 		return (pos.x > cp.x - cs.w/2 && pos.x < cp.x + cs.w/2 && pos.y > cp.y - cs.h/2 && pos.y < cp.y + cs.h/2)
 	}
-	/*
-	var clickArea = {
-		skArea:{
-			0:{w:60 ,h:60 ,x:-270 ,y:370},
-			1:{w:60 ,h:60 ,x:-195 ,y:370},
-			2:{w:60 ,h:60 ,x:-270 ,y:440},
-			3:{w:60 ,h:60 ,x:-195 ,y:440}
-		},
-		charArea:{
-			player:{w:75, h:160 ,x:-250, y:-400},
-			enemy:{w:108, h:160, x:250, y:-400}
-		},
-		killed:{
-			killed:{w:60, h:60, x:-90 ,y:337}
-		}
-	};
-	*/
 	
-	var i, j, cpoint, csize;
+	var i, j, cpoint, csize, skid;
 	for(i=0;i<4;i++){
 		cpoint = dp.skillslot[i].pos;
 		csize = dp.skillslot.size;
 		if(inArea(cpoint, csize)){
-			this.disp.skillslot[i].sk && this.skillUse(this.disp.skillslot[i].sk);
+			skid = this.disp.skillslot[i].sk.no;
+			this.disp.skillslot[i].sk && (!this.data.skillCD[skid]) && this.skillUse(this.disp.skillslot[i].sk);
 		}
 	}
 
@@ -280,8 +251,8 @@ dm.Game.prototype.pressHandler_ = function(e){
 	if(inArea(cpoint, csize)){
 		if( e.type == 'touchstart' || e.type == 'mousedown'){
 			this.showKilled();
-			this.saveData();
-			this.loadGame();
+			//this.saveData();
+			//this.loadGame();
 		}else if(e.type == 'touchend' || e.type == 'mouseup'){
 			this.backGround.removeChild(this.disp.killedTip);
 			this.disp.killedTip = null;
@@ -407,7 +378,7 @@ dm.Game.prototype.mainShow = function(game){
 	 }
 	 switch(key){
 		 case 'exp':{
-			 while(data['exp'] > exp_conf[udata.lvl + 1 + this.pop.lvl].total_exp){
+			 while(data['exp'] >= exp_conf[udata.lvl + 1 + this.pop.lvl].total_exp){
 				 this.pop.lvl++;
 			 }
 			 break;
@@ -765,7 +736,7 @@ dm.Game.prototype.endGame = function() {
  */
 dm.Game.prototype.skillStudy = function(){
 	var user = this.user;
-
+	var i;
 	//goog.events.unlisten(this.board, ['mousedown', 'touchstart'], this.board.pressHandler_);
 	//goog.events.unlisten(this, ['mousedown', 'touchstart'], this.pressHandler_);
 	var dialog = new lime.Sprite().setSize(473, 416).setPosition(720/2, 1004/2);
@@ -912,21 +883,31 @@ dm.Game.prototype.skillInfoShow = function(){
 		this.textarea.removeAllChildren();
 		this.button.skill = this.skill;
 		var textarea = this.textarea;
+		var pos;
 
-		var nm = new lime.Label().setFontColor('#FFF').setFontSize(20).setPosition(0, 00);
+		var nm = new lime.Label().setFontColor('#000').setFontSize(25).setPosition(0, -60);
 		nm.setText(' 技能：'+this.skill['name']);
 		this.textarea.appendChild(nm.setSize(textarea.getSize().width, nm.getSize().height));
+		pos = nm.getPosition().y + nm.getSize().height/2;
 
-		var disc = new lime.Label().setFontColor('#FFF').setFontSize(20).setPosition(0, 30);
+		var disc = new lime.Label().setFontColor('#000').setFontSize(25);
 		disc.setText(' 描述：'+this.skill['tips']);
+		disc.setPosition(0, pos + disc.getSize().height/2 + 20);
+		if(disc.getSize().width > textarea.getSize().width){
+			var line = Math.ceil(disc.getSize().width / textarea.getSize().width);
+		}
+		pos += disc.getSize().height*(line || 1);
 		this.textarea.appendChild(disc.setSize(textarea.getSize().width, disc.getSize().height));
 
-		var cd = new lime.Label().setFontColor('#FFF').setFontSize(20).setPosition(0, 60);
+		var cd = new lime.Label().setFontColor('#000').setFontSize(25);
 		cd.setText(' 冷却时间(轮)：'+this.skill['cd']);
+		cd.setPosition(0, pos + cd.getSize().height/2 + 20);
+		pos += cd.getSize().height;
 		this.textarea.appendChild(cd.setSize(textarea.getSize().width, cd.getSize().height));
 
-		var cost = new lime.Label().setFontColor('#FFF').setFontSize(20).setPosition(0, 90);
+		var cost = new lime.Label().setFontColor('#000').setFontSize(25);
 		cost.setText(' 魔法消耗：'+this.skill['mana']);
+		cost.setPosition(0, pos + cost.getSize().height/2 + 20);
 		this.textarea.appendChild(cost.setSize(textarea.getSize().width, cost.getSize().height));
 }
 
