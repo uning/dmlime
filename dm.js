@@ -128,6 +128,12 @@ dm.loadCover = function() {
       return dm.loadHelpScene();
     });
   });
+  goog.events.listen(help, ['focus'], function() {
+    return this.setFill('dmdata/dmimg/chelp2.png');
+  });
+  goog.events.listen(help, ['blur'], function() {
+    return this.setFill('dmdata/dmimg/chelp1.png');
+  });
   cover.appendChild(start);
   cover.appendChild(score);
   cover.appendChild(rank);

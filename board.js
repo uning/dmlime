@@ -22,7 +22,7 @@ goog.require('dm.conf.Score');
  * @constructor
  * @extends lime.Sprite
  */
-dm.Board = function(rows,cols,game) {
+dm.Board = function(rows,cols,game, guide) {
     lime.Sprite.call(this);
 	this.setRenderer(lime.Renderer.CANVAS);
     this.game = game ;
@@ -67,17 +67,61 @@ dm.Board = function(rows,cols,game) {
 	this.lineLayer = new lime.Layer();
 	this.appendChild(this.lineLayer);
     // load in first bubbles
-    this.fillGems();
-    // register listener
-    goog.events.listen(this, ['mousedown', 'touchstart','gesturestart'], this.pressHandler_);
-	var EVENTS = goog.object.getValues(this.EventType);
-	dm.log.fine('Listening for: ' + EVENTS.join(', ') + '.');
-	//register event debugger
-    // start moving (but give some time to load) //自动触发move 操作
-    lime.scheduleManager.callAfter(this.moveGems, this, 100);
+	
+	//教程模式，产生的宝石分布是一样的
+	if(guide){
+		this.guide();
+	}else{
+		this.fillGems();
+		// register listener
+		goog.events.listen(this, ['mousedown', 'touchstart','gesturestart'], this.pressHandler_);
+		var EVENTS = goog.object.getValues(this.EventType);
+		dm.log.fine('Listening for: ' + EVENTS.join(', ') + '.');
+		//register event debugger
+		// start moving (but give some time to load) //自动触发move 操作
+		//lime.scheduleManager.callAfter(this.moveGems, this, 100);
+	}
 };
 goog.inherits(dm.Board, lime.Sprite);
 
+dm.Board.prototype.guide = function(){
+	var gems = [
+		1,3,3,4,4,3,
+		4,3,0,3,2,1,
+		0,3,3,4,4,4,
+		2,1,0,3,1,0,
+		4,0,2,0,3,3,
+		4,0,0,3,3,0
+	]
+
+	for (var c = 0; c < 6; c++) {
+		if(!this.gems[c]){ 
+			this.gems[c] = [];
+		}
+		for (var r = 0; r < this.board.rows; r++) {
+			copy = s.splice(Math.round(Math.random()*(s.length-1)), 1);//随机选择一个gem
+			i++;
+			if(!copy[0].monster){//不是怪物
+				gem = dm.Gem.random(this.game.board.GAP, this.game.board.GAP, copy[0].index);
+			}else{
+				gem = copy[0];
+				gem.keep = true;
+			}
+			gem.r = r;
+			gem.c = c;
+			gem.setPosition((c + .5) * this.board.GAP - this.board.SIZE/2 , this.board.SIZE/2 - (r + .5) * this.board.GAP);
+			gem.setScale(0.5);
+			gem.setOpacity(0);
+			this.board.mm.addTarget(gem);
+			//gem.setSize(this.GAP, this.GAP);
+			this.board.gems[c].push(gem);
+			this.board.layers[c].appendChild(gem);
+		}
+	}
+	for(var i in gems){
+
+	}
+}
 /**
  * Fill the board so that all columns have max amount
  * of bubbles again. Poistion out of screen so they can be animated in
@@ -300,6 +344,9 @@ dm.Board.prototype.monsterAttack = function(){
 
 			var dtom = Math.round(total_dmg*fp.a28/100);//实际伤害转到魔法的增加
 			this.game.updateData('mana', Math.min(fp.a5, data['mana']+dtom));
+
+			//伤害动画
+			//this.game.disp.player.setFill('dmdata/dmimg/boyhurt.gif').setSize(200, 200);
 		}else{
 			alert('不受伤害');//
 		}

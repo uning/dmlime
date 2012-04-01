@@ -12,4 +12,4 @@
 # 2011-12-26 - created
 #
 cd dmdata && svn up
-~/work/sys/php_5.4.0RC4/bin/php ../convert_csv.php
+/home/hotel/work/sys/php_5.4.0RC4/bin/php ../convert_csv.php

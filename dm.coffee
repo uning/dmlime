@@ -86,7 +86,7 @@ dm.loadCover = ->
 					fc = ()->
 							dm.newgame(6)
 					fc()
-					#lime.scheduleManager.callAfter(fc,this, 800)
+
 
 	goog.events.listen help, ['mousedown','touchstart'],
 		(e)->
