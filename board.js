@@ -85,7 +85,7 @@ dm.Board = function(rows,cols,game, guide) {
 goog.inherits(dm.Board, lime.Sprite);
 
 dm.Board.prototype.guide = function(){
-	var gems = [
+	var index = [
 		1,3,3,4,4,3,
 		4,3,0,3,2,1,
 		0,3,3,4,4,4,
@@ -94,34 +94,178 @@ dm.Board.prototype.guide = function(){
 		4,0,0,3,3,0
 	]
 
-	for (var c = 0; c < 6; c++) {
-		if(!this.gems[c]){ 
-			this.gems[c] = [];
-		}
-		for (var r = 0; r < this.board.rows; r++) {
-			copy = s.splice(Math.round(Math.random()*(s.length-1)), 1);//随机选择一个gem
-			i++;
-			if(!copy[0].monster){//不是怪物
-				gem = dm.Gem.random(this.game.board.GAP, this.game.board.GAP, copy[0].index);
-			}else{
-				gem = copy[0];
-				gem.keep = true;
+    this.mm = new lime.animation.Spawn(
+        new lime.animation.ScaleTo(1)
+		,new lime.animation.FadeTo(1).setDuration(.8)
+    ).enableOptimizations();
+
+	var i = 0;
+
+	for (var r = 5; r >= 0; r--) {
+		for (var c = 0; c < 6 ; c++) {
+			if(!this.gems[c]){ 
+				this.gems[c] = [];
 			}
-			gem.r = r;
-			gem.c = c;
-			gem.setPosition((c + .5) * this.board.GAP - this.board.SIZE/2 , this.board.SIZE/2 - (r + .5) * this.board.GAP);
+            var gem = dm.Gem.random(this.GAP, this.GAP, index[i]);
+			i++;
+			if(gem.type == 'monster'){
+				gem.monster = new dm.Monster(this.game.data.turn, gem, this.game);
+			}
+            gem.r = r;
+            gem.c = c;
+            pos = new goog.math.Coordinate((c + .5) * this.GAP - this.SIZE/2, this.getSize().height - (r + .5) * this.GAP -this.SIZE/2);
+            //gem.setPosition((c + .5) * this.GAP - this.SIZE/2, (-i + .5) * this.GAP - this.SIZE/2);
+			gem.setPosition(pos);
 			gem.setScale(0.5);
 			gem.setOpacity(0);
-			this.board.mm.addTarget(gem);
-			//gem.setSize(this.GAP, this.GAP);
-			this.board.gems[c].push(gem);
-			this.board.layers[c].appendChild(gem);
+			this.mm.addTarget(gem);
+            this.gems[c].push(gem);
+            this.layers[c].appendChild(gem);
 		}
 	}
-	for(var i in gems){
+	var action = this.mm.play();
+	//this.findGemsType();
+	
+	//step 1, 连接3个金币
+	this.guidestep = 1;
+	var line = [this.gems[3][2], this.gems[4][2], this.gems[5][2]];
+	this.selectedGems = [];
 
+	function drawline(line){
+		lime.scheduleManager.callAfter(
+			function(){
+			if(line.length){
+				this.addSelGem(line[0]);
+				line.shift();
+				drawline.call(this, line);
+			}else{
+				this.cancelSelGem(-1);//全部取消选择
+				this.selectedGems = [];
+				//line = [this.gems[3][2], this.gems[4][2], this.gems[5][2]];
+				//drawline.call(this, line);
+				goog.events.listen(this, ['mousedown', 'touchstart','gesturestart'], this.guidePressHandler_);
+			}
+		}, this, 1000)
 	}
+	drawline.call(this, line);
+
+	//setp 2
 }
+
+/**
+ *专门处理教程中的鼠标点击
+ */
+dm.Board.prototype.guidePressHandler_ = function(e){
+    if (this.isMoving_) {
+		return;
+	}
+	if((e.type =='mousemove' || e.type == 'touchmove' || e.type == 'gesturechange')){
+		if(! this.doing_ ){
+			return;
+		}
+	}
+
+	this.selectedGems = this.selectedGems || [];
+    var pos = e.position;
+	var g;
+
+	pos.x += this.SIZE/2;
+	pos.y += this.SIZE/2; //中心偏移
+    // get the cell and row value for the touch
+    var c = Math.floor(pos.x / this.GAP),
+        r = Math.floor(pos.y / this.GAP)  //- this.rows 
+
+	var valid_min = this.GAP*0.05,
+		valid_max = this.GAP*0.95,  //落在GEM矩形框内中心部分才有效
+		x_valid = pos.x - this.GAP*c;
+		y_valid = pos.y - this.GAP*r; //(this.rows - 1 - r);
+	g = this.gems[c][r];
+
+	if(c >= this.cols || c < 0 || r < 0 || r >= this.rows ){
+		return;
+	}
+
+	if(x_valid < valid_min || x_valid > valid_max || y_valid < valid_min || y_valid > valid_max){
+		return;
+	}
+
+	var selid = -1;
+	for( var i = 0 ; i < this.selectedGems.length - 1; i++){
+		if( this.selectedGems[i] === g){
+			selid = i;
+			break;
+		}
+	}
+	//处理取消
+	if((e.type =='mousemove' || e.type == 'touchmove')){
+		if(selid > -1){
+				this.cancelSelGem(selid);
+				this.checkLine(this.selectedGems);
+				return;
+		}
+	}
+
+    if (e.type == 'mousedown' || e.type == 'touchstart' || e.type =='gesturestart') {
+		this.doing_ = true;
+		switch(this.guidestep){
+			case 1:{
+				if(r != 2 && c < 3){
+					return;
+				}
+				g = this.gems[c][r];
+				this.addSelGem(g);
+				break;
+			}
+		}
+
+		e.swallow(['mouseup','mousemove','touchmove','mouseover', 'touchend','touchcancel','gestureend','gesturechange'], 
+				  dm.Board.prototype.guidePressHandler_);
+	}
+
+	var lastg;
+
+	if(e.type == 'mouseup'  || e.type == 'touchend' || e.type == 'touchcancel' || e.type == 'gestureend'){
+		this.doing_ = false;
+		for( i = 0 ;i < this.selectedGems.length ; i ++){
+			this.selectedGems[i].deselect();
+			this.selectedGems[i].unsetSpecial();
+			if(this.selectedGems[i].type == 'sword' && !this.selectedGems[i].isBroken){
+				this.show_att -= this.fp.a2;
+				this.game.disp.attack.setText(this.show_att);					
+			}
+		}
+
+		if(this.selectedGems.length > 2){
+				this.checkSolutions();
+		}
+
+		this.selectedGems = [];
+		this.drawedLines = [];
+		this.lineLayer.removeAllChildren();
+		this.checkLine(this.selectedGems);
+		return;
+	}
+
+	if(this.selectedGems.length > 0)
+		lastg = this.selectedGems[this.selectedGems.length - 1];
+	if(lastg  === g){
+		return ;
+	}
+
+	//move 
+	switch(this.guidestep){
+		case 1:{
+			if(r != 2 && c < 3){
+				return;
+			}
+			g = this.gems[c][r];
+			this.addSelGem(g);
+			break;
+		}
+	}
+
+}
+
 /**
  * Fill the board so that all columns have max amount
  * of bubbles again. Poistion out of screen so they can be animated in

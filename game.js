@@ -104,7 +104,8 @@ dm.Game.prototype.createPanel = function(){
  * create board
  */
 dm.Game.prototype.createBoard = function(){
-    this.board = new dm.Board(this.size, this.size, this);
+	var guide = false; //true;
+    this.board = new dm.Board(this.size, this.size, this, guide);
     if(dm.isBrokenChrome()) this.board.setRenderer(lime.Renderer.CANVAS);
     this.backGround.appendChild(this.board);
 }
