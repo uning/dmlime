@@ -106,7 +106,7 @@ dm.Display = {
 			img:this.url+'skilldialog.png',
 			buy:{
 				pos:{x:0, y:150},
-				size:{w:87, h:33},
+				size:{w:130, h:50},
 				img:this.url+'buy.png'
 			}
 		}
@@ -117,7 +117,7 @@ dm.Display = {
 			img:this.url+'skilluse.png',
 			buy:{
 				pos:{x:0, y:150},
-				size:{w:87, h:33},
+				size:{w:130, h:50},
 				img:this.url+'study.png'
 			}
 		}
@@ -128,12 +128,12 @@ dm.Display = {
 				pos:this.itempop.pos,
 				img:this.url+'skilluse.png',
 				btn_use:{
-					size:{w:87, h:33},
+					size:{w:130, h:50},
 					pos:{x:-130, y:150},
 					img:this.url+'use.png'
 				},
 				btn_cancel:{
-					size:{w:87, h:33},
+					size:{w:130, h:50},
 					pos:{x:120, y:150},
 					img:this.url+'cancel.png'
 				}
@@ -143,7 +143,7 @@ dm.Display = {
 				pos:this.itempop.pos,
 				img:this.url+'skilluse.png',
 				btn_study:{
-					size:{w:87, h:33},
+					size:{w:130, h:50},
 					pos:{x:0, y:150},
 					img:this.url+'study.png'
 				}

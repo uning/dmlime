@@ -128,11 +128,12 @@ dm.loadCover = function() {
       return dm.loadHelpScene();
     });
   });
-  goog.events.listen(help, ['focus'], function() {
-    return this.setFill('dmdata/dmimg/chelp2.png');
-  });
-  goog.events.listen(help, ['blur'], function() {
-    return this.setFill('dmdata/dmimg/chelp1.png');
+  goog.events.listen(rank, ['mousedown', 'touchstart'], function(e) {
+    this.setFill('dmdata/dmimg/crank3.png');
+    return e.swallow(['mouseup', 'touchend', 'touchcancel'], function() {
+      this.setFill('dmdata/dmimg/crank1.png');
+      return dm.loadGame();
+    });
   });
   cover.appendChild(start);
   cover.appendChild(score);
@@ -207,6 +208,11 @@ dm.loadHelpScene = function() {
   scene = new dm.Help;
   dm.builtWithLime(scene);
   return dm.director.replaceScene(scene, lime.transitions.Dissolve);
+};
+
+dm.loadGame = function() {
+  dm.newgame(6);
+  return dm.game.loadGame();
 };
 
 dm.builtWithLime = function(scene) {};

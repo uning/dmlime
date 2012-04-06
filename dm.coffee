@@ -96,6 +96,14 @@ dm.loadCover = ->
 					this.setFill('dmdata/dmimg/chelp1.png')
 					dm.loadHelpScene()
 
+	goog.events.listen rank, ['mousedown', 'touchstart'],
+		(e)->
+			this.setFill('dmdata/dmimg/crank3.png')
+			e.swallow ['mouseup', 'touchend', 'touchcancel'],
+				()->
+					this.setFill('dmdata/dmimg/crank1.png')
+					dm.loadGame()
+
 	cover.appendChild start
 	cover.appendChild score
 	cover.appendChild rank
@@ -190,6 +198,11 @@ dm.loadHelpScene = ->
 	scene = new dm.Help
 	dm.builtWithLime scene
 	dm.director.replaceScene scene, lime.transitions.Dissolve
+
+dm.loadGame = ->
+	dm.newgame 6
+	dm.game.loadGame()
+
 
 # add lime credintials to a scene
 dm.builtWithLime = (scene) ->

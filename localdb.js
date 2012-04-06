@@ -4,9 +4,10 @@ goog.require('Lawnchair')
 
 dm.LDB = {
 	_lc: null
-	,lc:function(){ 
+	,lc:function(name){ 
+		name = name || "dm"
 		if(! this._lc)
-			this._lc = Lawnchair({name:'dm'},function(){})
+			this._lc = Lawnchair({name:name},function(){})
 		return this._lc
 	}
 	,save:function(key,v,cb){

@@ -86,12 +86,12 @@ goog.inherits(dm.Board, lime.Sprite);
 
 dm.Board.prototype.guide = function(){
 	var index = [
-		1,3,3,4,4,3,
-		4,3,0,3,2,1,
-		0,3,3,4,4,4,
-		2,1,0,3,1,0,
+		4,0,0,3,3,0,
 		4,0,2,0,3,3,
-		4,0,0,3,3,0
+		2,1,0,3,1,0,
+		0,3,3,4,4,4,
+		4,3,0,3,2,1,
+		1,3,3,4,4,3
 	]
 
     this.mm = new lime.animation.Spawn(
@@ -101,7 +101,7 @@ dm.Board.prototype.guide = function(){
 
 	var i = 0;
 
-	for (var r = 5; r >= 0; r--) {
+	for (var r = 0; r < 6; r++) {
 		for (var c = 0; c < 6 ; c++) {
 			if(!this.gems[c]){ 
 				this.gems[c] = [];
@@ -127,9 +127,11 @@ dm.Board.prototype.guide = function(){
 	//this.findGemsType();
 	
 	//step 1, 连接3个金币
-	this.guidestep = 1;
-	var line = [this.gems[3][2], this.gems[4][2], this.gems[5][2]];
+	this.guidestep = 0;
+	var line = [this.gems[3][3], this.gems[4][3], this.gems[5][3]];
 	this.selectedGems = [];
+
+	this.game.disp.guideTipDialog = {};
 
 	function drawline(line){
 		lime.scheduleManager.callAfter(
@@ -139,15 +141,68 @@ dm.Board.prototype.guide = function(){
 				line.shift();
 				drawline.call(this, line);
 			}else{
-				this.cancelSelGem(-1);//全部取消选择
-				this.selectedGems = [];
-				//line = [this.gems[3][2], this.gems[4][2], this.gems[5][2]];
-				//drawline.call(this, line);
 				goog.events.listen(this, ['mousedown', 'touchstart','gesturestart'], this.guidePressHandler_);
+				//this.game.disp.guideTipDialog = new lime.RoundedRect().setSize(500, 200).setFill(0,0,0, .7).setPosition(360, 602);
+				this.game.disp.guideTipDialog = new lime.RoundedRect().setFill('dmdata/dmimg/guide1.png').setPosition(480, 552).setSize(257, 140);
+				this.game.appendChild(this.game.disp.guideTipDialog);
 			}
 		}, this, 1000)
 	}
-	drawline.call(this, line);
+	lime.scheduleManager.callAfter(function(){drawline.call(this, line);}, this, 1000);
+
+	//检测新手引导到哪一步
+	lime.scheduleManager.scheduleWithDelay(function(){
+		switch(this.guidestep){
+			case 2:{
+				this.game.disp.guideTipDialog.setPosition(530, 752);
+				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide2.png').setSize(257, 140);
+				this.game.appendChild(this.game.disp.guideTipDialog);
+				break;
+			}
+			case 3:{
+				this.game.disp.guideTipDialog.setPosition(200, 520);
+				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide3.png').setSize(257, 139);
+				this.game.appendChild(this.game.disp.guideTipDialog);
+				break;
+			}
+			case 4:{
+				this.game.disp.guideTipDialog.setPosition(420, 102);
+				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide4.png').setSize(272, 114);
+				this.game.appendChild(this.game.disp.guideTipDialog);
+				break;
+			}
+			case 5:{
+				//第五步，显示对血槽的说明
+				this.game.disp.guideTipDialog.setPosition(530, 782);
+				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide5.png').setSize(257, 140);
+				this.game.appendChild(this.game.disp.guideTipDialog);
+				break;
+			}
+			case 6:{
+				//对技能的说明
+				//if(this.game.user.data.skills[0]){
+				this.game.disp.guideTipDialog.setPosition(220, 822);
+				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide6.png').setSize(256, 165);
+				this.game.appendChild(this.game.disp.guideTipDialog);
+				//}
+				break;
+			}
+			case 7:{
+				//装备的说明
+				this.game.disp.guideTipDialog.setPosition(290, 242);
+				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide7.png').setSize(256, 140);
+				this.game.appendChild(this.game.disp.guideTipDialog);
+				break;
+			}
+			case 8:{
+				//特殊怪物说明
+				this.game.disp.guideTipDialog.setPosition(360, 502);
+				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide8.png').setSize(257, 192);
+				this.game.appendChild(this.game.disp.guideTipDialog);
+				break;
+			}
+		}
+	}, this, 1000);
 
 	//setp 2
 }
@@ -159,6 +214,7 @@ dm.Board.prototype.guidePressHandler_ = function(e){
     if (this.isMoving_) {
 		return;
 	}
+
 	if((e.type =='mousemove' || e.type == 'touchmove' || e.type == 'gesturechange')){
 		if(! this.doing_ ){
 			return;
@@ -166,66 +222,10 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 	}
 
 	this.selectedGems = this.selectedGems || [];
-    var pos = e.position;
-	var g;
-
-	pos.x += this.SIZE/2;
-	pos.y += this.SIZE/2; //中心偏移
-    // get the cell and row value for the touch
-    var c = Math.floor(pos.x / this.GAP),
-        r = Math.floor(pos.y / this.GAP)  //- this.rows 
-
-	var valid_min = this.GAP*0.05,
-		valid_max = this.GAP*0.95,  //落在GEM矩形框内中心部分才有效
-		x_valid = pos.x - this.GAP*c;
-		y_valid = pos.y - this.GAP*r; //(this.rows - 1 - r);
-	g = this.gems[c][r];
-
-	if(c >= this.cols || c < 0 || r < 0 || r >= this.rows ){
-		return;
-	}
-
-	if(x_valid < valid_min || x_valid > valid_max || y_valid < valid_min || y_valid > valid_max){
-		return;
-	}
-
-	var selid = -1;
-	for( var i = 0 ; i < this.selectedGems.length - 1; i++){
-		if( this.selectedGems[i] === g){
-			selid = i;
-			break;
-		}
-	}
-	//处理取消
-	if((e.type =='mousemove' || e.type == 'touchmove')){
-		if(selid > -1){
-				this.cancelSelGem(selid);
-				this.checkLine(this.selectedGems);
-				return;
-		}
-	}
-
-    if (e.type == 'mousedown' || e.type == 'touchstart' || e.type =='gesturestart') {
-		this.doing_ = true;
-		switch(this.guidestep){
-			case 1:{
-				if(r != 2 && c < 3){
-					return;
-				}
-				g = this.gems[c][r];
-				this.addSelGem(g);
-				break;
-			}
-		}
-
-		e.swallow(['mouseup','mousemove','touchmove','mouseover', 'touchend','touchcancel','gestureend','gesturechange'], 
-				  dm.Board.prototype.guidePressHandler_);
-	}
-
-	var lastg;
 
 	if(e.type == 'mouseup'  || e.type == 'touchend' || e.type == 'touchcancel' || e.type == 'gestureend'){
 		this.doing_ = false;
+
 		for( i = 0 ;i < this.selectedGems.length ; i ++){
 			this.selectedGems[i].deselect();
 			this.selectedGems[i].unsetSpecial();
@@ -237,28 +237,175 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 
 		if(this.selectedGems.length > 2){
 				this.checkSolutions();
+				if(this.guidestep == 1 || this.guidestep == 3){
+					this.game.removeChild(this.game.disp.guideTipDialog);
+				}
+				/*
+				if(this.guidestep < 2){
+					this.guidestep++;
+				}
+				*/
+				this.guidestep++;
 		}
 
 		this.selectedGems = [];
 		this.drawedLines = [];
 		this.lineLayer.removeAllChildren();
+
 		this.checkLine(this.selectedGems);
 		return;
 	}
 
-	if(this.selectedGems.length > 0)
+    var pos = e.position;
+	pos.x += this.SIZE/2;
+	pos.y += this.SIZE/2; //中心偏移
+    // get the cell and row value for the touch
+    var c = Math.floor(pos.x / this.GAP),
+        //r = Math.floor(pos.y / this.GAP)  //- this.rows 
+        r = this.rows - Math.ceil(pos.y / this.GAP);
+
+	var valid_min = this.GAP*0.05,
+		valid_max = this.GAP*0.95,  //落在GEM矩形框内中心部分才有效
+		x_valid = pos.x - this.GAP*c;
+		//y_valid = pos.y - this.GAP*r; //(this.rows - 1 - r);
+		y_valid = pos.y - this.GAP*(this.rows - 1 - r);
+
+	if(c >= this.cols || c < 0 || r < 0 || r >= this.rows ){
+		return;
+	}
+
+	if(x_valid < valid_min || x_valid > valid_max || y_valid < valid_min || y_valid > valid_max){
+		return;
+	}
+
+	var g = this.gems[c][r];
+	var lastg;
+	if(this.selectedGems.length > 0){
 		lastg = this.selectedGems[this.selectedGems.length - 1];
+	}
+
 	if(lastg  === g){
 		return ;
+	}
+
+	var selid = -1;
+	for( var i = 0 ; i < this.selectedGems.length - 1; i++){
+		if( this.selectedGems[i] === g){
+			selid = i;
+			break;
+		}
+	}
+
+	//处理取消
+	if((e.type =='mousemove' || e.type == 'touchmove')){
+		if(selid > -1){
+				this.cancelSelGem(selid);
+				//this.checkLine(this.selectedGems);
+				return;
+		}
+	}
+
+    if (e.type == 'mousedown' || e.type == 'touchstart' || e.type =='gesturestart') {
+		this.doing_ = true;
+
+		switch(this.guidestep){
+			case 0:{
+				this.cancelSelGem(-1);
+				this.selectedGems = [];
+				this.guidestep = 1;
+				return;
+			}
+			case 2:{
+				this.game.removeChild(this.game.disp.guideTipDialog);
+				this.guidestep++;
+				//
+				return;
+			}
+			case 3:{
+				if(this.gems[c][r].type != 'monster' && this.gems[c][r].type != 'sword'){
+					return;
+				}
+				break;
+			}
+			/*
+			case 5:{
+				this.game.removeChild(this.game.disp.guideTipDialog);
+				if(this.game.user.data.skills[0]){
+					this.guidestep++;
+				}
+				return;
+			}
+			*/
+			case 4:
+			case 5:
+			case 6:
+			case 7:{
+				this.game.removeChild(this.game.disp.guideTipDialog);
+				this.guidestep++;
+				return;
+			}
+			case 8:{
+				this.game.removeChild(this.game.disp.guideTipDialog);
+				dm.newgame(6);
+				return;
+			}
+		}
+		/*
+		for( i = 0 ;i < this.selectedGems.length ; i ++){
+			this.selectedGems[i].deselect();
+			this.selectedGems[i].unsetSpecial();
+			if(this.selectedGems[i].type == 'sword' && !this.selectedGems[i].isBroken){
+				this.show_att -= this.fp.a2;
+				this.game.disp.attack.setText(this.show_att);					
+			}
+		}
+		*/
+		//this.selectedGems = [];
+		//lime.scheduleManager.changeDirectorActivity(dm.directory, false);
+
+		/*
+		switch(this.guidestep){
+			case 1:{
+				if(r != 3 || c < 3){
+					return;
+				}
+				g = this.gems[c][r];
+				this.addSelGem(g);
+				break;
+			}
+			case 2: //弹tips 提示金钱增加
+			case 3:{
+				if(this.gems[c][r].type != 'monster' && this.gems[c][r].type != 'sword'){
+					return;
+				}
+				g = this.gems[c][r];
+				this.addSelGem(g);
+				break;
+			}
+		}
+		*/
+
+		e.swallow(['mouseup','mousemove','touchmove','mouseover', 'touchend','touchcancel','gestureend','gesturechange'], 
+				  dm.Board.prototype.guidePressHandler_);
+	}
+
+
+	if(lastg && !lastg.canConnect(g) || !g.canSelect){
+		return;
 	}
 
 	//move 
 	switch(this.guidestep){
 		case 1:{
-			if(r != 2 && c < 3){
+			if(r != 3 || c < 3){
 				return;
 			}
 			g = this.gems[c][r];
+			this.addSelGem(g);
+			break;
+		}
+		case 2:
+		case 3:{
 			this.addSelGem(g);
 			break;
 		}
@@ -616,6 +763,9 @@ dm.Board.prototype.playerAction = function(){
 		}
 	}
 	count > 5 && (score = Math.ceil(score*(1+(count-5)*0.1)));
+	//
+	//记录消除的图标的最大长度
+	this.game.data.longestLine = Math.max(this.game.data.longestLine, count);
 	
 
 	//添加积分翻倍。一次性消除所有图标(不包括怪物)
@@ -813,6 +963,8 @@ dm.Board.prototype.addSelGem = function(g,trypos) {
 		}
 		this.selectedGems.push(g);
 	}
+
+	this.checkLine(this.selectedGems);
 }
 
 /**
@@ -960,7 +1112,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 	if((e.type =='mousemove' || e.type == 'touchmove')){
 		if(selid > -1){
 				this.cancelSelGem(selid);
-				this.checkLine(this.selectedGems);
+				//this.checkLine(this.selectedGems);
 				//dm.log.fine('pressHandler_: cancel to' + selid )
 				return;
 		}
@@ -971,7 +1123,8 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		this.lineLayer.removeAllChildren();
 		//dm.log.fine('pressHandler_ start pause:'+e.type);
 		lime.scheduleManager.changeDirectorActivity(dm.directory,false);
-        e.swallow(['mouseup','mousemove','touchmove','mouseover', 'touchend','touchcancel','gestureend','gesturechange'], dm.Board.prototype.pressHandler_);
+        e.swallow(['mouseup','mousemove','touchmove','mouseover', 'touchend','touchcancel','gestureend','gesturechange'], 
+				  dm.Board.prototype.pressHandler_);
     }
 	//如果不相邻
 	if(lastg && !lastg.canConnect(g) || !g.canSelect){
@@ -1286,9 +1439,11 @@ dm.Board.prototype.getDamage = function(){
              pos = new goog.math.Coordinate((c + .5) * this.GAP - this.SIZE/2, this.getSize().height - (r + .5) * this.GAP -this.SIZE/2);
 			 //gem.setPosition((c + .5) * this.GAP, (-i + .5) * this.GAP);
 			 gem.setPosition(pos);
+			 /*
 			 gem.setScale(0.5);
 			 gem.setOpacity(0);
 			 this.mm.addTarget(gem);
+			 */
 			 this.gems[c].push(gem);
 			 this.layers[c].appendChild(gem);
 		 }
@@ -1300,7 +1455,7 @@ dm.Board.prototype.getDamage = function(){
 		 this.game.disp.attack.setText(this.show_att);
 	 }
 	 this.findGemsType();
-	 return this.mm.play();
+	 //return this.mm.play();
  }
 
 /**

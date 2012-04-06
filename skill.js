@@ -55,11 +55,11 @@ dm.Skill.prototype.use = function(id){
 dm.Skill.prototype.action = function(id, param){ //各个技能的作用效果
 	switch(id){
 		case '1':{ //加血(持续)
-			this.game.updateData('hp', Math.min(Math.round(this.user.data.fp.a6*1.1), this.user.data.fp.a6));
+			this.game.updateData('hp', Math.min(Math.round(this.game.data.hp + this.user.data.fp.a6*0.1), this.user.data.fp.a6));
 		}
 		break;
 		case '2':{ //
-			this.game.updateData('hp', Math.min(Math.round(this.user.data.fp.a6*1.3), this.user.data.fp.a6));
+			this.game.updateData('hp', Math.min(Math.round(this.game.data.hp + this.user.data.fp.a6*0.3), this.user.data.fp.a6));
 		}
 		break;
 		case '3':{ //法力转换为生命
