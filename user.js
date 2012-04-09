@@ -156,7 +156,7 @@ dm.User.prototype.enterShop=function(){
 }
 
 
-dm.User.prototype.buyItem = function(type, lvl){
+dm.User.prototype.itemBuy = function(type, lvl){
 	//var bg = this.game.backGround;
 	var slot;
 	//var icon = new lime.Sprite().setSize(64, 64).setPosition(-170 + type*85, -350);

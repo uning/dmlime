@@ -10,7 +10,7 @@ dm.Monster = function(turn, p, game, mon_id){
 	this.game = game;
 	this.conf = dm.conf.MS;
 	this.parentGem = p;
-	this.genAttribute(turn, mon_id);
+	this.genAttribute(turn, p , mon_id);
 	//显示怪物攻防等图片
 	this.genImg();
 }
@@ -78,7 +78,7 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 				this.id = 0;
 			}
 			//test
-			//this.id = 5;
+			this.id = 7;
 		}else{
 			this.id = 0;
 		}
@@ -112,6 +112,7 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	this.def = this.def_max;
 	this.hp  = this.hp_max;
 
+	this.att_addition = 0;
 	//状态参数
 	this.delay = config.delay;
 	this.poison = false; //受毒伤害
@@ -254,7 +255,7 @@ dm.Monster.prototype.onDeath = function(bounce){
 /** 
  * 回合开始的动作
  */
- dm.Monster.prototype.startSkill = function(){
+ dm.Monster.prototype.turnStartUseSkill = function(){
 	 if(this.id && this.delay == 0){
 		 this.useSkill();
 	 }
@@ -263,7 +264,7 @@ dm.Monster.prototype.onDeath = function(bounce){
 /**
  * 每轮结束后执行的动作
  */
-dm.Monster.prototype.endTurn = function(monster){
+dm.Monster.prototype.turnEndUseSkill = function(monster){
 	if(monster){
 		if(monster.aliveturn && monster.id && monster.delay == 1){
 			monster.useSkill();
@@ -560,13 +561,11 @@ dm.Monster.prototype.useSkill = function(){
 			break;
 		}
 		case '2':{
-			//附加毒伤害，必须消除红心来治疗
-			this.poisonAttack();
-
-			/*
-			this.game.updateData('canCD', 0);
-			*/
+			//明每回合降低玩家10%生命（不会直接导致死亡）
+			this.game.updateData('hp', Math.ceil(this.game.data.hp*0.9));
 			break;
+			//附加毒伤害，必须消除红心来治疗
+			//this.poisonAttack();
 		}
 		case '3':{
 			//怪物存在时，CD不会减少
@@ -601,6 +600,10 @@ dm.Monster.prototype.useSkill = function(){
 			break;
 		}
 		case '7':{
+			//有50%几率基础攻击翻倍
+			if(Math.random() > 0.5){
+				this.att_addition = this.att;
+			}
 			//board中计算，reflectionDmg
 			//this.cure();
 			break;
@@ -672,7 +675,7 @@ dm.Monster.prototype.useSkill = function(){
 
 
 /**
- * 怪物死亡后复原技能影响
+ * 怪物死亡后或者技能持续时间到，取消技能造成的影响
 */
 dm.Monster.prototype.endSkill = function(){
 	var data = this.game.data;
@@ -709,6 +712,7 @@ dm.Monster.prototype.endSkill = function(){
 			break;
 		}
 		case '7':{
+			this.att_addition = 0;
 			break;
 		}
 		case '8':{

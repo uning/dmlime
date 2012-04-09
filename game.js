@@ -12,7 +12,7 @@ goog.require('lime.animation.Loop');
  * @constructor
  * @extends lime.Scene
  */
-dm.Game = function(size,user){
+dm.Game = function(size, user, guide){
 
 	dm.log.fine('for ad',size,user)
     lime.Scene.call(this);
@@ -20,7 +20,7 @@ dm.Game = function(size,user){
 	dm.Display.init();
 	this.initData(size, user);
 	this.createPanel();
-	this.createBoard();
+	this.createBoard(guide);
 	//显示数据
 	this.showData();
 
@@ -107,10 +107,12 @@ dm.Game.prototype.createPanel = function(){
 /*
  * create board
  */
-dm.Game.prototype.createBoard = function(){
-	var guide = true;
-	guide = false;
-    this.board = new dm.Board(this.size, this.size, this, guide);
+dm.Game.prototype.createBoard = function(guide){
+	//test
+	//guide = true;
+	//
+	guide = guide || false;
+    this.board = new dm.Board(this, guide);
     if(dm.isBrokenChrome()) this.board.setRenderer(lime.Renderer.CANVAS);
     this.backGround.appendChild(this.board);
 }
@@ -121,8 +123,8 @@ dm.Game.prototype.createBoard = function(){
 dm.Game.prototype.showData = function(){
 	var dp = dm.Display
 	this.disp.score = new lime.Label().setPosition(dp.score.pos.x, dp.score.pos.y).setFontSize(dp.score.fontsize).setText(0)
-	this.disp.hp = new lime.Label().setPosition(dp.hp.pos.x, dp.hp.pos.y).setFontSize(dp.hp.fontsize).setText(this.data['hp']+'/'+this.user.data.fp.a6)
-	.setFontWeight(800)
+	this.disp.hp = new lime.Label().setPosition(dp.hp.pos.x, dp.hp.pos.y).setFontSize(dp.hp.fontsize - 2).setText(this.data['hp']+'/'+this.user.data.fp.a6)
+	.setFontWeight(800).setFontColor('#FFF');
 
 	this.disp.mana = new lime.Sprite().setPosition(dp.mana.pos.x, dp.mana.pos.y).setSize(dp.mana.size.w, dp.mana.size.h).setFill(dp.url + dp.mana.img)
 	this.disp.mana_mask = new lime.Sprite().setAnchorPoint(0, .5).setPosition(- dp.mana.size.w/2, 0)//.setSize(dp.mana.size.w , dp.mana.size.h)
@@ -485,19 +487,26 @@ dm.Game.prototype.mainShow = function(game){
 	  var udata = sdata['userdata'];
 	  var gems  = sdata['gems'];
 	  
-
 	  var icon;
 	  var i, c, r;
 	  this.data = gdata;
+
 	  for(i in this.user.data){
 		  if(i != "equips" && i != "skills"){
 			  this.user.data[i] = udata[i];
 		  }
 	  }
+	  this.board.show_att = this.user.data.fp.a1;
+	  this.disp.lvl.setText(this.user.data.lvl);
+	  this.disp.attack.setText(this.user.data.fp.a1);
+	  this.disp.defense.setText(this.user.data.fp.a3);
+	  this.disp.turn.setText(this.data.turn);
+	  this.disp.kill.setText((this.data.killcommon + this.data.killspecial) || 0);
 
 	  this.user.data["skills"] = {};
 	  for(i in udata["skills"]){
-		  this.user.data.skills[i] = dm.conf.SK[udata["skills"][i]];
+		  //this.user.data.skills[i] = dm.conf.SK[udata["skills"][i]];
+		  this.user.skillUp(dm.conf.SK[udata["skills"][i]]);
 	  }
 	  //根据装备的id附加装备
 	  this.user.data["equips"] = {};
@@ -1056,7 +1065,7 @@ dm.Game.prototype.itemBuy = function(){
 		game = this.getParent().getParent();
 		board = game.board;
 		if(this.item){
-			game.user.buyItem(this.item.type, this.item.lvl);
+			game.user.itemBuy(this.item.type, this.item.lvl);
 			board.turnEndShow();
 			board.show_att = board.getBaseAttack();
 			board.show_dmg = board.getDamage();

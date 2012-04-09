@@ -99,7 +99,7 @@ dm.api = function(m, param, callback) {
 };
 
 dm.loadCover = function() {
-  var cover, help, layer, rank, scene, score, start;
+  var cover, help, layer, load, scene, score, start;
   scene = new lime.Scene;
   layer = new lime.Layer().setPosition(dm.WIDTH / 2, dm.HEIGHT / 2);
   cover = new lime.Sprite().setFill('dmdata/dmimg/cover.png');
@@ -107,7 +107,7 @@ dm.loadCover = function() {
   /* btns
   */
   start = new lime.Sprite().setPosition(100, -230).setFill('dmdata/dmimg/cstart1.png');
-  rank = new lime.Sprite().setPosition(120, -150).setFill('dmdata/dmimg/crank1.png');
+  load = new lime.Sprite().setPosition(120, -150).setFill('dmdata/dmimg/cload1.png');
   score = new lime.Sprite().setPosition(140, -70).setFill('dmdata/dmimg/cscore1.png');
   help = new lime.Sprite().setPosition(160, 10).setFill('dmdata/dmimg/chelp1.png');
   goog.events.listen(start, ['mousedown', 'touchstart'], function(e) {
@@ -128,16 +128,16 @@ dm.loadCover = function() {
       return dm.loadHelpScene();
     });
   });
-  goog.events.listen(rank, ['mousedown', 'touchstart'], function(e) {
-    this.setFill('dmdata/dmimg/crank3.png');
+  goog.events.listen(load, ['mousedown', 'touchstart'], function(e) {
+    this.setFill('dmdata/dmimg/cload3.png');
     return e.swallow(['mouseup', 'touchend', 'touchcancel'], function() {
-      this.setFill('dmdata/dmimg/crank1.png');
+      this.setFill('dmdata/dmimg/cload1.png');
       return dm.loadGame();
     });
   });
   cover.appendChild(start);
   cover.appendChild(score);
-  cover.appendChild(rank);
+  cover.appendChild(load);
   cover.appendChild(help);
   scene.appendChild(layer);
   return dm.director.replaceScene(scene, lime.transitions.Dissolve);
@@ -199,8 +199,13 @@ dm.isBrokenChrome = function() {
 };
 
 dm.newgame = function(size) {
-  dm.game = new dm.Game(size);
-  return dm.director.replaceScene(dm.game, lime.transitions.Dissolve);
+  var func;
+  func = function(guide) {
+    if (typeof guide === 'undefined' || guide === null) guide = true;
+    dm.game = new dm.Game(size, null, guide);
+    return dm.director.replaceScene(dm.game, lime.transitions.Dissolve);
+  };
+  return dm.LDB.get('isnewuser', func, this);
 };
 
 dm.loadHelpScene = function() {

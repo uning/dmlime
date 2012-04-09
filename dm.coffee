@@ -73,7 +73,7 @@ dm.loadCover = ->
 
 	### btns ###
 	start = new lime.Sprite().setPosition(100, -230).setFill('dmdata/dmimg/cstart1.png')
-	rank = new lime.Sprite().setPosition(120, -150).setFill('dmdata/dmimg/crank1.png')
+	load = new lime.Sprite().setPosition(120, -150).setFill('dmdata/dmimg/cload1.png')
 	score = new lime.Sprite().setPosition(140, -70).setFill('dmdata/dmimg/cscore1.png')
 	help = new lime.Sprite().setPosition(160, 10).setFill('dmdata/dmimg/chelp1.png')
 
@@ -96,17 +96,17 @@ dm.loadCover = ->
 					this.setFill('dmdata/dmimg/chelp1.png')
 					dm.loadHelpScene()
 
-	goog.events.listen rank, ['mousedown', 'touchstart'],
+	goog.events.listen load, ['mousedown', 'touchstart'],
 		(e)->
-			this.setFill('dmdata/dmimg/crank3.png')
+			this.setFill('dmdata/dmimg/cload3.png')
 			e.swallow ['mouseup', 'touchend', 'touchcancel'],
 				()->
-					this.setFill('dmdata/dmimg/crank1.png')
+					this.setFill('dmdata/dmimg/cload1.png')
 					dm.loadGame()
 
 	cover.appendChild start
 	cover.appendChild score
-	cover.appendChild rank
+	cover.appendChild load
 	cover.appendChild help
 
 	scene.appendChild layer
@@ -189,8 +189,14 @@ dm.isBrokenChrome =   ->
 
 # load new game scene
 dm.newgame = (size)  ->
-	dm.game =   new dm.Game size
-	dm.director.replaceScene dm.game, lime.transitions.Dissolve
+	func = (guide)->
+		if(typeof(guide) == 'undefined' or guide == null)
+			guide = true
+		dm.game = new dm.Game(size, null, guide)
+		dm.director.replaceScene(dm.game, lime.transitions.Dissolve)
+	dm.LDB.get('isnewuser', func, this)
+	#dm.game =   new dm.Game size
+	#dm.director.replaceScene dm.game, lime.transitions.Dissolve
 
 
 # load new help scene
