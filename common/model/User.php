@@ -19,6 +19,23 @@ class model_User  extends PL_Db_Mongo_User{
 		$this->_collname = $collname;
 		$this->_mc = new PL_Db_Mongo(DbConfig::getMongodb($this->_collname));
 	}
+
+	function id($id = false){
+		if($id){
+			$this->_u = $id;
+		}
+		return $this->_u;
+	}
+
+	static function fromDb($cond){
+		$ret = new static(1);
+		$ret->data = $ret->_mc->findOne($cond);
+		if($ret->data){
+			$ret->_u = $ret->data['_id'];
+		}
+		return $ret;
+	}
+
+
+
 }
-
-

@@ -33,8 +33,8 @@ dm.Display = {
 		//panel
 		this.score = {pos:{x:147, y:-433}, fontsize:25}
 		this.hp = {pos:{x:240, y:444}, fontsize:25, fontcolor:'#2482ff'}
-		this.mana = {pos:{x:-137, y:-457}, size:{w:120,h:11}, img:'mana_bar.png'}
-		this.exp = {pos:{x:this.mana.pos.x, y:-429}, size:this.mana.size, img:'exp_bar.png'}
+		this.mana = {pos:{x:-137, y:-456}, size:{w:120,h:11}, img:'mana_bar.png'}
+		this.exp = {pos:{x:this.mana.pos.x, y:-428}, size:this.mana.size, img:'exp_bar.png'}
 		this.player = {pos:{x:-250, y:-400}, size:{w:75, h:160}, img:{m:'boy.png', f:'girl.png'}}
 		this.enemy = {pos:{x:285, y:-400}, size:{w:108, h:158}}
 		this.box = {pos:{x:10, y:-393}, size:{w:90, h:80}, img:'box.png'}
@@ -51,10 +51,10 @@ dm.Display = {
 		this.turn = {pos:{x:317, y:360}, fontsize:this.lvl.fontsize}
 
 		this.skillslot = {
-			0:{pos:{x:-220, y:420}},
-			1:{pos:{x:-104, y:420}},
-			2:{pos:{x:13, y:420}},
-			3:{pos:{x:128, y:420}},
+			0:{pos:{x:-220, y:422}},
+			1:{pos:{x:-104, y:422}},
+			2:{pos:{x:13, y:422}},
+			3:{pos:{x:128, y:422}},
 			size:{w:90, h:85}
 		}
 
@@ -76,10 +76,15 @@ dm.Display = {
 			}
 		}
 
+		this.bowClickArea = {pos:this.weapon.pos, size:this.weapon.size}
+		this.bowTip = {pos:{x:-230, y:-260}, size:{w:205, h:120}, img: this.url+'bowtip.png'}
+		this.shieldClickArea = {pos:this.shield.pos, size:this.shield.size}
+		this.shieldTip = {pos:{x:-18, y:-260}, size:{w:205, h:120}, img: this.url+'shieldtip.png'}
+
 		//点击区域
-		this.killarea= {pos:{x:-240, y:335}, size:{w:60, h:60}}
+		this.killClickArea= {pos:{x:-240, y:335}, size:{w:60, h:60}}
 		//文字
-		this.kill = {pos:{x:-180, y:345}, fontsize:35, fontcolor:this.defense.fontcolor}
+		this.killLabel = {pos:{x:-180, y:345}, fontsize:35, fontcolor:this.defense.fontcolor}
 		//弹框
 		this.killtip = {
 			pos:{x:-230, y:280},
@@ -90,6 +95,8 @@ dm.Display = {
 				special:{x:35, y:7, value:'killspecial'}
 			}
 		}
+
+
 		//board
 		this.board.pos = {x:this.background.x, y:this.background.y}
 		this.gemSize = this.board.size/2;
@@ -100,54 +107,83 @@ dm.Display = {
 			'gold':this.url+'gold.png'
 		}
 		//
+		this.menu = {
+			size:{w:104, h:42},
+			pos:{x:150, y:-380},
+			img:this.url+'menu.png'
+		}
+		//
 		this.itempop= {
 			size:{w:473, h:416},
 			pos:{x:this.framework.com.width/2, y:this.framework.com.height/2},
-			img:this.url+'skilldialog.png',
+			img:this.url+'equipdialog.png',
+			textarea:{
+				pos:{x:0, y:20},
+				size:{w:390, h:150}
+			},
 			buy:{
 				pos:{x:0, y:150},
-				size:{w:130, h:50},
-				img:this.url+'buy.png'
+				img:this.url+'buy.png',
+				size:{w:129, h:49}
 			}
 		}
 
 		this.lvlpop= {
 			size:{w:473, h:416},
 			pos:this.itempop.pos,
-			img:this.url+'skilluse.png',
-			buy:{
+			img:this.url+'charlvlup.png',
+			textarea:{
+				pos:{x:0, y:20},
+				size:{w:390, h:150}
+			},
+			ok:{
 				pos:{x:0, y:150},
-				size:{w:130, h:50},
-				img:this.url+'study.png'
+				size:{w:129, h:49},
+				img:this.url+'confirm.png'
 			}
 		}
 
 		this.skpop= {
+			textarea:{
+				pos:{x:0, y:20},
+				size:{w:390, h:150}
+			},
 			use:{
 				size:{w:473, h:416},
 				pos:this.itempop.pos,
 				img:this.url+'skilluse.png',
-				btn_use:{
-					size:{w:130, h:50},
-					pos:{x:-130, y:150},
-					img:this.url+'use.png'
-				},
-				btn_cancel:{
-					size:{w:130, h:50},
-					pos:{x:120, y:150},
-					img:this.url+'cancel.png'
+				icon:{
+					size:{w:90, h:85},
+					pos:{x:-5, y:-125}
 				}
 			},
 			study:{
 				size:{w:473, h:416},
 				pos:this.itempop.pos,
-				img:this.url+'skilluse.png',
-				btn_study:{
-					size:{w:130, h:50},
-					pos:{x:0, y:150},
-					img:this.url+'study.png'
-				}
+				img:this.url+'skilldialog.png'
+			},
+			btn_use:{
+				size:this.lvlpop.ok.size,
+				pos:{x:-130, y:150},
+				img:this.url+'use.png'
+			},
+			btn_cancel:{
+				size:this.lvlpop.ok.size,
+				pos:{x:120, y:150},
+				img:this.url+'cancel.png'
+			},
+			btn_study:{
+				size:this.lvlpop.ok.size,
+				pos:{x:-130, y:150},
+				img:this.url+'study.png'
 			}
+		}
+
+		this.popSelector = {
+			size:{w:125, h:125},
+			img:this.url + 'selected.png',
+			one:{x:-143, y:-123},
+			tow:{x:-5, y:-125}
 		}
 	}
 }

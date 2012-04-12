@@ -26,6 +26,7 @@ dm.Board = function(game, guide) {
     lime.Sprite.call(this);
 	this.setRenderer(lime.Renderer.CANVAS);
     this.game = game ;
+	this.skill = new dm.Skill(game);
     /**
      * @const
      * @type {number}
@@ -67,6 +68,7 @@ dm.Board = function(game, guide) {
 	this.appendChild(this.lineLayer);
     // load in first bubbles
 	
+	this.guidemode = guide;
 	//教程模式，产生的宝石分布是一样的
 	if(guide){
 		this.pressHandler_ = this.guidePressHandler_;
@@ -86,7 +88,7 @@ goog.inherits(dm.Board, lime.Sprite);
 
 dm.Board.prototype.guide = function(){
 	this.game.data.mana = this.game.user.data.fp.a5;
-	dm.LDB.save('isnewuser', false);
+	dm.LDB.save('olduser', true);
 	var index = [
 		4,1,1,1,3,0,
 		4,0,2,0,3,3,
@@ -116,7 +118,6 @@ dm.Board.prototype.guide = function(){
             gem.r = r;
             gem.c = c;
             pos = new goog.math.Coordinate((c + .5) * this.GAP - this.SIZE/2, this.getSize().height - (r + .5) * this.GAP -this.SIZE/2);
-            //gem.setPosition((c + .5) * this.GAP - this.SIZE/2, (-i + .5) * this.GAP - this.SIZE/2);
 			gem.setPosition(pos);
 			gem.setScale(0.5);
 			gem.setOpacity(0);
@@ -126,16 +127,20 @@ dm.Board.prototype.guide = function(){
 		}
 	}
 	var action = this.mm.play();
-	//this.findGemsType();
 	
 	//step 1, 连接3个金币
 	this.guidestep = 0;
 	var line = [this.gems[3][3], this.gems[4][3], this.gems[5][3]];
 	this.selectedGems = [];
 
-	this.game.disp.guideTipDialog = {};
+	this.game.disp.guideTipDialog = new lime.Sprite().setFill('dmdata/dmimg/guide1.png').setPosition(480, 552).setSize(400, 400);
 
 	function drawline(line){
+		if(this.guidestep != 0){
+			this.cancelSelGem(-1);
+			this.selectedGems = [];
+			return;
+		}
 		lime.scheduleManager.callAfter(
 			function(){
 			if(line.length){
@@ -143,83 +148,20 @@ dm.Board.prototype.guide = function(){
 				line.shift();
 				drawline.call(this, line);
 			}else{
+				this.cancelSelGem(-1);
+				this.selectedGems = [];
+				line = [this.gems[3][3], this.gems[4][3], this.gems[5][3]];
+				drawline.call(this, line);
+				if(this.game.getChildIndex(this.game.disp.guideTipDialog) == -1){
+					this.game.appendChild(this.game.disp.guideTipDialog);
+				}
 				goog.events.listen(this, ['mousedown', 'touchstart','gesturestart'], this.guidePressHandler_);
-				//this.game.disp.guideTipDialog = new lime.RoundedRect().setSize(500, 200).setFill(0,0,0, .7).setPosition(360, 602);
-				this.game.disp.guideTipDialog = new lime.RoundedRect().setFill('dmdata/dmimg/guide1.png').setPosition(480, 552).setSize(257, 140);
-				this.game.appendChild(this.game.disp.guideTipDialog);
 			}
 		}, this, 1000)
 	}
 	if(this.guidestep == 0){
 		lime.scheduleManager.callAfter(function(){drawline.call(this, line);}, this, 1000);
 	}
-
-	/*
-	//检测新手引导到哪一步
-	lime.scheduleManager.scheduleWithDelay(function(){
-		switch(this.guidestep){
-			case 2:{
-				this.game.disp.guideTipDialog.setPosition(530, 752);
-				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide2.png').setSize(257, 140);
-				this.game.appendChild(this.game.disp.guideTipDialog);
-				break;
-			}
-			case 3:{
-				this.game.disp.guideTipDialog.setPosition(200, 520);
-				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide3.png').setSize(257, 139);
-				this.game.appendChild(this.game.disp.guideTipDialog);
-				var line = [this.gems[3][0], this.gems[3][1], this.gems[3][2], this.gems[4][2], this.gems[4][1]];
-				drawline = function(line){
-					if(line.length){
-						this.addSelGem(line[0]);
-						line.shift();
-						drawline.call(this, line);
-					}
-				}
-				drawline.call(this, line);
-				break;
-			}
-			case 4:{
-				this.game.disp.guideTipDialog.setPosition(420, 102);
-				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide4.png').setSize(272, 114);
-				this.game.appendChild(this.game.disp.guideTipDialog);
-				break;
-			}
-			case 5:{
-				//第五步，显示对血槽的说明
-				this.game.disp.guideTipDialog.setPosition(530, 782);
-				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide5.png').setSize(257, 140);
-				this.game.appendChild(this.game.disp.guideTipDialog);
-				break;
-			}
-			case 6:{
-				//对技能的说明
-				//if(this.game.user.data.skills[0]){
-				this.game.disp.guideTipDialog.setPosition(220, 822);
-				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide6.png').setSize(256, 165);
-				this.game.appendChild(this.game.disp.guideTipDialog);
-				//}
-				break;
-			}
-			case 7:{
-				//装备的说明
-				this.game.disp.guideTipDialog.setPosition(290, 242);
-				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide7.png').setSize(256, 140);
-				this.game.appendChild(this.game.disp.guideTipDialog);
-				break;
-			}
-			case 8:{
-				//特殊怪物说明
-				this.game.disp.guideTipDialog.setPosition(360, 502);
-				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide8.png').setSize(257, 192);
-				this.game.appendChild(this.game.disp.guideTipDialog);
-				break;
-			}
-		}
-	}, this, 1000);
-	*/
-
-	//setp 2
 }
 
 /**
@@ -266,11 +208,6 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 				}
 				this.game.removeChild(this.game.disp.guideTipDialog);
 			}
-/*
-				if(this.guidestep < 2){
-					this.guidestep++;
-				}
-*/
 			this.guidestep++;
 			guideStepCheck.call(this);
 		}
@@ -279,7 +216,6 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 		this.drawedLines = [];
 		this.lineLayer.removeAllChildren();
 
-		this.checkLine(this.selectedGems);
 		return;
 	}
 
@@ -340,6 +276,7 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 				this.cancelSelGem(-1);
 				this.selectedGems = [];
 				this.guidestep = 1;
+				//this.game.removeChild(this.game.disp.guideTipDialog);
 				return;
 			}
 			case 2:{
@@ -370,30 +307,24 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 					return;
 				}
 				break;
-
-				/*
-				this.game.removeChild(this.game.disp.guideTipDialog);
-				if(!this.game.user.data.skills['sk2']){
-					this.game.user.skillUp(dm.conf.SK['sk2']);
-					this.guidestep++;
-					guideStepCheck.call(this)
-				}
-				return;
-				*/
 			}
 			case 6:{
+				/*
 				this.game.removeChild(this.game.disp.guideTipDialog);
 				if(!this.game.user.equips){
 					this.game.user.itemBuy(0, 1);
 					this.guidestep++;
 					guideStepCheck.call(this)
 				}
+				*/
 				return;
 			}
 			case 7:{
+				/*
 				this.game.removeChild(this.game.disp.guideTipDialog);
 				this.guidestep++;
 				guideStepCheck.call(this);
+				*/
 				return;
 			}
 			case 8:{
@@ -401,40 +332,6 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 				//return;
 			}
 		}
-		/*
-		for( i = 0 ;i < this.selectedGems.length ; i ++){
-			this.selectedGems[i].deselect();
-			this.selectedGems[i].unsetSpecial();
-			if(this.selectedGems[i].type == 'sword' && !this.selectedGems[i].isBroken){
-				this.show_att -= this.fp.a2;
-				this.game.disp.attack.setText(this.show_att);					
-			}
-		}
-		*/
-		//this.selectedGems = [];
-		//lime.scheduleManager.changeDirectorActivity(dm.directory, false);
-
-		/*
-		switch(this.guidestep){
-			case 1:{
-				if(r != 3 || c < 3){
-					return;
-				}
-				g = this.gems[c][r];
-				this.addSelGem(g);
-				break;
-			}
-			case 2: //弹tips 提示金钱增加
-			case 3:{
-				if(this.gems[c][r].type != 'monster' && this.gems[c][r].type != 'sword'){
-					return;
-				}
-				g = this.gems[c][r];
-				this.addSelGem(g);
-				break;
-			}
-		}
-		*/
 
 		e.swallow(['mouseup','mousemove','touchmove','mouseover', 'touchend','touchcancel','gestureend','gesturechange'], 
 				  dm.Board.prototype.guidePressHandler_);
@@ -467,26 +364,45 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 		}
 	}
 
+	function drawline(line){
+		if(line.length){
+			this.addSelGem(line[0]);
+			line.shift();
+			drawline.call(this, line);
+		}
+	}
+
+	function guideTipResponse(){
+		goog.events.unlisten(this.game.disp.guideTipDialog, ['mousedown', 'touchstart'], guideTipResponse, false, this);
+		this.game.removeChild(this.game.disp.guideTipDialog);
+		this.guidestep++;
+		guideStepCheck.call(this);
+	}
+
 	function guideStepCheck(){
 		switch(this.guidestep){
 			case 2:{
 				this.game.disp.guideTipDialog.setPosition(530, 752);
 				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide2.png').setSize(257, 140);
 				this.game.appendChild(this.game.disp.guideTipDialog);
+				/*
+				goog.events.listen(this.game.disp.guideTipDialog, ['mousedown', 'touchstart'], guideTipResponse
+				, false, this);
+				/*
+				goog.events.listen(this.game.disp.guideTipDialog, ['mousedown', 'touchstart'], function(){
+					this.game.removeChild(this.game.disp.guideTipDialog);
+					this.guidestep++;
+					guideStepCheck.call(this);
+				}, true, this);
+				*/
 				break;
 			}
 			case 3:{
-				this.game.disp.guideTipDialog.setPosition(200, 520);
-				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide3.png').setSize(257, 139);
+				this.game.disp.guideTipDialog.setPosition(200, 540);
+				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide3.png').setSize(400, 400);
 				this.game.appendChild(this.game.disp.guideTipDialog);
+				this.selectedGems = [];
 				var line = [this.gems[0][3], this.gems[1][3], this.gems[2][3], this.gems[2][4], this.gems[1][4]];
-				drawline = function(line){
-					if(line.length){
-						this.addSelGem(line[0]);
-						line.shift();
-						drawline.call(this, line);
-					}
-				}
 				drawline.call(this, line);
 				break;
 			}
@@ -494,13 +410,17 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 				this.game.disp.guideTipDialog.setPosition(420, 102);
 				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide4.png').setSize(272, 114);
 				this.game.appendChild(this.game.disp.guideTipDialog);
+				goog.events.listen(this.game.disp.guideTipDialog, ['mousedown', 'touchstart'], guideTipResponse
+				, false, this);
 				break;
 			}
 			case 5:{
 				//第五步，显示对血槽的说明
-				this.game.disp.guideTipDialog.setPosition(530, 782);
-				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide5.png').setSize(257, 140);
+				this.game.disp.guideTipDialog.setPosition(300, 622);
+				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide5.png').setSize(400, 400);
 				this.game.appendChild(this.game.disp.guideTipDialog);
+				line = [this.gems[1][0], this.gems[2][0], this.gems[3][0]];
+				drawline.call(this, line);
 				break;
 			}
 			case 6:{
@@ -509,14 +429,17 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 				this.game.disp.guideTipDialog.setPosition(220, 822);
 				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide6.png').setSize(256, 165);
 				this.game.appendChild(this.game.disp.guideTipDialog);
+				goog.events.listen(this.game.disp.guideTipDialog, ['mousedown', 'touchstart'], guideTipResponse, false, this);
 				//}
 				break;
 			}
 			case 7:{
 				//装备的说明
+				this.game.user.itemBuy(0, 1);
 				this.game.disp.guideTipDialog.setPosition(290, 242);
 				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide7.png').setSize(256, 140);
 				this.game.appendChild(this.game.disp.guideTipDialog);
+				goog.events.listen(this.game.disp.guideTipDialog, ['mousedown', 'touchstart'], guideTipResponse, false, this);
 				break;
 			}
 			case 8:{
@@ -531,12 +454,17 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 				parent.appendChild(this.gems[2][4])
 
 				//特殊怪物说明
-				this.game.disp.guideTipDialog.setPosition(360, 502);
-				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide8.png').setSize(257, 192);
+				this.game.disp.guideTipDialog.setPosition(370, 502);
+				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide8.png').setSize(257, 191);
 				this.game.appendChild(this.game.disp.guideTipDialog);
+				goog.events.listen(this.game.disp.guideTipDialog, ['mousedown', 'touchstart'], function(){
+					this.game.removeChild(this.game.disp.guideTipDialog);
+					dm.newgame(6);
+				}, false, this);
 				break;
 			}
 		}
+		//goog.events.listen(this, ['mousedown', 'touchstart'], this.guidePressHandler_);
 	}
 
 	if(this.selectedGems.length == 1 && this.selectedGems[0].type == 'monster'){
@@ -569,6 +497,7 @@ dm.Board.prototype.fillGems = function(type) {
             var gem = dm.Gem.random(this.GAP, this.GAP, type);
 			if(gem.type == 'monster'){
 				gem.monster = new dm.Monster(this.game.data.turn, gem, this.game);
+				gem.monster.onAppear();
 			}
             gem.r = r;
             gem.c = c;
@@ -589,6 +518,7 @@ dm.Board.prototype.fillGems = function(type) {
 		this.game.disp.attack.setText(this.show_att);
 	}
 	this.mm.play();
+	goog.events.listen(this.mm, lime.animation.Event.STOP, function(){this.isMoving_ = 0}, false, this);
 	this.findGemsType();
 };
 
@@ -623,7 +553,7 @@ dm.Board.prototype.moveGems = function(opt_static) {
         // check if new solutions have appeared after move
         goog.events.listen(action, lime.animation.Event.STOP, function() {
 			dm.log.fine('in moveGems : action.play stop')
-			this.isMoving_ = 0;
+			//this.isMoving_ = 0;
 			//this.mm.play();
         },false, this);
     }else{
@@ -654,13 +584,16 @@ dm.Board.prototype.randExtra = function(basev,randratio,baseadd,ratio) {
  * 计算分数
  */
 dm.Board.prototype.checkSolutions = function() {
-	this.game.saveData();
+	if(!this.guidemode){
+		//不是教学模式才保存进度
+		this.game.saveData();
+	}
 	this.isMoving_ = 1;
 	this.checkStart();
 	this.playerAction();
 	this.monsterAttack();
 	this.checkEnd();
-	this.isMoving_ = 0;
+	//this.isMoving_ = 0;
 	return true;
 };
 
@@ -734,7 +667,7 @@ dm.Board.prototype.playerAttack = function(s){
 			}
 			g.monster.changeDisplay('hp');
 		}else if(g.type == 'monster'){
-			g.setSpecial('noDmg');
+		//	g.setSpecial('noDmg');
 			g.keep = true;
 		}
 	}
@@ -743,6 +676,7 @@ dm.Board.prototype.playerAttack = function(s){
 		this.game.updateData('hp', -reflectionDmg, 'add');//反弹的伤害
 	}
 }
+
 
 /**
  * 怪物开始攻击
@@ -756,6 +690,7 @@ dm.Board.prototype.monsterAttack = function(){
 
 	//闪避？
 	if(Math.random()*100 > (fp.a38 + data['extAvoid'])){
+	//if(Math.random()*100 > 50){
 		if(!data['noDmg']){ 
 		//伤害减少
 			var def_extra = data['def_extra'];
@@ -763,31 +698,75 @@ dm.Board.prototype.monsterAttack = function(){
 			var def_reduce = data['def_reduce'];
 
 			total_dmg = Math.ceil(total_dmg*(100-fp.a29)/100);//被动属性减少伤害
-			this.game.updateData('hp', -Math.max(0, total_dmg - def_extra), 'add');
 			this.game.updateData('def_extra', Math.max(0, def_extra - total_dmg));
 
 			total_dmg = Math.max(0, total_dmg - def_extra);
-			//记录玩家最终所承受的伤害
-			data['finalDmg'] = total_dmg;
-			//
 
 			var dtom = Math.round(total_dmg*fp.a28/100);//实际伤害转到魔法的增加
 			this.game.updateData('mana', Math.min(fp.a5, data['mana']+dtom));
 
-			//伤害动画
-			if(mon_arr.length > 0){
+			if(mon_arr.length > 0 && total_dmg > 0){
 				this.game.disp.player.setSize(200, 200).setFill('dmdata/dmimg/boyhurt.gif');
 				lime.scheduleManager.callAfter(function(){
 					this.game.disp.player.setSize(75, 160).setFill('dmdata/dmimg/boy.png');
 				}, this, 500);
+
+				//伤害动画
+				if(!this.game.disp.damageText){
+					this.game.disp.damageText = new lime.Label().setFontSize(50).setFontColor('#ff0000').setText('伤害 '+ total_dmg).setPosition(-245, -400);
+				}else{
+					this.game.disp.damageText.setFontColor('#ff0000').setText('伤害 '+ total_dmg).setPosition(-245, -400).setOpacity(1);
+				}
+				var damageText = this.game.disp.damageText;
+				this.game.backGround.appendChild(damageText);
+				if(!this.damageAnimation){
+					this.damageAnimation = new lime.animation.Sequence(
+						new lime.animation.MoveTo(240, 330).setDuration(.3),
+						new lime.animation.FadeTo(0).setDuration(.7)
+					);
+				}
+				var animation = this.damageAnimation;
+				damageText.runAction(animation);
+				/*
+				goog.events.listen(animation, lime.animation.Event.STOP, function(){
+					alert('wow damage is : '+ total_dmg);
+				}, false, this);
+				*/
+				this.game.updateData('hp', -Math.max(0, total_dmg), 'add');
+				if(data['hp'] <= 0){
+					if(data.revive == 1){
+						this.game.updateData('hp', fp.a6);
+						this.game.updateData('mana', fp.a5);
+						this.game.updateData('revive', 0);
+					}else{
+						this.game.endGame();
+					}
+				}
+				//}, false, this);
 			}
 		}else{
-			alert('不受伤害');//
+			if(!this.game.disp.avoidDamage){
+				this.game.disp.avoidDamage = new lime.Label().setFontSize(50).setFontColor('#ff0000').setText('无视伤害').setPosition(-250, -400);
+				this.game.backGround.appendChild(this.game.disp.avoidDamage);
+			}else{
+				this.game.disp.avoidDamage.setText('无视伤害').setOpacity(1);
+			}
+			this.avoidAnimation = new lime.animation.FadeTo(0).setDuration(.7);
+			this.game.disp.avoidDamage.runAction(this.avoidAnimation);
 		}
 	}else{
-		alert('闪避');
+		if(mon_arr.length > 0 && total_dmg > 0){
+			if(!this.game.disp.avoidDamage){
+				this.game.disp.avoidDamage = new lime.Label().setFontSize(50).setFontColor('#ff0000').setText('闪避伤害').setPosition(-250, -400);
+				this.game.backGround.appendChild(this.game.disp.avoidDamage);
+			}else{
+				this.game.disp.avoidDamage.setOpacity(1).setText('闪避伤害');
+			}
+			this.avoidAnimation = new lime.animation.FadeTo(0).setDuration(.7);
+			this.game.disp.avoidDamage.runAction(this.avoidAnimation);
+		}
 	}
-	for(i in mon_arr){
+	for(i in mon_arr){ //怪物额外增加的攻击力归0
 		if(mon_arr[i].monster.id == 7){
 			mon_arr[i].monster.endSkill();
 		}
@@ -859,10 +838,18 @@ dm.Board.prototype.gainGems = function(s){
  */
 dm.Board.prototype.checkStart = function(){
 	this.unStoneMonsters(); //上一轮被石化的怪物恢复
-	if(!this.game.data.disableSkill){
+	if(!this.game.data.disableMonsterSkill){
 		var mon_arr = this.findMonster();
 		for(i in mon_arr){
 			mon_arr[i].monster.turnStartUseSkill();
+		}
+	}
+	var buff = this.game.data['buff'];
+	for(i in buff){
+		if(buff[i] && dm.conf.SK['sk'+i]['delay'] == 1){ //回合开始技能生效
+			//var sk_action = new dm.Skill(this.game);
+			//sk_action.action(i);
+			this.skill.action(i);
 		}
 	}
 }
@@ -947,7 +934,7 @@ dm.Board.prototype.checkEnd = function(){
 	var fp = this.game.user.fp
 	var data = this.game.data;
 	var buff = data['buff'];
-	var sk_action = new dm.Skill(this.game);
+	//var sk_action = new dm.Skill(this.game);
 
 	//回合结束其他动作
 	this.poisonMonsters(s); //其他怪物的毒伤害等
@@ -956,17 +943,38 @@ dm.Board.prototype.checkEnd = function(){
 	//回合末技能生效
 	for(i in buff){
 		if(buff[i] && dm.conf.SK['sk'+i]['delay'] == 2){ //回合末技能生效
-			sk_action.action(i);
+			//sk_action.action(i);
+			this.skill.action(i);
 		}
 	}
 
 	//毒伤害
 	if(data['poison'] > 0){
+		//this.game.disp.damageText = new lime.Label().setFontSize(50).setFontColor('#00ff00').setText('毒素伤害 '+ data['poison']).setPosition(-245, -400);
+		this.game.disp.damageText.setFontColor('#00ff00').setText('毒素伤害 '+ data['poison']).setPosition(-245, -400).setOpacity(1);
+		var damageText = this.game.disp.damageText;
+		this.game.backGround.appendChild(damageText);
+		this.poisonAnimation = new lime.animation.Sequence(
+			new lime.animation.MoveTo(240, 330).setDuration(.3),
+			new lime.animation.FadeTo(0).setDuration(.7)
+		);
+		animation = this.poisonAnimation;
+		damageText.runAction(animation);
+		//goog.events.listen(animation, lime.animation.Event.STOP, function(){
 		this.game.updateData('hp', -data['poison'], 'add');
+		if(data['hp'] <= 0){
+			if(data.revive == 1){
+				this.game.updateData('hp', fp.a6);
+				this.game.updateData('mana', fp.a5);
+				this.game.updateData('revive', 0);
+			}else{
+				this.game.endGame();
+			}
+		}
+		//}, false, this);
 	}
 
-	this.recover();
-
+	/*
 	if(data['hp'] <= 0){
 		if(data.revive == 1){
 			this.game.updateData('hp', fp.a6);
@@ -975,6 +983,10 @@ dm.Board.prototype.checkEnd = function(){
 			this.game.endGame();
 		}
 	}
+	*/
+
+	this.recover();
+
 	
 	if(!this.game.ispoping){
 		this.turnEndShow();
@@ -1005,7 +1017,7 @@ dm.Board.prototype.checkEnd = function(){
 
 
 	this.clearGem();
-	if(!data['disableSkill']){ //怪物可以使用技能
+	if(!data['disableMonsterSkill']){ //怪物可以使用技能
 		var mon_arr = this.findMonster();
 		for(i in mon_arr){
 			mon_arr[i].monster.turnEndUseSkill();
@@ -1017,7 +1029,8 @@ dm.Board.prototype.checkEnd = function(){
 		if(buff[i]){ //技能持续时间到期时候的游戏参数设置。
 			buff[i]--; 
 			if(buff[i] == 0){
-				sk_action.actionEnd(i);
+				//sk_action.actionEnd(i);
+				this.skill.actionEnd(i);
 				delete buff[i];
 			}
 		}
@@ -1046,13 +1059,22 @@ dm.Board.prototype.recover = function(){
 	for(element in line){
 		if(line[element].type == 'monster'){
 			monster = line[element].monster;
-			if(this.show_att *(this.game.data['dmgRatio'] || 1) >= monster.hp + monster.def && (this.game.data.canDamageMon || monster.id != 0)){
-				//杀死怪物了
-				monster.setKilled();
-				//reduceDmg += monster.att //死亡怪物不再造成伤害，从总显示数值中去掉。
-				//this.game.mon.setText(Math.max(0,this.getDamage() - reduceDmg));
+			var damageRatio = 1;
+			if(this.game.data.buff[8] || this.game.data['dmgRatio'] == 2){
+				damageRatio = 2;
+			}
+			if(this.game.data.canDamageMon || monster.id != 0 || this.game.data.disableMonsterSkill){
+				if(this.show_att * damageRatio >= monster.hp + monster.def){
+					//杀死怪物了
+					monster.setKilled();
+					//reduceDmg += monster.att //死亡怪物不再造成伤害，从总显示数值中去掉。
+					//this.game.mon.setText(Math.max(0,this.getDamage() - reduceDmg));
+				}else{
+					monster.unsetKilled();
+				}
 			}else{
-				monster.unsetKilled();
+				line[element].setSpecial('无敌');
+				line[element].monster.invincible(true);
 			}
 		}
 	}
@@ -1145,6 +1167,8 @@ dm.Board.prototype.cancelSelGem = function(selid){
 		this.lineEnd.setRotation(rotation);//线的旋转角度
 		this.lineLayer.appendChild(this.lineEnd);
 	}
+	this.checkLine(this.selectedGems);
+
 }
 
 dm.Board.prototype.updateLine = function() {
@@ -1213,7 +1237,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		this.lineLayer.removeAllChildren();
 
 
-		this.checkLine(this.selectedGems);
+		//this.checkLine(this.selectedGems);
 		return;
 	}
 
@@ -1225,8 +1249,8 @@ dm.Board.prototype.pressHandler_ = function(e) {
     var c = Math.floor(pos.x / this.GAP),
         r = this.rows - Math.ceil(pos.y / this.GAP);
 
-	var valid_min = this.GAP*0.05,
-		valid_max = this.GAP*0.95,  //落在GEM矩形框内中心部分才有效
+	var valid_min = this.GAP*0.08,
+		valid_max = this.GAP*0.92,  //落在GEM矩形框内中心部分才有效
 		x_valid = pos.x - this.GAP*c;
 		y_valid = pos.y - this.GAP*(this.rows - 1 - r);
 
@@ -1284,6 +1308,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 		var rab  = r > 0 ? r : -r ,cab = c > 0 ? c : -c;
 
 
+		/*
 
 		if ( cab >= rab ){
 			delta = c > 0 ? 1 : -1;
@@ -1293,7 +1318,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 					if(lastg.canConnect(g3)){
 						this.addSelGem(g3);
 						lastg = g3;
-						this.checkLine(this.selectedGems);
+						//this.checkLine(this.selectedGems);
 						//dm.log.fine('line add ',g3.r,g3.c)
 					}else{
 						//dm.log.fine('g3 not add ',g3.r,g3.c)
@@ -1310,7 +1335,7 @@ dm.Board.prototype.pressHandler_ = function(e) {
 					g3 = this.gems[g1.c + Math.round((i - g1.r)*c/r)][i];
 					if(lastg.canConnect(g3)){
 						this.addSelGem(g3);
-						this.checkLine(this.selectedGems);
+						//this.checkLine(this.selectedGems);
 						//dm.log.fine('line add ',g3.r,g3.c)
 						lastg = g3;
 					}else{
@@ -1322,12 +1347,13 @@ dm.Board.prototype.pressHandler_ = function(e) {
 
 			}
 		}
+		*/
 		//dm.log.fine('not connect : ',g1.r,g1.c,g2.r,g.c);
 		return;
 	}
 	//this.lastPos = e.poistion;
 	this.addSelGem(g);	
-	this.checkLine(this.selectedGems);
+	//this.checkLine(this.selectedGems);
 	if(this.selectedGems.length == 1 && this.selectedGems[0].type == 'monster'){
 		this.monsterTip = true;
 		this.monTipPos = e.position;

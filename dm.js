@@ -9,6 +9,8 @@ goog.require('goog.debug.DivConsole');
 
 goog.require('goog.dom');
 
+goog.require('bootstrap');
+
 goog.require('goog.dom.classes');
 
 goog.require('goog.object');
@@ -43,6 +45,8 @@ goog.require('goog.json');
 
 goog.require('dm.Log');
 
+goog.require('dm.Login');
+
 goog.require('dm.Loader');
 
 goog.require('dm.LDB');
@@ -54,25 +58,6 @@ dm.HEIGHT = 1004;
 dm.BOARDSIZE = 690;
 
 dm.GEMTYPES = ['monster', 'hp', 'mana', 'sword', 'gold'];
-
-dm.LVLCONF = [
-  {
-    gold: 1000,
-    gold_add: 1,
-    gold_ratio: 1,
-    defense: 1000,
-    hp: 30,
-    attack: 3,
-    wattack: 1,
-    exp: 1000
-  }, {
-    gold: 1000,
-    defense: 10000,
-    hp: 30,
-    attack: 3,
-    wattack: 1
-  }
-];
 
 dm.SERVER = 'http://dm.playcrab.com/';
 
@@ -106,8 +91,8 @@ dm.loadCover = function() {
   layer.appendChild(cover);
   /* btns
   */
-  start = new lime.Sprite().setPosition(100, -230).setFill('dmdata/dmimg/cstart1.png');
-  load = new lime.Sprite().setPosition(120, -150).setFill('dmdata/dmimg/cload1.png');
+  start = new lime.Sprite().setPosition(120, -150).setFill('dmdata/dmimg/cstart1.png');
+  load = new lime.Sprite().setPosition(140, -70).setFill('dmdata/dmimg/cload1.png');
   score = new lime.Sprite().setPosition(140, -70).setFill('dmdata/dmimg/cscore1.png');
   help = new lime.Sprite().setPosition(160, 10).setFill('dmdata/dmimg/chelp1.png');
   goog.events.listen(start, ['mousedown', 'touchstart'], function(e) {
@@ -135,8 +120,13 @@ dm.loadCover = function() {
       return dm.loadGame();
     });
   });
+  goog.events.listen(score, ['mousedown', 'touchstart'], function(e) {
+    this.setFill('dmdata/dmimg/cscore3.png');
+    return e.swallow(['mouseup', 'touchend', 'touchcancel'], function() {
+      return this.setFill('dmdata/dmimg/cscore1.png');
+    });
+  });
   cover.appendChild(start);
-  cover.appendChild(score);
   cover.appendChild(load);
   cover.appendChild(help);
   scene.appendChild(layer);
@@ -200,12 +190,12 @@ dm.isBrokenChrome = function() {
 
 dm.newgame = function(size) {
   var func;
-  func = function(guide) {
-    if (typeof guide === 'undefined' || guide === null) guide = true;
-    dm.game = new dm.Game(size, null, guide);
+  func = function(old) {
+    if (typeof old === 'undefined' || old === null) old = false;
+    dm.game = new dm.Game(size, null, !old);
     return dm.director.replaceScene(dm.game, lime.transitions.Dissolve);
   };
-  return dm.LDB.get('isnewuser', func, this);
+  return dm.LDB.get('olduser', func, this);
 };
 
 dm.loadHelpScene = function() {
@@ -216,8 +206,19 @@ dm.loadHelpScene = function() {
 };
 
 dm.loadGame = function() {
-  dm.newgame(6);
-  return dm.game.loadGame();
+  var func;
+  func = function(data) {
+    var guide;
+    if (typeof data === 'undefined' || data === null) {
+      guide = true;
+      dm.game = new dm.Game(6, null, guide);
+    } else {
+      dm.game = new dm.Game(6, null, false);
+      dm.game.loadGame();
+    }
+    return dm.director.replaceScene(dm.game, lime.transitions.Dissolve);
+  };
+  return dm.LDB.get('data', func, this);
 };
 
 dm.builtWithLime = function(scene) {};
@@ -232,7 +233,7 @@ dm.checkVersion = function() {
     var l;
     if (!uuid) {
       uuid = dm.LDB.lc().uuid();
-      dm.isnewuser = true;
+      dm.olduser = true;
     }
     dm.uuid = uuid;
     dm.LDB.save('uuid', uuid);
@@ -250,6 +251,41 @@ dm.checkVersion = function() {
     };
     return l.load();
   });
+};
+
+dm.hidegame = function() {
+  if (dm.ishide) return;
+  dm.director.setPaused(true);
+  $('.lime-director').hide();
+  return dm.ishide = true;
+};
+
+dm.showgame = function() {
+  if (!dm.ishide) return;
+  dm.director.setPaused(false);
+  $('.lime-director').show();
+  return dm.ishide = false;
+};
+
+dm.checkLoginDiv = function() {
+  var el;
+  dm.hidegame();
+  el = document.getElementById('');
+  if (!el) {
+    el = goog.dom.createDom('div', {
+      "class": 'hidden',
+      id: 'register'
+    });
+    el.innerHTML = "";
+  }
+  return $(el).show();
+};
+
+dm.continuegame = function() {
+  $('.subpage').hide();
+  $('.alert').hide();
+  dm.showgame();
+  return false;
 };
 
 dm.start = function() {

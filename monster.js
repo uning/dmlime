@@ -36,21 +36,11 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 	this.att_max = Math.ceil(udata.fp.a3/ad) || 0;   
 	this.def_max = Math.ceil(udata.fp.a1/ad) || 0;   
 	this.hp_max = this.hp_max || 0;
-	/*
-	 *
-	 */
-	
-/*
-	this.att_max = Math.floor(turn/25); 
-	this.hp_max =  Math.floor(turn/50)*2;
-	this.def_max = Math.floor(turn/25);
-	*/
 
 	this.aliveturn = 0;
 
 	//特殊怪物?
 	this.id = mon_id;
-	//var turn = this.game.data.turn;
 	var sp = this.game.data.specialMon;
 	var i, max = 0;
 
@@ -78,7 +68,7 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 				this.id = 0;
 			}
 			//test
-			this.id = 7;
+			//this.id = 6;
 		}else{
 			this.id = 0;
 		}
@@ -167,6 +157,21 @@ dm.Monster.prototype.genImg = function(){
 }
 
 /**
+ * 怪物无敌状态
+ * @param state -- true 无敌；false 普通
+ */
+ dm.Monster.prototype.invincible = function(state){
+	 if(this.id != 0){
+		 return;
+	 }
+	 if(state){
+		 this.parentGem.setFill('dmdata/dmimg/invincible.png');
+	 }else{
+		 this.parentGem.setFill('dmdata/dmimg/monster.png')
+	 }
+ }
+
+/**
  *改变怪物显示的数值
  */
 dm.Monster.prototype.changeDisplay = function(type){
@@ -227,6 +232,17 @@ dm.Monster.prototype.suicide = function(turn){
 	return false;
 }
 
+/**
+ * 产生怪物使使用技能
+ */
+ dm.Monster.prototype.onAppear = function(){
+	 switch(this.id){
+		 case 6:{
+			 this.useSkill()
+			 break;
+		 }
+	 }
+ }
 
 /**
  *怪物死亡后产生作用,复原一些怪物改变的参数
@@ -240,7 +256,7 @@ dm.Monster.prototype.onDeath = function(bounce){
 		this.game.updateData('killspecial', 1, 'add');
 	}
 
-	this.game.disp.kill.setText(parseInt(this.game.disp.kill.getText())+1)
+	this.game.disp.killLabel.setText(parseInt(this.game.disp.killLabel.getText())+1)
 
 	if(this.id != 0){
 		delete this.game.data.specialMon[this.id];  
@@ -330,7 +346,8 @@ dm.Monster.prototype.disableConn = function(number){
 	 if(s.length > 0){
 		 random = Math.round(Math.random()*(s.length-1));//随机一种类型	
 		 s[random].isBroken = true;
-		 s[random].setSpecial('broken');
+		// s[random].setSpecial('broken');
+		 s[random].setBroken();
 	 }
  }
  
@@ -546,6 +563,10 @@ dm.Monster.prototype.monRevive = function(){
 * 怪物使用相应的技能
 */
 dm.Monster.prototype.useSkill = function(){
+	if(this.game.data.disableMonsterSkill == true){
+		//禁魔
+		return;
+	}
 	switch(this.skill){
 		case '1':{
 			//每回合损失2金币
@@ -561,8 +582,13 @@ dm.Monster.prototype.useSkill = function(){
 			break;
 		}
 		case '2':{
-			//明每回合降低玩家10%生命（不会直接导致死亡）
-			this.game.updateData('hp', Math.ceil(this.game.data.hp*0.9));
+			//明每回合降低玩家10%生命（不会直接导致死亡,最低降到1点生命）
+			var reduceHp = Math.floor(this.game.user.data.fp.a6*0.1);
+			if(this.game.data.hp > reduceHp ){
+				this.game.updateData('hp', -reduceHp, 'add');
+			}else{
+				this.game.updateData('hp', 1);
+			}
 			break;
 			//附加毒伤害，必须消除红心来治疗
 			//this.poisonAttack();

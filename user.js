@@ -283,9 +283,9 @@ dm.User.prototype.lvlUp=function(){
 	this.game.disp.lvl.setText(this.data.lvl);
 	switch(this.data.lvl){
 		case 3:
-		case 5:
-		case 7:
-		case 9:{
+		case 6:
+		case 9:
+		case 12:{
 			this.game.pop.skill++;
 			break;
 		}
@@ -293,12 +293,10 @@ dm.User.prototype.lvlUp=function(){
 	for(i in this.data.skills){
 		count++;
 	}
-	if(this.data.lvl > 10 && count < 4){
+	if(this.data.lvl > 12 && count < 4){
 		//没有学满4个技能
 		this.game.pop.skill++;
 	}
-	//this.game.data['exp'] -= 3;
-	
 }
 
 //
@@ -333,13 +331,14 @@ dm.User.randSel = function(arr, num){
 
 /**
  * 找出两个用于学习的技能
+ * 12级以前，只能学习对应等级的技能。12级以后则可出现所有技能，但同类型技能只会出现一个
  */
 dm.User.prototype.findSkill = function(){
 	var conf = dm.conf.SK;
 	var i;
 	var sk=new Array(5);
 	for(i in conf){
-		if(conf[i].lvl <= this.data.lvl && !this.data.skills[i]){
+		if((conf[i].lvl == this.data.lvl || this.data.lvl > 12) && !this.data.skills[i]){
 			//找出所有满足条件的
 			!sk[conf[i]['class']] && (sk[conf[i]['class']] = []);
 			sk[conf[i]['class']].push(i);

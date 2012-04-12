@@ -18,8 +18,7 @@ dm.Gem = function() {
     this.appendChild(this.circle);
 	
 	//最上层 特殊效果文字
-	this.special = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(30).setAnchorPoint(0.5, 0.5).setOpacity(0);
-	this.appendChild(this.special);
+	this.special = new lime.Label().setFontFamily('Trebuchet MS').setFontColor('#000').setFontSize(25).setFontWeight(800).setAnchorPoint(0.5, 0.5);
 	
     this.selected_ = false;
 
@@ -113,6 +112,15 @@ dm.Gem.prototype.select = function() {
 };
 
 /**
+ * set broken bow
+ */
+dm.Gem.prototype.setBroken = function(){
+	if(this.type == 'sword'){
+		this.setFill('dmdata/dmimg/broken_bow.png');
+	}
+}
+
+/**
  * Remove selection highlight form bubble.
  */
 dm.Gem.prototype.deselect = function() {
@@ -121,15 +129,19 @@ dm.Gem.prototype.deselect = function() {
 	if(this.type == "monster"){
 		this.monster.unsetKilled();
 	}
+	if(this.monster){
+		this.monster.invincible(false);
+	}
     this.selected_ = false;
 	
 };
 
 dm.Gem.prototype.setSpecial = function(str) {
-	this.special.setText(str).setOpacity(1);
+	this.special.setText(str);
+	this.appendChild(this.special);
 }
 
 dm.Gem.prototype.unsetSpecial = function() {
-	this.special.setOpacity(0);
+	this.removeChild(this.special);
 }
 

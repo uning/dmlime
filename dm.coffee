@@ -4,6 +4,7 @@ goog.require 'goog.events'
 goog.require 'goog.events.EventType'
 goog.require 'goog.debug.DivConsole'
 goog.require 'goog.dom'
+goog.require 'bootstrap'
 goog.require 'goog.dom.classes'
 goog.require 'goog.object'
 goog.require 'lime.Director'
@@ -22,6 +23,7 @@ goog.require 'dm.Display'
 goog.require 'goog.net.XhrIo'
 goog.require 'goog.json'
 goog.require 'dm.Log'
+goog.require 'dm.Login'
 
 goog.require 'dm.Loader'
 goog.require 'dm.LDB'
@@ -32,20 +34,6 @@ dm.WIDTH = 720
 dm.HEIGHT = 1004
 dm.BOARDSIZE = 690
 dm.GEMTYPES = ['monster','hp','mana','sword','gold']
-#等级到每个属性定义
-dm.LVLCONF = [
-	{gold: 1000
-	,gold_add: 1
-	,gold_ratio: 1
-
-	,defense:1000
-	,hp:30
-	,attack:3
-	,wattack:1
-	,exp:1000}
-	,{gold:1000,defense:10000,hp:30,attack:3,wattack:1}
-]
-
 dm.SERVER='http://dm.playcrab.com/'
 dm.SERVER='./'
 dm.APIURL='api.php'
@@ -72,8 +60,13 @@ dm.loadCover = ->
 	layer.appendChild cover
 
 	### btns ###
-	start = new lime.Sprite().setPosition(100, -230).setFill('dmdata/dmimg/cstart1.png')
-	load = new lime.Sprite().setPosition(120, -150).setFill('dmdata/dmimg/cload1.png')
+	#start = new lime.Sprite().setPosition(100, -230).setFill('dmdata/dmimg/cstart1.png')
+	#load = new lime.Sprite().setPosition(120, -150).setFill('dmdata/dmimg/cload1.png')
+	#score = new lime.Sprite().setPosition(140, -70).setFill('dmdata/dmimg/cscore1.png')
+	#help = new lime.Sprite().setPosition(160, 10).setFill('dmdata/dmimg/chelp1.png')
+
+	start = new lime.Sprite().setPosition(120, -150).setFill('dmdata/dmimg/cstart1.png')
+	load = new lime.Sprite().setPosition(140, -70).setFill('dmdata/dmimg/cload1.png')
 	score = new lime.Sprite().setPosition(140, -70).setFill('dmdata/dmimg/cscore1.png')
 	help = new lime.Sprite().setPosition(160, 10).setFill('dmdata/dmimg/chelp1.png')
 
@@ -104,8 +97,15 @@ dm.loadCover = ->
 					this.setFill('dmdata/dmimg/cload1.png')
 					dm.loadGame()
 
+	goog.events.listen score, ['mousedown', 'touchstart'],
+		(e)->
+			this.setFill('dmdata/dmimg/cscore3.png')
+			e.swallow ['mouseup', 'touchend', 'touchcancel'],
+				()->
+					this.setFill('dmdata/dmimg/cscore1.png')
+					
 	cover.appendChild start
-	cover.appendChild score
+	#cover.appendChild score
 	cover.appendChild load
 	cover.appendChild help
 
@@ -189,12 +189,12 @@ dm.isBrokenChrome =   ->
 
 # load new game scene
 dm.newgame = (size)  ->
-	func = (guide)->
-		if(typeof(guide) == 'undefined' or guide == null)
-			guide = true
-		dm.game = new dm.Game(size, null, guide)
+	func = (old)->
+		if(typeof(old) == 'undefined' or old == null)
+			old = false
+		dm.game = new dm.Game(size, null, !old)
 		dm.director.replaceScene(dm.game, lime.transitions.Dissolve)
-	dm.LDB.get('isnewuser', func, this)
+	dm.LDB.get('olduser', func, this)
 	#dm.game =   new dm.Game size
 	#dm.director.replaceScene dm.game, lime.transitions.Dissolve
 
@@ -206,8 +206,17 @@ dm.loadHelpScene = ->
 	dm.director.replaceScene scene, lime.transitions.Dissolve
 
 dm.loadGame = ->
-	dm.newgame 6
-	dm.game.loadGame()
+	func = (data)->
+		if(typeof(data) == 'undefined' or data == null)
+			guide = true
+			dm.game = new dm.Game(6, null, guide)
+		else
+			dm.game = new dm.Game(6, null, false)
+			dm.game.loadGame()
+		dm.director.replaceScene(dm.game, lime.transitions.Dissolve)
+	dm.LDB.get('data', func, this)
+	#dm.newgame 6
+	#dm.game.loadGame()
 
 
 # add lime credintials to a scene
@@ -224,7 +233,7 @@ dm.checkVersion = ->
 	,(uuid)->
 		if not uuid
 			uuid = dm.LDB.lc().uuid()
-			dm.isnewuser = true
+			dm.olduser = true
 		dm.uuid = uuid
 		dm.LDB.save('uuid',uuid)
 		l = new dm.Loader()
@@ -238,7 +247,38 @@ dm.checkVersion = ->
 
 
 
+dm.hidegame = ->
+	if(dm.ishide)
+		return
+	dm.director.setPaused(true)
+	$('.lime-director').hide()
+	dm.ishide  = true
+dm.showgame = ->
+	if(not dm.ishide)
+		return
+	dm.director.setPaused(false)
+	$('.lime-director').show()
+	dm.ishide  = false
 
+dm.checkLoginDiv = ->
+	dm.hidegame()
+	el = document.getElementById ''
+	if not el 
+		el = goog.dom.createDom 'div',{class:'hidden',id:'register'}
+		el.innerHTML = """
+		"""
+	$(el).show()
+
+	  
+
+dm.continuegame = ->
+	$('.subpage').hide()
+	$('.alert').hide()
+	dm.showgame()
+	return false
+
+
+	
 
 
 
@@ -247,6 +287,7 @@ dm.start = ->
 	# Set up a logger to track responses
 	el = document.getElementById 'gamearea'
 	el or= document.body
+	#el.height =  document.body.clientHeight
 
 	logdiv = document.getElementById 'log-wrapper'
 	if not logdiv and goog.DEBUG

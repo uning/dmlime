@@ -14,6 +14,10 @@ dm.LDB = {
 		cb = cb || function(){};
 		this.lc().save({key:key,'v':v},cb);
 	}
+	,set:function(key,v,cb){
+		cb = cb || function(){};
+		this.lc().save({key:key,'v':v},cb);
+	}
 	,get:function(key,cb,context){
 		cb = cb || function(){};
 		this.lc().get(key,function(o){

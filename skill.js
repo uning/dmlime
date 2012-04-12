@@ -2,7 +2,6 @@ goog.provide('dm.Skill');
 
 dm.Skill = function(game){
 	this.game = game;
-	this.board = game.board;
 	this.user = game.user;
 	this.sk_conf = dm.conf.SK;
 }
@@ -38,7 +37,7 @@ dm.Skill.prototype.use = function(id){
 			//
 			this.game.data.skillCD[id] = sk.cd;
 			this.game.data.buff[id] = parseInt(sk.turn); //持续时间
-			if(parseInt(sk.delay) != 2){ //立即施展技能
+			if(parseInt(sk.delay) == 0){ //立即施展技能
 				this.action(id);
 			}
 		}
@@ -59,7 +58,7 @@ dm.Skill.prototype.action = function(id, param){ //各个技能的作用效果
 		}
 		break;
 		case '2':{ //
-			this.game.updateData('hp', Math.min(Math.round(this.game.data.hp + this.user.data.fp.a6*0.3), this.user.data.fp.a6));
+			this.game.updateData('hp', Math.min(Math.round(this.game.data.hp + this.user.data.fp.a6*0.5), this.user.data.fp.a6));
 		}
 		break;
 		case '3':{ //法力转换为生命
@@ -83,7 +82,7 @@ dm.Skill.prototype.action = function(id, param){ //各个技能的作用效果
 		case '7':{
 			//连锁闪电
 			this.game.updateData('attack_magic', this.game.data['mana']);
-			this.board.findMonster(this.magicAttack, this.game);
+			this.game.board.findMonster(this.magicAttack, this.game);
 			this.game.updateData('mana', 0);
 
 		}
@@ -111,8 +110,8 @@ dm.Skill.prototype.action = function(id, param){ //各个技能的作用效果
 		}
 		break;
 		case '12':{
-			//虚弱无力 降低敌人伤害,每轮效果递减10%
-			this.game.updateData('reduceDmg', 10*this.game.data.buff[9]);
+			//虚弱无力 降低敌人伤害,每轮效果递减20%
+			this.game.updateData('reduceDmg', 20*this.game.data.buff[id]);
 
 		}
 		break;
@@ -126,14 +125,14 @@ dm.Skill.prototype.action = function(id, param){ //各个技能的作用效果
 		}
 		break;
 		case '14':{
-			//老化，敌人的生命值降低20%
-			this.reduceHp(20)
+			//老化，敌人的生命值降低50%
+			this.reduceHp(50)
 
 		}
 		break;
 		case '15':{
 			//禁魔，敌人无法使用特殊技能
-			this.game.updateData('disableSkill', true);
+			this.game.updateData('disableMonsterSkill', true);
 
 		}
 		break;
@@ -200,7 +199,7 @@ dm.Skill.prototype.actionEnd = function(id, param){ //技能作用完毕的清�
 		}
 		break;
 		case '15':{ //敌人无法使用特殊技能
-			this.game.updateData('disableSkill', false);
+			this.game.updateData('disableMonsterSkill', false);
 		}
 		break;
 		/*
@@ -220,7 +219,7 @@ dm.Skill.prototype.actionEnd = function(id, param){ //技能作用完毕的清�
  * 减少敌人HP
  */
 dm.Skill.prototype.reduceHp = function(ratio){
-  this.board.findMonster(function(g, context, ratio){
+  this.game.board.findMonster(function(g, context, ratio){
 	  g.monster.hp = Math.floor(g.monster.hp*(100 - ratio)/100);
 	  if(g.monster.hp > 0){
 		  g.keep = true;
@@ -237,7 +236,7 @@ dm.Skill.prototype.reduceHp = function(ratio){
  * 降低敌人防御
  */
  dm.Skill.prototype.reduceDef = function(){
-	 this.board.findMonster(function(g,context){
+	 this.game.board.findMonster(function(g,context){
 		 g.monster.def = 1;
 		 g.monster.changeDisplay('def');
 	 }, this.game);
@@ -308,19 +307,19 @@ dm.Skill.prototype.reduceHp = function(ratio){
   */
    dm.Skill.prototype.reArrange = function(s){//, keep){
 	   //先删除显示层元素
-	   this.board.clearGem(true);
+	   this.game.board.clearGem(true);
 	   var c, r, copy, gem;
 
-	   this.board.mm = new lime.animation.Spawn(
+	   this.game.board.mm = new lime.animation.Spawn(
 		   new lime.animation.ScaleTo(1)
 		   ,new lime.animation.FadeTo(1).setDuration(.8)
 	   ).enableOptimizations();
 
-	   for (c = 0; c < this.board.cols; c++) {
-		   if ( !this.board.gems[c] ) 
-			   this.board.gems[c] = [];
+	   for (c = 0; c < this.game.board.cols; c++) {
+		   if ( !this.game.board.gems[c] ) 
+			   this.game.board.gems[c] = [];
 		   i = 0;
-		   for (r = this.board.gems[c].length; r < this.board.rows; r++) {
+		   for (r = this.game.board.gems[c].length; r < this.game.board.rows; r++) {
 			   copy = s.splice(Math.round(Math.random()*(s.length-1)), 1);//随机选择一个gem
 			   i++;
 			   if(!copy[0].monster){//不是怪物
@@ -331,16 +330,16 @@ dm.Skill.prototype.reduceHp = function(ratio){
 			   }
 			   gem.r = r;
 			   gem.c = c;
-			   gem.setPosition((c + .5) * this.board.GAP - this.board.SIZE/2 , this.board.SIZE/2 - (r + .5) * this.board.GAP);
+			   gem.setPosition((c + .5) * this.game.board.GAP - this.game.board.SIZE/2 , this.game.board.SIZE/2 - (r + .5) * this.game.board.GAP);
 			   gem.setScale(0.5);
 			   gem.setOpacity(0);
-			   this.board.mm.addTarget(gem);
+			   this.game.board.mm.addTarget(gem);
 			   //gem.setSize(this.GAP, this.GAP);
-			   this.board.gems[c].push(gem);
-			   this.board.layers[c].appendChild(gem);
+			   this.game.board.gems[c].push(gem);
+			   this.game.board.layers[c].appendChild(gem);
 		   }
 	   }
-	   this.board.mm.play();
+	   this.game.board.mm.play();
 	   //this.board.moveGems();
    }
 
@@ -354,23 +353,23 @@ dm.Skill.prototype.reduceHp = function(ratio){
 	   var g;
 	   if(mod == 'All'){
 		   var c, r;
-		   for (c = 0; c < this.board.cols; c++) {
-			   for (r = 0; r < this.board.rows; r++) {
-				   g = this.board.gems[c][r];
+		   for (c = 0; c < this.game.board.cols; c++) {
+			   for (r = 0; r < this.game.board.rows; r++) {
+				   g = this.game.board.gems[c][r];
 				   g.keep = false;
 				   s.push(g);
 			   }
 		   }
 	   }else{//取3*3的一个方块内的元素
 		   var anchor = [
-			   Math.round(1 + Math.random()*(this.board.cols - 3)),
-			   Math.round(1 + Math.random()*(this.board.rows - 3))
+			   Math.round(1 + Math.random()*(this.game.board.cols - 3)),
+			   Math.round(1 + Math.random()*(this.game.board.rows - 3))
 		   ];
 
 
 		   for(c = -1; c < 2; c++){
 			   for(r = -1; r < 2; r++){
-				   g = this.board.gems[anchor[0] + c][anchor[1] + r];
+				   g = this.game.board.gems[anchor[0] + c][anchor[1] + r];
 				   g.keep = keep;
 				   s.push(g);
 			   }
@@ -384,10 +383,10 @@ dm.Skill.prototype.reduceHp = function(ratio){
 	*/
    dm.Skill.prototype.findType = function(type, func, param, context){
 	   var c, i, r, g, arr = [];
-	   for (c = 0; c < this.board.cols; c++) {
-		   for (r = 0; r < this.board.rows; r++) {
-			   if(this.board.gems[c][r].type == type){
-				   func(this.board.gems[c][r], param, context);
+	   for (c = 0; c < this.game.board.cols; c++) {
+		   for (r = 0; r < this.game.board.rows; r++) {
+			   if(this.game.board.gems[c][r].type == type){
+				   func(this.game.board.gems[c][r], param, context);
 			   }
 		   }
 	   }
