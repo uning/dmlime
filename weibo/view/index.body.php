@@ -5,4 +5,4 @@
 //print_r($_SESSION);
 ?>
 </pre>
-<iframe frameborder=0 src='dm.html' align='center' width='500' height='800' ></iframe>
+<iframe frameborder=0 src='dmc.html' align='center' width='100%' height='100%' ></iframe>
