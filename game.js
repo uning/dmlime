@@ -120,7 +120,7 @@ dm.Game.prototype.createPanel = function(){
  */
 dm.Game.prototype.createBoard = function(guide){
 	//test
-	//guide = true;
+	guide = true;
 	
 	guide = guide || false;
     this.board = new dm.Board(this, guide);

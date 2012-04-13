@@ -32,13 +32,27 @@ $_SESSION['psession'] = PL::getSession(true);
 
 //print_r($sess);die();
 
-#require ROOT.'/dmc.php';
+require ROOT.'/dmc.php';
 ?>
 <script>
 if(top && self && self !=top ){
-	top.location.assign("<?php echo "http://adventure.playcrab.com/wbplay.php?cid=$_cid";?>")
+//	top.location.assign("<?php echo "http://adventure.playcrab.com/wbplay.php?cid=$_cid";?>")
 }
 </script>
+<script type="text/javascript" src="http://game.weibo.com/static/js/v0.3/wyx.connect.js.php"></script>
+<script>
+   WYX.Connect.init();
+  var _CONFIG = _CONFIG ||  {};
+  _CONFIG.rurl = 'http://adventure.playcrab.com/assets/';
+  _CONFIG.cid = '<?php echo $s->getCid(); ?>';
+  _CONFIG.appid = '<?php echo PL::app_id; ?>';
+  _CONFIG.pid = '<?php echo $spid;?>';
+  _CONFIG.urlapi = '<?php echo url(array('mod'=>'api'));?>';
+  _CONFIG.canvas_url = '<?php echo PL::canvas_url; ?>';
+  _CONFIG.callback_url = '<?php echo PL::callback_url; ?>';
+  _CONFIG.platform = 'weibo'
+</script>
+<script type="text/javascript" src="./wxy.js"></script>
 <?php
 fastcgi_finish_request();
 PL::updateFriend($_REQUEST['upf']);

@@ -328,8 +328,11 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 				return;
 			}
 			case 8:{
+				this.game.removeChild(this.game.disp.guideTipDialog);
+				this.guidestep++;
+				guideStepCheck.call(this);
 				//this.game.removeChild(this.game.disp.guideTipDialog);
-				//return;
+				return;
 			}
 		}
 
@@ -457,8 +460,16 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 				this.game.disp.guideTipDialog.setPosition(370, 502);
 				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guide8.png').setSize(257, 191);
 				this.game.appendChild(this.game.disp.guideTipDialog);
+				goog.events.listen(this.game.disp.guideTipDialog, ['mousedown', 'touchstart'], guideTipResponse, false, this);
+				break;
+			}
+			case 9:{
+				this.game.disp.guideTipDialog.setPosition(360, 502);
+				this.game.disp.guideTipDialog.setFill('dmdata/dmimg/guideover.png').setSize(613, 390);
+				this.game.appendChild(this.game.disp.guideTipDialog);
 				goog.events.listen(this.game.disp.guideTipDialog, ['mousedown', 'touchstart'], function(){
-					this.game.removeChild(this.game.disp.guideTipDialog);
+					//this.game.removeChild(this.game.disp.guideTipDialog);
+					this.game.removeAllChildren();
 					dm.newgame(6);
 				}, false, this);
 				break;
@@ -680,10 +691,11 @@ dm.Board.prototype.playerAttack = function(s){
 			}
 			g.monster.changeDisplay('hp');
 
-			attackMonster.addTarget(g);
+			//g.keep == true && attackMonster.addTarget(g);
 
 		}else if(g.type == 'monster'){
 			g.keep = true;
+			attackMonster.addTarget(g);
 		}
 	}
 
@@ -713,7 +725,7 @@ dm.Board.prototype.playerAttack = function(s){
 		this.game.updateData('hp', -reflectionDmg, 'add');//反弹的伤害
 	}
 
-	attackMonster.play();
+	//attackMonster.targets.length && attackMonster.play();
 }
 
 
