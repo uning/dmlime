@@ -35,4 +35,4 @@ help:
 	@echo "make js   -- coffee到js"
 
 dwb:
-	@prsync -avvz deploy/latest/  w27:./adventure/
+	@prsync -avz deploy/latest/  w27:./adventure/

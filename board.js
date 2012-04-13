@@ -127,41 +127,57 @@ dm.Board.prototype.guide = function(){
 		}
 	}
 	var action = this.mm.play();
+
+	//guide start
+	this.game.disp.guideTipDialog = new lime.Sprite().setFill('dmdata/dmimg/guidestart.png').setPosition(360, 502).setSize(613, 390);
+	//var newgame = new lime.Sprite().setSize(170, 50).setPosition().setFill('dmdata/dmimg/btn_start.png');
+	//var startguide = new lime.Sprite().setSize(170, 50).setPosition().setFill('dmdata/dmimg/btn_guide.png');
+
+	//this.game.disp.guideTipDialog.appendChild(newgame);
+	//this.game.disp.guideTipDialog.appendChild(startguide);
+
+	//goog.events.listen(this.game.disp.guideTipDialog, ['mousedown', 'touchstart','gesturestart'], function(){});
+	//goog.events.listen(this.game.disp.guideTipDialog, ['mousedown', 'touchstart','gesturestart'], function(){});
 	
-	//step 1, 连接3个金币
-	this.guidestep = 0;
-	var line = [this.gems[3][3], this.gems[4][3], this.gems[5][3]];
-	this.selectedGems = [];
+	this.game.appendChild(this.game.disp.guideTipDialog);
 
-	this.game.disp.guideTipDialog = new lime.Sprite().setFill('dmdata/dmimg/guide1.png').setPosition(480, 552).setSize(400, 400);
+	goog.events.listen(this.game.disp.guideTipDialog, ['mousedown', 'touchstart','gesturestart'], function(){
+		this.game.disp.guideTipDialog.removeAllChildren();
+		this.game.removeChild(this.game.disp.guideTipDialog);
+		//step 1, 连接3个金币
+		this.guidestep = 0;
+		var line = [this.gems[3][3], this.gems[4][3], this.gems[5][3]];
+		this.selectedGems = [];
+		this.game.disp.guideTipDialog = new lime.Sprite().setFill('dmdata/dmimg/guide1.png').setPosition(480, 552).setSize(400, 400);
 
-	function drawline(line){
-		if(this.guidestep != 0){
-			this.cancelSelGem(-1);
-			this.selectedGems = [];
-			return;
-		}
-		lime.scheduleManager.callAfter(
-			function(){
-			if(line.length){
-				this.addSelGem(line[0]);
-				line.shift();
-				drawline.call(this, line);
-			}else{
+		function drawline(line){
+			if(this.guidestep != 0){
 				this.cancelSelGem(-1);
 				this.selectedGems = [];
-				line = [this.gems[3][3], this.gems[4][3], this.gems[5][3]];
-				drawline.call(this, line);
-				if(this.game.getChildIndex(this.game.disp.guideTipDialog) == -1){
-					this.game.appendChild(this.game.disp.guideTipDialog);
-				}
-				goog.events.listen(this, ['mousedown', 'touchstart','gesturestart'], this.guidePressHandler_);
+				return;
 			}
-		}, this, 1000)
-	}
-	if(this.guidestep == 0){
-		lime.scheduleManager.callAfter(function(){drawline.call(this, line);}, this, 1000);
-	}
+			lime.scheduleManager.callAfter(
+				function(){
+				if(line.length){
+					this.addSelGem(line[0]);
+					line.shift();
+					drawline.call(this, line);
+				}else{
+					this.cancelSelGem(-1);
+					this.selectedGems = [];
+					line = [this.gems[3][3], this.gems[4][3], this.gems[5][3]];
+					drawline.call(this, line);
+					if(this.game.getChildIndex(this.game.disp.guideTipDialog) == -1){
+						this.game.appendChild(this.game.disp.guideTipDialog);
+					}
+					goog.events.listen(this, ['mousedown', 'touchstart','gesturestart'], this.guidePressHandler_);
+				}
+			}, this, 1000)
+		}
+		if(this.guidestep == 0){
+			lime.scheduleManager.callAfter(function(){drawline.call(this, line);}, this, 100);
+		}
+	}, false, this);
 }
 
 /**
@@ -186,7 +202,9 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 		this.monsterTip = false;
 		if(this.monTipDialog && this.guidestep == 8){
 			this.game.removeChild(this.game.disp.guideTipDialog);
-			dm.newgame(6);
+			//dm.newgame(6);
+			this.guidestep++;
+			guideStepCheck.call(this);
 		}
 		this.game.removeChild(this.monTipDialog);
 		this.monTipDialog = null;
@@ -328,11 +346,14 @@ dm.Board.prototype.guidePressHandler_ = function(e){
 				return;
 			}
 			case 8:{
+				/*
 				this.game.removeChild(this.game.disp.guideTipDialog);
 				this.guidestep++;
 				guideStepCheck.call(this);
 				//this.game.removeChild(this.game.disp.guideTipDialog);
-				return;
+				*/
+				//return;
+				break;
 			}
 		}
 

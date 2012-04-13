@@ -13,7 +13,7 @@ snsapi.feed=function(param){
 			,templateContent: param.tcontent ||'实在太精彩了' 
 			,link:_CONFIG.canvas_url 
 			,actionUrl:_CONFIG.canvas_url 
-			,imageUrl: param.pics || _CONFIG.rurl+'/assets/images/apple-touch-icon-114x114.png'
+			,imageUrl: param.pics || _CONFIG.rurl+'/images/apple-touch-icon-114x114.png'
 		}
 	};
 	WYX.Connect.send(wb_param,function(data){

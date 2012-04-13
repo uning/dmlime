@@ -120,7 +120,7 @@ dm.Game.prototype.createPanel = function(){
  */
 dm.Game.prototype.createBoard = function(guide){
 	//test
-	guide = true;
+	//guide = true;
 	
 	guide = guide || false;
     this.board = new dm.Board(this, guide);
@@ -881,7 +881,7 @@ dm.Game.prototype.skillStudy = function(){
 	}
 	*/
 	//test
-	//sk_key[0] = 'sk14';
+	sk_key[0] = 'sk10';
 	this.disp.select = this.disp.select || new lime.Sprite().setFill(dm.Display.popSelector.img)
 	.setSize(dm.Display.popSelector.size.w, dm.Display.popSelector.size.h);
 	this.disp.select.setPosition(dm.Display.popSelector.one.x, dm.Display.popSelector.one.y);//-143, -123);

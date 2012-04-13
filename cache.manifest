@@ -10,6 +10,9 @@ assets/startup.jpg
 assets/startup_ipad.jpg
 assets/icon.png
 assets/images/favicon.ico
+assets/images/apple-touch-icon-114x114.png
+assets/images/apple-touch-icon-72X72.png
+assets/images/apple-touch-icon.png
 
 assets/bootstrap.min.css 
 assets/loading.gif
@@ -92,6 +95,8 @@ dmdata/dmimg/skilluse.png
 dmdata/dmimg/start.png
 dmdata/dmimg/study.png
 dmdata/dmimg/topscore.png
+dmdata/dmimg/btn_start.png
+dmdata/dmimg/btn_guide.png
 dmdata/dmimg/use.png
 
 dmdata/dmimg/sk/sk1.png
