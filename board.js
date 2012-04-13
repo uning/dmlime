@@ -1035,6 +1035,11 @@ dm.Board.prototype.checkEnd = function(){
 			}
 		}
 	}
+
+	if(this.game.data.points > parseInt(this.game.disp.topscoreLabelInner.getText())){
+		this.game.disp.topscoreLabelInner.setText(this.game.data.points);
+		dm.LDB.save('topscore', this.game.data.points);
+	}
 }
 
 /**

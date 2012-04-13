@@ -109,7 +109,20 @@ dm.loadCover = ->
 	cover.appendChild load
 	cover.appendChild help
 
+	#topscore = new lime.Sprite().setPosition(-230, -180).setFill('dmdata/dmimg/topscore.png').setSize(140, 50)
+	#topscoreLabel = new lime.Label().setPosition(0, 8)
+	#topscore.appendChild topscoreLabel
+	#cover.appendChild topscore
+
 	scene.appendChild layer
+	dm.LDB.get('topscore',
+		(data)->
+			if data
+				topscore = new lime.Sprite().setPosition(-230, -180).setFill('dmdata/dmimg/topscore.png').setSize(140, 50)
+				topscoreLabel = new lime.Label().setPosition(0, 8).setText(data)
+				topscore.appendChild topscoreLabel
+				this.appendChild topscore
+		, this)
 	dm.director.replaceScene scene, lime.transitions.Dissolve
 
 # load menu scene
@@ -250,13 +263,13 @@ dm.checkVersion = ->
 dm.hidegame = ->
 	if(dm.ishide)
 		return
-	dm.director.setPaused(true)
+	dm.director and dm.director.setPaused(true)
 	$('.lime-director').hide()
 	dm.ishide  = true
 dm.showgame = ->
 	if(not dm.ishide)
 		return
-	dm.director.setPaused(false)
+	dm.director and dm.director.setPaused(false)
 	$('.lime-director').show()
 	dm.ishide  = false
 
@@ -288,6 +301,7 @@ dm.start = ->
 	el = document.getElementById 'gamearea'
 	el or= document.body
 	#el.height =  document.body.clientHeight
+	$('#loading').hide()
 
 	logdiv = document.getElementById 'log-wrapper'
 	if not logdiv and goog.DEBUG

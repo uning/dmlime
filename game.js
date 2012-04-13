@@ -78,6 +78,7 @@ dm.Game.prototype.createPanel = function(){
 	this.disp.shield = new lime.Sprite()
 	this.disp.killLabel = new lime.Label().setText((this.data.killcommon + this.data.killspecial) || 0)
 	this.disp.menu = new lime.Sprite().setFill(dp.menu.img)
+	this.disp.topscoreLabelInner = new lime.Label()
 	goog.events.listen(this.disp.menu, ['click', 'touchstart'], function(){
 		this.removeChild(this.backGround);
 		dm.loadCover();
@@ -104,6 +105,10 @@ dm.Game.prototype.createPanel = function(){
 		setSize(dp.blood_mask.size.w, dp.blood_mask.size.h);
 	this.disp.blood_bar.appendChild(this.disp.blood_mask);
 	this.disp.blood_bar.setMask(this.disp.blood_mask);
+	
+	dm.LDB.get('topscore', function(topscore){
+		this.disp.topscoreLabelInner.setText(topscore || 0);
+	}, this)
 
 
 	//test
@@ -515,12 +520,14 @@ dm.Game.prototype.mainShow = function(game){
 	 //this.database._lc = 'wangkun';//用id来区分每个用户
 	 this.database.save('data', savedata);
 
-	 var hiscore = this.data.points;
-	 var oldhiscore;
-	 this.database.get('hiscore', function(data){oldhiscore = data;}, this);
-	 oldhiscore = oldhiscore || 0;
-	 hiscore = Math.max(hiscore, oldhiscore);
-	 this.database.save('hiscore', hiscore);
+	 var topscore = this.data.points;
+	 var oldtopscore;
+	 this.database.get('topscore', function(data){
+		 oldtopscore = data;
+		 oldtopscore = oldtopscore || 0;
+		 topscore = Math.max(topscore, oldtopscore);
+		 this.database.save('topscore', topscore);
+	 }, this);
  }
 
  dm.Game.prototype.loadGame = function(){

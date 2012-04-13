@@ -1,0 +1,7 @@
+DeployConfig,Dbconfig对应有测试环境test，线上环境online
+对应版本由base中ENV常量定义
+
+gen目录保存所有由excel生成的php配置
+
+
+

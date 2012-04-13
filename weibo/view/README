@@ -1,0 +1,35 @@
+
+使用原生php 文件编辑
+
+将一个页面分成很多部分,原生echo 
+见compile 实现;
+  将 <?php echo  XXXXX;?> 直接运行后结果替换
+
+
+
+static 放置可以事先运行为静态文件的部分
+
+
+
+layout.php example
+<html>
+ <header>
+ <?php include $this->viewRoot.'/header.php';?>
+ </header>
+<body>
+ <?php include $this->viewRoot.'/body.php';?>
+ </body>
+</html>
+ <?php include $this->viewRoot.'/tail.php';?>
+
+ public $cssFiles = array();//引用的css文件
+ public $hjsFiles = array(); //头部引用js
+ public $tjsFile = array();//尾部引用的js
+ public $tittle ; //页面标题
+ public $layout ;//布局文件 
+ public $tailView;//末尾文件
+ public $bodyView ;//内容view文件
+
+
+
+

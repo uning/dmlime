@@ -109,8 +109,16 @@ dm.Display = {
 		//
 		this.menu = {
 			size:{w:104, h:42},
-			pos:{x:150, y:-380},
+			pos:{x:10, y:-470},
 			img:this.url+'menu.png'
+		}
+		//
+		this.topscoreLableInner = { //游戏内的最高分显示
+			fontsize:25,
+			pos:{x:140, y:-386}
+		}
+
+		this.topscoreLableEndGame = {
 		}
 		//
 		this.itempop= {

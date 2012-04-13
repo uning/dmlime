@@ -130,6 +130,15 @@ dm.loadCover = function() {
   cover.appendChild(load);
   cover.appendChild(help);
   scene.appendChild(layer);
+  dm.LDB.get('topscore', function(data) {
+    var topscore, topscoreLabel;
+    if (data) {
+      topscore = new lime.Sprite().setPosition(-230, -180).setFill('dmdata/dmimg/topscore.png').setSize(140, 50);
+      topscoreLabel = new lime.Label().setPosition(0, 8).setText(data);
+      topscore.appendChild(topscoreLabel);
+      return this.appendChild(topscore);
+    }
+  }, this);
   return dm.director.replaceScene(scene, lime.transitions.Dissolve);
 };
 
@@ -255,14 +264,14 @@ dm.checkVersion = function() {
 
 dm.hidegame = function() {
   if (dm.ishide) return;
-  dm.director.setPaused(true);
+  dm.director && dm.director.setPaused(true);
   $('.lime-director').hide();
   return dm.ishide = true;
 };
 
 dm.showgame = function() {
   if (!dm.ishide) return;
-  dm.director.setPaused(false);
+  dm.director && dm.director.setPaused(false);
   $('.lime-director').show();
   return dm.ishide = false;
 };
@@ -292,6 +301,7 @@ dm.start = function() {
   var el, logdiv;
   el = document.getElementById('gamearea');
   el || (el = document.body);
+  $('#loading').hide();
   logdiv = document.getElementById('log-wrapper');
   if (!logdiv && goog.DEBUG) {
     logdiv = goog.dom.createDom('div', {

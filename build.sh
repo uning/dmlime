@@ -16,3 +16,4 @@
 cd ../
 # remove -a 
 bin/lime.py  build dm -o dm/compiled/dm.js  -p dm.start
+cp dm/compiled/dm.js dm/dm.c.js

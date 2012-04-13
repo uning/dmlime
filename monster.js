@@ -68,7 +68,7 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 				this.id = 0;
 			}
 			//test
-			//this.id = 6;
+			this.id = 5;
 		}else{
 			this.id = 0;
 		}
@@ -491,6 +491,12 @@ dm.Monster.prototype.monRevive = function(){
 					this.hp  = this.hp_max;
 					this.genImg();
 					p.keep = true;
+					/*
+					p.light = new lime.Sprite().setSize(100, 100).setFill('dmdata/dmimg/light.png');
+					p.appendChild(p.light);
+					p.setSpecial('复活');
+					lime.scheduleManager.scheduleWithDelay(100, function(){this.set})
+					*/
 					return;
 				}
 			}
