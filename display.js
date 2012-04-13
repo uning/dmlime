@@ -113,12 +113,12 @@ dm.Display = {
 			img:this.url+'menu.png'
 		}
 		//
-		this.topscoreLableInner = { //游戏内的最高分显示
+		this.topscoreLabelInner = { //游戏内的最高分显示
 			fontsize:25,
 			pos:{x:140, y:-386}
 		}
 
-		this.topscoreLableEndGame = {
+		this.topscoreLabelEndGame = {
 		}
 		//
 		this.itempop= {
