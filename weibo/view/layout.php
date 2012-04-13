@@ -10,11 +10,11 @@ if(!$pid){
 	$this->redirect(PL::canvas_url.url(array('from'=>'authret')));
 	die();
 }
-
+$spid = $pid;
 $pid = P_PLATFORM.$pid;
 PL_Session::usecookie(true);
 $epid = PL_Tool_IdGen::encodeStr($pid);
-$sess = PL_Session::start($epid);
+$s= PL_Session::start($epid);
 if(!isset($_SESSION['uo'])){
 	$um = new model_User($pid);
 	$datas = $um->get(array('pinfo'=>1,'record'=>1));
@@ -26,7 +26,7 @@ if(!isset($_SESSION['uo'])){
 	}
 }
 
-$_cid  = $sess->getCid();
+$_cid  = $s->getCid();
 //setcookie('cid',$_cid);
 $_SESSION['psession'] = PL::getSession(true);
 
@@ -47,7 +47,6 @@ if(top && self && self !=top ){
   _CONFIG.cid = '<?php echo $s->getCid(); ?>';
   _CONFIG.appid = '<?php echo PL::app_id; ?>';
   _CONFIG.pid = '<?php echo $spid;?>';
-  _CONFIG.urlapi = '<?php echo url(array('mod'=>'api'));?>';
   _CONFIG.canvas_url = '<?php echo PL::canvas_url; ?>';
   _CONFIG.callback_url = '<?php echo PL::callback_url; ?>';
   _CONFIG.platform = 'weibo'
