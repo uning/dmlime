@@ -29,7 +29,7 @@ $_cid  = $sess->getCid();
 //setcookie('cid',$_cid);
 $_SESSION['psession'] = PL::getSession(true);
 
-require ROOT.'/dmc.html';
+require ROOT.'/dmc.php';
 ?>
 
 

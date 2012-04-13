@@ -119,10 +119,10 @@ dm.loadCover = ->
 		(data)->
 			if data
 				topscore = new lime.Sprite().setPosition(-230, -180).setFill('dmdata/dmimg/topscore.png').setSize(140, 50)
-				topscoreLabel = new lime.Label().setPosition(0, 8).setText(data)
+				topscoreLabel = new lime.Label().setFontSize(30).setPosition(0, 8).setText(data)
 				topscore.appendChild topscoreLabel
 				this.appendChild topscore
-		, this)
+		, cover)
 	dm.director.replaceScene scene, lime.transitions.Dissolve
 
 # load menu scene

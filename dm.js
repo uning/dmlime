@@ -134,11 +134,11 @@ dm.loadCover = function() {
     var topscore, topscoreLabel;
     if (data) {
       topscore = new lime.Sprite().setPosition(-230, -180).setFill('dmdata/dmimg/topscore.png').setSize(140, 50);
-      topscoreLabel = new lime.Label().setPosition(0, 8).setText(data);
+      topscoreLabel = new lime.Label().setFontSize(30).setPosition(0, 8).setText(data);
       topscore.appendChild(topscoreLabel);
       return this.appendChild(topscore);
     }
-  }, this);
+  }, cover);
   return dm.director.replaceScene(scene, lime.transitions.Dissolve);
 };
 

@@ -68,7 +68,7 @@ dm.Monster.prototype.genAttribute = function(turn, p, mon_id){
 				this.id = 0;
 			}
 			//test
-			this.id = 5;
+			//this.id = 5;
 		}else{
 			this.id = 0;
 		}

@@ -810,9 +810,9 @@ dm.Game.prototype.endGame = function() {
 
 	var topscoreLabelEndGame = new lime.Label().setFontSize(30).setFontColor('#A00F0F').setSize(120, 35).setPosition(130, -60);
 	dm.LDB.get('topscore', function(topscore){
-		if(this.game.data.points > topscore){
-			dm.LDB.save('topscore', this.game.data.points);
-			topscoreLabelEndGame.setText(this.game.data.points);
+		if(this.data.points > topscore){
+			dm.LDB.save('topscore', this.data.points);
+			topscoreLabelEndGame.setText(this.data.points);
 		}else{
 			topscoreLabelEndGame.setText(topscore);
 		}
@@ -821,12 +821,14 @@ dm.Game.prototype.endGame = function() {
 	var restart = new lime.Sprite().setSize(160, 50).setPosition(-79.5, 245.5);
 	dialog.appendChild(restart);
     goog.events.listen(restart, ['click', 'touchstart'], function(){
+		dm.game.removeAllChildren();
 		dm.newgame(6);
 	}, false, this);
 
 	var menu = new lime.Sprite().setSize(120, 50).setPosition(109.5, 245.5);
 	dialog.appendChild(menu);
     goog.events.listen(menu, ['click', 'touchstart'], function(){
+		dm.game.removeAllChildren();
 		dm.loadCover();
 	}, false, this);
 

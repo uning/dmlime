@@ -39,3 +39,4 @@ update_config.php
 vc.js
 vendors/
 views/
+*.log
