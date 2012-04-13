@@ -100,7 +100,7 @@ dm.Skill.prototype.action = function(id, param){ //各个技能的作用效果
 		break;
 		case '10':{
 			//伤害抵抗
-			this.game.updateData('noDmg', 1);
+			this.game.updateData('avoidDamage', true);
 
 		}
 		break;
@@ -183,7 +183,7 @@ dm.Skill.prototype.actionEnd = function(id, param){ //技能作用完毕的清�
 		}
 		break;
 		case '10':{//伤害抵抗
-			this.game.updateData('noDmg', 0);
+			this.game.updateData('avoidDamage', false);
 		}
 		break;
 		case '11':{

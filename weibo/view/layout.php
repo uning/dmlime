@@ -13,12 +13,13 @@ if(!$pid){
 
 $pid = P_PLATFORM.$pid;
 PL_Session::usecookie(true);
-$sess = PL_Session::start($pid);
+$epid = PL_Tool_IdGen::encodeStr($pid);
+$sess = PL_Session::start($ppid);
 if(!isset($_SESSION['uo'])){
 	$um = new model_User($pid);
 	$datas = $um->get(array('pinfo'=>1,'record'=>1));
 	if(!$datas){
-		$um->opOne('_it',$_SERVER);
+		$um->opOne('_it',$_SERVER['REQUEST_TIME']);
 		$pinfos = PL::updateInfo(false,$um);
 	}else{
 		$_SESSION['uo'] = $datas;
@@ -30,14 +31,15 @@ $_cid  = $sess->getCid();
 $_SESSION['psession'] = PL::getSession(true);
 
 require ROOT.'/dmc.php';
+
 ?>
-
-
 <script>
+if(top && self && self !=top ){
+	top.location.assign("<?php echo "http://adventure.playcrab.com/wbplay.php?cid=$_cid";?>")
+}
   var _CONFIG = {};
   _CONFIG.resource_url = '<?php echo $urlp; ?>';
   _CONFIG.cid = '<?php echo $_cid; ?>';
-  _CONFIG.common_resource_url = '<?php echo app_config('common_resource_url'); ?>';
   _CONFIG.appid = '<?php echo PL::app_id; ?>';
   _CONFIG.pid = '<?php echo $pid;?>';
   _CONFIG.js_api_url = '<?php echo url(array('mod'=>'jsapi','cid'=>$_cid));?>';
@@ -50,7 +52,9 @@ require ROOT.'/dmc.php';
   _CONFIG.qq_quns = ['116299965']
   //for browser 
   var console = console || {};console.log = console.log || function(){};
+   WYX.Connect.init();
 </script>
+<script type="text/javascript" src="http://game.weibo.com/static/js/v0.3/wyx.connect.js.php"></script>
 <?php
 fastcgi_finish_request();
 PL::updateFriend($_REQUEST['upf']);

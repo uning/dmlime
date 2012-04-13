@@ -10,7 +10,7 @@ JSOBJS = $(patsubst %.coffee,%.js,$(COFFEESRCS))
 
 
 all:
-	@echo "make build  -- 编译所有js"
+	@echo "make bu  -- 编译所有js"
 	@echo "make up -- 更新deps"
 	@echo "make genc   -- 生成配置"
 	@echo "make js   -- coffee到js"
@@ -22,8 +22,9 @@ js: $(JSOBJS) $(COFFEESRCS)
 up:
 	@../bin/lime.py update
 
-build:
+bu:
 	@build.sh
+	@php deploy/gen_pack.php 
 
 genc:
 	@gen_config.sh

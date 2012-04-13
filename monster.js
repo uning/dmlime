@@ -589,11 +589,13 @@ dm.Monster.prototype.useSkill = function(){
 		}
 		case '2':{
 			//明每回合降低玩家10%生命（不会直接导致死亡,最低降到1点生命）
-			var reduceHp = Math.floor(this.game.user.data.fp.a6*0.1);
-			if(this.game.data.hp > reduceHp ){
-				this.game.updateData('hp', -reduceHp, 'add');
-			}else{
-				this.game.updateData('hp', 1);
+			if(this.game.data.noDmg == false){ //玩家没有使用不受伤害技能
+				var reduceHp = Math.floor(this.game.user.data.fp.a6*0.1);
+				if(this.game.data.hp > reduceHp ){
+					this.game.updateData('hp', -reduceHp, 'add');
+				}else{
+					this.game.updateData('hp', 1);
+				}
 			}
 			break;
 			//附加毒伤害，必须消除红心来治疗

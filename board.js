@@ -630,6 +630,7 @@ dm.Board.prototype.playerAttack = function(s){
 			if(data['isWeaken'] == true){//玩家虚弱，伤害减半
 				attack_real = Math.round(attack_real*0.5);
 			}
+
 			if(attack_real >= g.monster.hp + mon_def_real){
 				if(g.monster.id == -1){//反弹50%伤害的怪物
 					reflectionDmg += Math.ceil(g.monster.hp/2);
@@ -648,14 +649,20 @@ dm.Board.prototype.playerAttack = function(s){
 					g.keep = true;
 				}
 			}else{
+				g.keep = true;
 				if(attack_real > mon_def_real){
 					g.monster.hp = g.monster.hp + mon_def_real - attack_real;
 					if(g.monster.id == 7){//反弹50%伤害的怪物
 						reflectionDmg += Math.ceil(attack_real - mon_def_real);
 					}
 					leech = attack_real*fp.a36/100;
+				}else{
+					g.monster.hp -= 1;
+					if(g.monster.hp <= 0){
+						g.keep = false;
+						g.monster.onDeath(true);
+					}
 				}
-				g.keep = true;
 				if(Math.random()*100 < fp.a32){//毒伤害,todo: 加入持续时间
 					g.setSpecial('poison');
 					g.monster.poison = Math.round(attack_real*10/100) || 1;//fp.a33/100);
@@ -672,7 +679,7 @@ dm.Board.prototype.playerAttack = function(s){
 		}
 	}
 
-	if(!data['noDmg']){
+	if(!data['avoidDamage']){
 		this.game.updateData('hp', -reflectionDmg, 'add');//反弹的伤害
 	}
 }
@@ -691,7 +698,7 @@ dm.Board.prototype.monsterAttack = function(){
 	//闪避？
 	if(Math.random()*100 > (fp.a38 + data['extAvoid'])){
 	//if(Math.random()*100 > 50){
-		if(!data['noDmg']){ 
+		if(!data['avoidDamage']){ 
 		//伤害减少
 			var def_extra = data['def_extra'];
 			//怪物减少玩家防御
@@ -751,7 +758,7 @@ dm.Board.prototype.monsterAttack = function(){
 			}else{
 				this.game.disp.avoidDamage.setText('无视伤害').setOpacity(1);
 			}
-			this.avoidAnimation = new lime.animation.FadeTo(0).setDuration(.7);
+			this.avoidAnimation = new lime.animation.FadeTo(0).setDuration(1);
 			this.game.disp.avoidDamage.runAction(this.avoidAnimation);
 		}
 	}else{
@@ -873,7 +880,7 @@ dm.Board.prototype.playerAction = function(){
 		this.gainGems(s);
 	};
 	//火焰伤害
-	if(!data['noDmg']){
+	if(!data['avoidDamage']){
 		this.game.updateData('hp', -fireDmg, 'add');//火焰伤害
 	}
 
@@ -1069,7 +1076,7 @@ dm.Board.prototype.recover = function(){
 				damageRatio = 2;
 			}
 			if(this.game.data.canDamageMon || monster.id != 0 || this.game.data.disableMonsterSkill){
-				if(this.show_att * damageRatio >= monster.hp + monster.def){
+				if(this.show_att * damageRatio >= monster.hp + monster.def || monster.hp <= 1){
 					//杀死怪物了
 					monster.setKilled();
 					//reduceDmg += monster.att //死亡怪物不再造成伤害，从总显示数值中去掉。
