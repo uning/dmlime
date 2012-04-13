@@ -609,6 +609,12 @@ dm.Board.prototype.playerAttack = function(s){
 	var i, g;
 	var weapon_dmg = 0;
 	var reflectionDmg = 0;
+	var attackMonster = new lime.animation.Sequence(
+		new lime.animation.MoveBy(-10,-10).setDuration(.1),
+		new lime.animation.MoveBy(20,20).setDuration(.1),
+		new lime.animation.MoveBy(-10,-10).setDuration(.1)
+	);
+
 	for(i = 0; i < s.length; i++){
 		if(s[i].type == 'sword' && !s[i].isBroken){
 			weapon_dmg += fp.a2*(100 + data['attack_ratio']*i)/100; //每个武器伤害递增
@@ -673,15 +679,41 @@ dm.Board.prototype.playerAttack = function(s){
 				}
 			}
 			g.monster.changeDisplay('hp');
+
+			attackMonster.addTarget(g);
+
 		}else if(g.type == 'monster'){
-		//	g.setSpecial('noDmg');
 			g.keep = true;
 		}
 	}
 
-	if(!data['avoidDamage']){
+
+	//test
+	//reflectionDmg = 1;
+
+	if(!data['avoidDamage'] && reflectionDmg > 0){
+		/*
+		if(!this.game.disp.reflectiondamageText){
+			this.game.disp.reflectiondamageText = new lime.Label().setFontSize(50).setFontColor('#ff0000').setText('反弹伤害 '+ reflectionDmg).setPosition(-245, -400);
+		}else{
+			this.game.disp.reflectiondamageText.setFontColor('#ff0000').setText('反弹伤害 '+ reflectionDmg).setPosition(-245, -400).setOpacity(1);
+		}
+		var damageText = this.game.disp.reflectiondamageText;
+		this.game.backGround.getChildIndex(damageText) == -1 && this.game.backGround.appendChild(damageText);
+
+		if(!this.damageAnimation){
+			this.damageAnimation = new lime.animation.Sequence(
+				new lime.animation.MoveTo(240, 330).setDuration(.3),
+				new lime.animation.FadeTo(0).setDuration(.7)
+			);
+		}
+		var animation = this.damageAnimation;
+		damageText.runAction(animation);
+		*/
 		this.game.updateData('hp', -reflectionDmg, 'add');//反弹的伤害
 	}
+
+	attackMonster.play();
 }
 
 
@@ -725,7 +757,7 @@ dm.Board.prototype.monsterAttack = function(){
 					this.game.disp.damageText.setFontColor('#ff0000').setText('伤害 '+ total_dmg).setPosition(-245, -400).setOpacity(1);
 				}
 				var damageText = this.game.disp.damageText;
-				this.game.backGround.appendChild(damageText);
+				this.game.backGround.getChildIndex(damageText) == -1 && this.game.backGround.appendChild(damageText);
 				if(!this.damageAnimation){
 					this.damageAnimation = new lime.animation.Sequence(
 						new lime.animation.MoveTo(240, 330).setDuration(.3),

@@ -220,7 +220,7 @@ dm.Skill.prototype.actionEnd = function(id, param){ //技能作用完毕的清�
  */
 dm.Skill.prototype.reduceHp = function(ratio){
   this.game.board.findMonster(function(g, context, ratio){
-	  g.monster.hp = Math.floor(g.monster.hp*(100 - ratio)/100);
+	  g.monster.hp = Math.max(Math.floor(g.monster.hp*(100 - ratio)/100), 1);
 	  if(g.monster.hp > 0){
 		  g.keep = true;
 	  }else{
